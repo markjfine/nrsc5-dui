@@ -109,6 +109,5 @@ If you change the map image, you will have to delete the BaseMap images in the m
 1.0.1 Fixed compatibility with display scailing  
 1.1.0 Added weather radar and traffic map viewer  
 1.2.0 zefie update to modern nrsc5 build
-
 2.0.0 Updated to use the nrsc5 API
 2.1.0 Updated and enhanced operation and use
