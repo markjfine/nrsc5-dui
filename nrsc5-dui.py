@@ -21,7 +21,7 @@
 #    Updated and enhanced by markjfine ~ 2021
 
 #import os, sys, shutil, re, gtk, gobject, json, datetime, numpy, glob, time, platform
-import os, sys, shutil, re, json, datetime, numpy, glob, time, platform
+import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform
 from subprocess import Popen, PIPE
 from threading import Timer, Thread
 from dateutil import tz
@@ -72,6 +72,8 @@ class NRSC5_DUI(object):
         self.mapFile        = os.path.join(resDir, "map.png")
         self.defaultSize    = [490,250] # default width,height of main app
         self.nrsc5          = None      # nrsc5 process
+        self.nrsc5master    = None
+        self.nrsc5slave     = None
         self.playerThread   = None      # player thread
         self.playing        = False     # currently playing
         self.statusTimer    = None      # status update timer
@@ -85,6 +87,7 @@ class NRSC5_DUI(object):
         self.lastXHDR       = ""        # the last XHDR data received
         self.stationStr     = ""        # current station frequency (string)
         self.streamNum      = 0         # current station stream number
+        self.nrsc5msg       = ""        # send key command to nrsc5 (streamNum)
         self.update_btns    = True
         self.set_program_btns()
         self.bookmarks      = []        # station bookmarks
@@ -136,12 +139,12 @@ class NRSC5_DUI(object):
             262 : "Private Data Network",     
             263 : "Service Maintenance",      
             264 : "HD Radio System Services", 
-            265 : "Audio Related Data",       
+            265 : "Audio-Related Objects",       
             511 : "Test_Str_E"               
         }
 
         self.ProgramType = {
-            0 : "Undefined",
+            0 : "None",
             1 : "News",
             2 : "Information",
             3 : "Sports",
@@ -157,8 +160,8 @@ class NRSC5_DUI(object):
             13 : "Nostalgia",
             14 : "Jazz",
             15 : "Classical",
-            16 : "Rhythm And Blues",
-            17 : "Soft Rhythm And Blues",
+            16 : "Rhythm and Blues",
+            17 : "Soft Rhythm and Blues",
             18 : "Foreign Language",
             19 : "Religious Music",
             20 : "Religious Talk",
@@ -167,7 +170,7 @@ class NRSC5_DUI(object):
             23 : "College",
             24 : "Spanish Talk",
             25 : "Spanish Music",
-            26 : "Hip Hop",
+            26 : "Hip-Hop",
             29 : "Weather",
             30 : "Emergency Test",
             31 : "Emergency",
@@ -281,6 +284,9 @@ class NRSC5_DUI(object):
         self.loadSettings()
         self.proccessWeatherMaps()
         #self..connect('check-resize',self.on_window_resized) # TODO: fix on resize infinite loop
+        
+        # set up pty
+        self.nrsc5master,self.nrsc5slave = pty.openpty()
 
     def img_to_pixbuf(self,img):
         """convert PIL.Image to GdkPixbuf.Pixbuf"""
@@ -580,13 +586,14 @@ class NRSC5_DUI(object):
         self.streamInfo["Logo"] = ""
         self.streamInfo["Bitrate"] = 0
         self.set_program_btns()
-        #if self.playing:
-        #    self.display_logo()
+        if self.playing:
+            self.nrsc5msg = str(self.streamNum)
+            self.displayLogo()
         #TODO: fix so stream change is smoother - should be able to pipe new stream number to running application and update display_logo()
         #      For now, just restart
-        if (self.playing):
-             self.on_btnStop_clicked(None)
-             self.on_btnPlay_clicked(None)        
+        #if (self.playing):
+        #     self.on_btnStop_clicked(None)
+        #     self.on_btnPlay_clicked(None)        
 
     def set_program_btns(self):
         self.btnAudioPrgs0.set_active(self.update_btns and self.streamNum == 0)
@@ -689,9 +696,16 @@ class NRSC5_DUI(object):
         FTMP = open('tmp.log','w')
 
         # run nrsc5 and output stdout & stderr to pipes
-        self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, stdout=PIPE, universal_newlines=True)
+        #self.nrsc5 = Popen(self.nrsc5Args, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         
         while True:
+            # send input to nrsc5 if needed
+            if (self.nrsc5msg != ""):
+                select.select([],[self.nrsc5master],[])
+                os.write(self.nrsc5master,str.encode(self.nrsc5msg))
+                #print(self.nrsc5msg)
+                self.nrsc5msg = ""
             # read output from nrsc5
             output = self.nrsc5.stderr.readline()
             # parse the output
@@ -712,7 +726,7 @@ class NRSC5_DUI(object):
                 # restart nrsc5 if it crashes
                 self.debugLog("Restarting NRSC5")
                 time.sleep(1)
-                self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, stdout=PIPE, universal_newlines=True)
+                self.nrsc5 = Popen(self.nrsc5Args, stdin=PIPE, stderr=PIPE, stdout=PIPE, universal_newlines=True)
 
     def set_synchronization(self, state):
         self.imgNoSynch.set_visible(state == 0)
