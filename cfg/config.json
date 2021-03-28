@@ -1,0 +1,59 @@
+{
+  "CfgVersion": "1.1.0",
+  "WindowX": 831,
+  "WindowY": 335,
+  "Width": 490,
+  "Height": 771,
+  "Frequency": 88.1,
+  "Stream": 1,
+  "Gain": 0.0,
+  "AutoGain": true,
+  "PPMError": 0,
+  "RTL": 0,
+  "LogToFile": false,
+  "Bookmarks": [],
+  "MapData": {
+    "mapMode": 1,
+    "mapTiles": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "mapComplete": false,
+    "weatherTime": 0,
+    "weatherPos": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "weatherNow": "",
+    "weatherID": "",
+    "viewerConfig": {
+      "mode": 1,
+      "animate": false,
+      "scale": true,
+      "windowPos": [
+        0,
+        0
+      ],
+      "windowSize": [
+        764,
+        632
+      ],
+      "animationSpeed": 0.5
+    }
+  }
+}
