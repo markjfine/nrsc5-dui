@@ -81,9 +81,10 @@ class NRSC5_DUI(object):
         self.logFile        = None      # nrsc5 log file
         self.lastImage      = ""        # last image file displayed
         self.coverImage     = ""
-        self.lastXHDR       = ["", -1]  # the last XHDR data received
+        #self.lastXHDR       = ["", -1]  # the last XHDR data received
+        self.lastXHDR       = ""        # the last XHDR data received
         self.stationStr     = ""        # current station frequency (string)
-        self.streamNum      = 1         # current station stream number
+        self.streamNum      = 0         # current station stream number
         self.update_btns    = True
         self.set_program_btns()
         self.bookmarks      = []        # station bookmarks
@@ -266,7 +267,7 @@ class NRSC5_DUI(object):
             re.compile("^[0-9\:]{8,8} Best gain: (.*) dB,.*$"),                                                 # 10 match gain
             re.compile("^[0-9\:]{8,8} SIG Service: type=(.*) number=(.*) name=(.*)$"),                          # 11 match stream
             re.compile("^[0-9\:]{8,8} .*Data component:.* id=([\d]+).* port=([\d]+).* service_data_type=([\d]+) .*$"), # 12 match port (and data_service_type)
-            re.compile("^[0-9\:]{8,8} XHDR: .* ([0-9A-Fa-f]{8}) (.*)$"),                                        # 13 match xhdr tag
+            re.compile("^[0-9\:]{8,8} XHDR: (.*) ([0-9A-Fa-f]{8}) (.*)$"),                                      # 13 match xhdr tag
             re.compile("^[0-9\:]{8,8} Unique file identifier: PPC;07; ([\S]+).*$"),                             # 14 match unique file id
             re.compile("^[0-9\:]{8,8} Genre: (.*)$"),                                                           # 15 match genre
             re.compile("^[0-9\:]{8,8} Message: (.*)$"),                                                         # 16 match message
@@ -309,7 +310,24 @@ class NRSC5_DUI(object):
             else:
                 self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
 
-
+    def displayLogo(self):
+        global aasDir
+        #if (self.stationLogos.has_key(self.stationStr)):
+        if (self.stationStr in self.stationLogos):
+            # show station logo if it's cached
+            logo = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
+            if (os.path.isfile(logo)):
+                self.streamInfo["Logo"] = self.stationLogos[self.stationStr][self.streamNum]
+                img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
+                #self.pixbuf = Gtk.gdk.pixbuf_new_from_file(logo)
+                self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(logo)
+                self.coverImage = logo
+                #self.handle_window_resize()
+                self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
+                self.imgCover.set_from_pixbuf(self.pixbuf)
+        else:
+            # add entry in database for the station if it doesn't exist
+            self.stationLogos[self.stationStr] = ["", "", "", ""]
 
     def service_data_type_name(self, type):
         for key, value in self.ServiceDataType.items():
@@ -374,7 +392,7 @@ class NRSC5_DUI(object):
             # set frequency and stream
             self.nrsc5Args.append(str(self.spinFreq.get_value()))
             #self.nrsc5Args.append(str(int(self.spinStream.get_value()-1)))
-            self.nrsc5Args.append(str(int(self.streamNum-1)))
+            self.nrsc5Args.append(str(int(self.streamNum)))
                         
             #print(self.nrsc5Args)
 
@@ -392,7 +410,8 @@ class NRSC5_DUI(object):
             self.btnStop.set_sensitive(True)
             self.cbAutoGain.set_sensitive(False)
             self.playing = True
-            self.lastXHDR = ["", -1]
+            #self.lastXHDR = ["", -1]
+            self.lastXHDR = ""
             
             # start the player thread
             self.playerThread = Thread(target=self.play)
@@ -400,26 +419,14 @@ class NRSC5_DUI(object):
             
             self.stationStr = str(self.spinFreq.get_value())
             #self.stationNum = int(self.spinStream.get_value())-1
-            self.stationNum = int(self.streamNum)-1
-            
-            #if (self.stationLogos.has_key(self.stationStr)):
-            if (self.stationStr in self.stationLogos):
-                # show station logo if it's cached
-                logo = os.path.join(aasDir, self.stationLogos[self.stationStr][self.stationNum])
-                if (os.path.isfile(logo)):
-                    self.streamInfo["Logo"] = self.stationLogos[self.stationStr][self.stationNum]
-                    #self.pixbuf = Gtk.gdk.pixbuf_new_from_file(logo)
-                    self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(logo)
-                    self.coverImage = logo
-                    self.handle_window_resize()
-            else:
-                # add entry in database for the station if it doesn't exist
-                self.stationLogos[self.stationStr] = ["", "", "", ""]
+            #self.set_program_btns()
+
+            self.displayLogo()         
             
             # check if station is bookmarked
             self.bookmarked = False
             #freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.spinStream.get_value())
-            freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum)
+            freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum + 1)
             for b in self.bookmarks:
                 if (b[2] == freq):
                     self.bookmarked = True
@@ -467,12 +474,12 @@ class NRSC5_DUI(object):
     def on_btnBookmark_clicked(self, btn):         
         # pack frequency and channel number into one int
         #freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.spinStream.get_value())
-        freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum)
+        freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum + 1)
         
         # create bookmark
         bookmark = [
             #"{:4.1f}-{:1.0f}".format(self.spinFreq.get_value(), self.spinStream.get_value()),
-            "{:4.1f}-{:1.0f}".format(self.spinFreq.get_value(), self.streamNum),
+            "{:4.1f}-{:1.0f}".format(self.spinFreq.get_value(), self.streamNum + 1),
             self.streamInfo["Callsign"],
             freq
         ]
@@ -487,7 +494,7 @@ class NRSC5_DUI(object):
     def on_btnDelete_clicked(self, btn):
         # select current station if not on bookmarks page
         if (self.notebookMain.get_current_page() != 3):
-            station = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum)
+            station = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum + 1)
             for i in range(0, len(self.lsBookmarks)):
                 if (self.lsBookmarks[i][2] == station):            
                     self.lvBookmarks.set_cursor(i)
@@ -517,23 +524,21 @@ class NRSC5_DUI(object):
             return
 
         authors = [
-        "Cody Nybo <cmnybo@gmail.com>"
+            "Cody Nybo <cmnybo@gmail.com>",
+            "Clayton Smith <argilo@gmail.com>"
         ]
 
         license = """
         NRSC5 DUI - A graphical interface for nrsc5
-        Copyright (C) 2017-2018  Cody Nybo
-
+        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
         (at your option) any later version.
-
         This program is distributed in the hope that it will be useful,
         but WITHOUT ANY WARRANTY; without even the implied warranty of
         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
         GNU General Public License for more details.
-
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>."""
 
@@ -542,9 +547,9 @@ class NRSC5_DUI(object):
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 DUI")
         about_dialog.set_version("2.1.0")
-        about_dialog.set_copyright("Copyright \xc2\xa9 2017-2018 Cody Nybo, 2019 zefie, 2021 markjfine")
+        about_dialog.set_copyright("Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine")
         about_dialog.set_website("https://github.com/markjfine/nrsc5-dui")
-        about_dialog.set_comments("A graphical interface for nrsc5.")
+        about_dialog.set_comments("A second generation graphical interface for nrsc5.")
         about_dialog.set_authors(authors)
         about_dialog.set_license(license)
         #about_dialog.set_logo(Gtk.gdk.pixbuf_new_from_file("logo.png"))
@@ -565,22 +570,36 @@ class NRSC5_DUI(object):
         self.about_dialog = about_dialog
         about_dialog.show()
 
+    def on_stream_changed(self):
+        self.lastXHDR = ""
+        self.streamInfo["Title"] = ""
+        self.streamInfo["Album"] = ""
+        self.streamInfo["Artist"] = ""
+        self.streamInfo["Genre"] = ""
+        self.streamInfo["Cover"] = ""
+        self.streamInfo["Logo"] = ""
+        self.streamInfo["Bitrate"] = 0
+        self.set_program_btns()
+        #if self.playing:
+        #    self.display_logo()
+        #TODO: fix so stream change is smoother - should be able to pipe new stream number to running application and update display_logo()
+        #      For now, just restart
+        if (self.playing):
+             self.on_btnStop_clicked(None)
+             self.on_btnPlay_clicked(None)        
+
     def set_program_btns(self):
-        self.btnAudioPrgs0.set_active(self.update_btns and self.streamNum == 1)
-        self.btnAudioPrgs1.set_active(self.update_btns and self.streamNum == 2)
-        self.btnAudioPrgs2.set_active(self.update_btns and self.streamNum == 3)
-        self.btnAudioPrgs3.set_active(self.update_btns and self.streamNum == 4)
+        self.btnAudioPrgs0.set_active(self.update_btns and self.streamNum == 0)
+        self.btnAudioPrgs1.set_active(self.update_btns and self.streamNum == 1)
+        self.btnAudioPrgs2.set_active(self.update_btns and self.streamNum == 2)
+        self.btnAudioPrgs3.set_active(self.update_btns and self.streamNum == 3)
         self.update_btns = True
 
     def on_program_select(self, _label, evt):
         stream_num = int(_label.get_property("name")[-1])
         self.update_btns = not (_label.get_property("name")[0] == "b")
-        self.streamNum = stream_num + 1
-        self.set_program_btns()
-        #self.on_stream_changed()
-        #TODO: fix so stream change is smoother - should be able to pipe new stream number to running application.
-        if (self.playing): self.on_btnStop_clicked(None)
-        self.on_btnPlay_clicked(None)        
+        self.streamNum = stream_num
+        self.on_stream_changed()
 
     def on_cbAutoGain_toggled(self, btn):
         self.spinGain.set_sensitive(not btn.get_active())
@@ -595,11 +614,12 @@ class NRSC5_DUI(object):
             # set frequency and stream
             self.spinFreq.set_value(float(int(station/10)/10.0))
             #self.spinStream.set_value(station%10)
-            self.streamNum = (station%10)
-            self.set_program_btns()
+            self.streamNum = (station%10)-1
+            self.on_stream_changed()
             
             # stop playback if playing
-            if (self.playing): self.on_btnStop_clicked(None)
+            if (self.playing):
+                 self.on_btnStop_clicked(None)
             
             # play bookmarked station
             self.on_btnPlay_clicked(None)
@@ -702,11 +722,13 @@ class NRSC5_DUI(object):
     def checkStatus(self):
         # update status information
         def update():
+            global aasDir
             Gdk.threads_enter()
             try:
                 imagePath = ""
                 image = ""
-                ber = [self.streamInfo["BER"][0]*100,self.streamInfo["BER"][1]*100,self.streamInfo["BER"][2]*100,self.streamInfo["BER"][3]*100]
+                #ber = [self.streamInfo["BER"][0]*100,self.streamInfo["BER"][1]*100,self.streamInfo["BER"][2]*100,self.streamInfo["BER"][3]*100]
+                ber = [self.streamInfo["BER"][i]*100 for i in range(4)]
                 self.txtTitle.set_text(self.streamInfo["Title"])
                 self.txtArtist.set_text(self.streamInfo["Artist"])
                 self.txtAlbum.set_text(self.streamInfo["Album"])
@@ -717,32 +739,48 @@ class NRSC5_DUI(object):
                 self.lblError.set_label("{:2.2f}% BER ".format(self.streamInfo["BER"][0]*100))
                 self.lblCall.set_label(" " + self.streamInfo["Callsign"])
                 self.lblName.set_label(self.streamInfo["Callsign"])
-                self.btnAudioLbl0.set_label(self.streamInfo["Streams"][0])
-                self.btnAudioLbl1.set_label(self.streamInfo["Streams"][1])
-                self.btnAudioLbl2.set_label(self.streamInfo["Streams"][2])
-                self.btnAudioLbl3.set_label(self.streamInfo["Streams"][3])
                 self.lblSlogan.set_label(self.streamInfo["Slogan"])
                 self.lblSlogan.set_tooltip_text(self.streamInfo["Slogan"])
                 self.lblMessage.set_label(self.streamInfo["Message"])
                 self.lblMessage.set_tooltip_text(self.streamInfo["Message"])
                 self.lblAlert.set_label(self.streamInfo["Alert"])
                 self.lblAlert.set_tooltip_text(self.streamInfo["Alert"])
+                self.btnAudioLbl0.set_label(self.streamInfo["Streams"][0])
+                self.btnAudioLbl1.set_label(self.streamInfo["Streams"][1])
+                self.btnAudioLbl2.set_label(self.streamInfo["Streams"][2])
+                self.btnAudioLbl3.set_label(self.streamInfo["Streams"][3])
                 self.lblAudioPrgs0.set_label(self.streamInfo["Streams"][0])
+                self.lblAudioPrgs0.set_tooltip_text(self.streamInfo["Streams"][0])
                 self.lblAudioPrgs1.set_label(self.streamInfo["Streams"][1])
+                self.lblAudioPrgs1.set_tooltip_text(self.streamInfo["Streams"][1])
                 self.lblAudioPrgs2.set_label(self.streamInfo["Streams"][2])
+                self.lblAudioPrgs2.set_tooltip_text(self.streamInfo["Streams"][2])
                 self.lblAudioPrgs3.set_label(self.streamInfo["Streams"][3])
+                self.lblAudioPrgs3.set_tooltip_text(self.streamInfo["Streams"][3])
                 self.lblAudioSvcs0.set_label(self.streamInfo["Programs"][0])
+                self.lblAudioSvcs0.set_tooltip_text(self.streamInfo["Programs"][0])
                 self.lblAudioSvcs1.set_label(self.streamInfo["Programs"][1])
+                self.lblAudioSvcs1.set_tooltip_text(self.streamInfo["Programs"][1])
                 self.lblAudioSvcs2.set_label(self.streamInfo["Programs"][2])
+                self.lblAudioSvcs2.set_tooltip_text(self.streamInfo["Programs"][2])
                 self.lblAudioSvcs3.set_label(self.streamInfo["Programs"][3])
+                self.lblAudioSvcs3.set_tooltip_text(self.streamInfo["Programs"][3])
                 self.lblDataSvcs0.set_label(self.streamInfo["Services"][0])
+                self.lblDataSvcs0.set_tooltip_text(self.streamInfo["Services"][0])
                 self.lblDataSvcs1.set_label(self.streamInfo["Services"][1])
+                self.lblDataSvcs1.set_tooltip_text(self.streamInfo["Services"][1])
                 self.lblDataSvcs2.set_label(self.streamInfo["Services"][2])
+                self.lblDataSvcs2.set_tooltip_text(self.streamInfo["Services"][2])
                 self.lblDataSvcs3.set_label(self.streamInfo["Services"][3])
+                self.lblDataSvcs3.set_tooltip_text(self.streamInfo["Services"][3])
                 self.lblDataType0.set_label(self.streamInfo["SvcTypes"][0])
+                self.lblDataType0.set_tooltip_text(self.streamInfo["SvcTypes"][0])
                 self.lblDataType1.set_label(self.streamInfo["SvcTypes"][1])
+                self.lblDataType1.set_tooltip_text(self.streamInfo["SvcTypes"][1])
                 self.lblDataType2.set_label(self.streamInfo["SvcTypes"][2])
+                self.lblDataType2.set_tooltip_text(self.streamInfo["SvcTypes"][2])
                 self.lblDataType3.set_label(self.streamInfo["SvcTypes"][3])
+                self.lblDataType3.set_tooltip_text(self.streamInfo["SvcTypes"][3])
                 self.lblMerLower.set_label("{:1.2f} dB".format(self.streamInfo["MER"][0]))
                 self.lblMerUpper.set_label("{:1.2f} dB".format(self.streamInfo["MER"][1]))
                 self.lblBerNow.set_label("{:1.3f}% (Now)".format(ber[0]))
@@ -757,10 +795,12 @@ class NRSC5_DUI(object):
                 # second param is lot id, if -1, show cover, otherwise show cover
                 # technically we should show the file with the matching lot id
 
-                if (int(self.lastXHDR[1]) > 0 and self.streamInfo["Cover"] != None):
+                #if (int(self.lastXHDR[1]) > 0 and self.streamInfo["Cover"] != None):
+                if self.lastXHDR == "0":
                     imagePath = os.path.join(aasDir, self.streamInfo["Cover"])
                     image = self.streamInfo["Cover"]
-                elif (int(self.lastXHDR[1]) < 0 or self.streamInfo["Cover"] == None):
+                #elif (int(self.lastXHDR[1]) < 0 or self.streamInfo["Cover"] == None):
+                elif self.lastXHDR == "1":
                     imagePath = os.path.join(aasDir, self.streamInfo["Logo"])
                     image = self.streamInfo["Logo"]
                     if (not os.path.isfile(imagePath)):
@@ -768,13 +808,17 @@ class NRSC5_DUI(object):
                         self.coverImage = ""
                     
                 # resize and display image if it changed and exists
-                if (self.xhdrChanged and self.lastImage != image and os.path.isfile(imagePath)):
+                #if (self.xhdrChanged and self.lastImage != image and os.path.isfile(imagePath)):
+                if (self.lastImage != image) and os.path.isfile(imagePath):
                     self.xhdrChanged = False
                     self.lastImage = image
+                    img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
                     #self.pixbuf = Gtk.gdk.pixbuf_new_from_file(imagePath)
                     self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
                     self.coverImage = imagePath
-                    self.handle_window_resize()
+                    self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
+                    self.imgCover.set_from_pixbuf(self.pixbuf)
+                    #self.handle_window_resize()
                     self.debugLog("Image Changed")
             finally:
                 Gdk.threads_leave()        
@@ -1062,11 +1106,15 @@ class NRSC5_DUI(object):
         elif (self.regex[13].match(line)):
             # match xhdr
             m = self.regex[13].match(line)
-            xhdr = [m.group(1),m.group(2)]
+            #xhdr = [m.group(1),m.group(2)]
+            xhdr = m.group(1)
+            mime = m.group(2)
+            lot  = m.group(3)
             if (xhdr != self.lastXHDR):
                 self.lastXHDR = xhdr
                 self.xhdrChanged = True
-                self.debugLog("XHDR Changed: {:s} (lot {:s})".format(xhdr[0],xhdr[1]))
+                #self.debugLog("XHDR Changed: {:s} (lot {:s})".format(xhdr[0],xhdr[1]))
+                self.debugLog("XHDR Changed: {:s} (lot {:s})".format(xhdr,lot))
         elif (self.regex[7].match(line)):
             # match album art
             m = self.regex[7].match(line)
@@ -1086,16 +1134,16 @@ class NRSC5_DUI(object):
                         self.debugLog("Corrupt file: " + fileName + " (expected: "+fileSize+" bytes, got "+actualFileSize+" bytes)")
 
                 #tmp = self.streams[int(self.spinStream.get_value()-1)][0]
-                tmp = self.streams[int(self.streamNum-1)][0]
+                tmp = self.streams[int(self.streamNum)][0]
 
                 #if (p == self.streams[int(self.spinStream.get_value()-1)][0]):
-                if (p == self.streams[int(self.streamNum-1)][0]):
+                if (p == self.streams[int(self.streamNum)][0]):
                     self.streamInfo["Cover"] = fileName
                     self.debugLog("Got Album Cover: " + fileName)
                 #elif (p == self.streams[int(self.spinStream.get_value()-1)][1]):
-                elif (p == self.streams[int(self.streamNum-1)][1]):
+                elif (p == self.streams[int(self.streamNum)][1]):
                     self.streamInfo["Logo"] = fileName
-                    self.stationLogos[self.stationStr][self.stationNum] = fileName    # add station logo to database
+                    self.stationLogos[self.stationStr][self.streamNum] = fileName    # add station logo to database
                     self.debugLog("Got Station Logo: " + fileName)
 
                 elif(fileName[headerOffset:(5+headerOffset)] == "DWRO_" and mapDir is not None):
@@ -1129,7 +1177,7 @@ class NRSC5_DUI(object):
             # match stream
             m = self.regex[11].match(line)
             t = m.group(1) # stream type
-            s = int(m.group(2), 16) # stream number
+            s = int(m.group(2), 10) # stream number
             n = m.group(3)
 
             self.debugLog("Found Stream: Type {:s}, Number {:02X}". format(t, s))
@@ -1264,16 +1312,16 @@ class NRSC5_DUI(object):
             "Slogan": "",           # station slogan
             "Message": "",          # station message
             "Alert": "",            # station alert
-            "Streams": ["","","",""],  # audio stream names
-            "Programs": ["","","",""], # audio stream types
-            "Services": ["","","",""], # data service names
-            "SvcTypes": ["","","",""], # data service types
             "Title": "",            # track title
             "Album": "",            # track album
             "Genre": "",            # track genre
             "Artist": "",           # track artist
             "Cover": "",            # filename of track cover
             "Logo": "",             # station logo
+            "Streams": ["","","",""],  # audio stream names
+            "Programs": ["","","",""], # audio stream types
+            "Services": ["","","",""], # data service names
+            "SvcTypes": ["","","",""], # data service types
             "Bitrate": 0,           # current stream bit rate
             "MER": [0,0],           # modulation error ratio: lower, upper
             "BER": [0,0,0,0],       # bit error rate: current, average, min, max
@@ -1364,9 +1412,9 @@ class NRSC5_DUI(object):
                 self.mainWindow.move(config["WindowX"], config["WindowY"])
                 self.spinFreq.set_value(config["Frequency"])
                 #self.spinStream.set_value(config["Stream"])
-                self.streamNum = config["Stream"]
+                self.streamNum = config["Stream"]-1
                 if (self.streamNum < 0):
-                    self.streamNum = 1
+                    self.streamNum = 0
                 self.set_program_btns()
                 self.spinGain.set_value(config["Gain"])
                 self.cbAutoGain.set_active(config["AutoGain"])
@@ -1445,7 +1493,7 @@ class NRSC5_DUI(object):
                     "Height"    : height,
                     "Frequency" : self.spinFreq.get_value(),
                     #"Stream"    : int(self.spinStream.get_value()),
-                    "Stream"    : int(self.streamNum),
+                    "Stream"    : int(self.streamNum)+1,
                     "Gain"      : self.spinGain.get_value(),
                     "AutoGain"  : self.cbAutoGain.get_active(),
                     "PPMError"  : int(self.spinPPM.get_value()),
