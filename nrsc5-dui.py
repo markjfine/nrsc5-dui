@@ -891,7 +891,13 @@ class NRSC5_DUI(object):
                         tileFile = os.path.join(mapDir, "TrafficMap_{:g}_{:g}.png".format(i,j))          # get path to tile
                         imgMap.paste(Image.open(tileFile), (j*200, i*200))                              # paste tile into map
                         os.remove(tileFile)                                                             # delete tile image
-                
+
+                # now put a timestamp on it. 
+                imgMap   = imgMap.convert("RGBA")               
+                posTS    = (imgMap.size[0]-235, imgMap.size[1]-29)                                      # calculate position to put timestamp (bottom right)
+                imgTS    = self.mkTimestamp(t, imgMap.size, posTS)                                      # create timestamp
+                imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
+
                 imgMap.save(os.path.join(mapDir, "TrafficMap.png"))                                      # save traffic map
                 
                 # display on map page
