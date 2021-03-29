@@ -1,5 +1,5 @@
-NRSC5-DUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5).  
-It makes it easy to play your favorite FM HD radio stations using an RTL-SDR dongle.  
+NRSC5-DUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5).
+It makes it easy to play your favorite FM HD radio stations using an RTL-SDR dongle.
 It will also display weather radar and traffic maps found on most iHeart radio
 stations.
 
@@ -46,7 +46,7 @@ From the terminal, start nrsc5-dui by entering: `python3 nrsc5-dui.py`.
 ## Settings
 You may first change some optional parameters of how nrsc5 works from the Settings tab in nrsc5-dui:
 Set the gain to Auto, or optionally enter an RF gain in dB that has known to work well for some stations.  
-Enter a PPM correction value if your RTL-SDR dongle has an offset.
+Enter a PPM correction value if your RTL-SDR dongle has an offset.  
 Enter the number of the desired device if you have more than one RTL-SDR dongle.  
 Check `Log to file` to enable writing debug information from nrsc5 to nrsc5.log.
 
@@ -54,19 +54,19 @@ Check `Log to file` to enable writing debug information from nrsc5 to nrsc5.log.
 Enter the frequency in MHz of the station you want to play and click the triangular Play button on the toolbar, or just hit return.
 When the receiver attains synchronization, the pilot in the lower left corner of the status bar turn green. It return to gray if synchronization is lost.
 If the device itself becomes 'lost', the pilot will turn red to indicate an error has occurred (this is the theory, though I've yet to see this status message happen in practice).
-The synchronization process may take about 10 seconds, and the station will begin to play. This depends upon signal strength and whether it's relatively free from adjacent interference.   
+The synchronization process may take about 10 seconds, and the station will begin to play. This depends upon signal strength and whether it's relatively free from adjacent interference.
 After a short while, the station name will appear to the right of the frequency, and the available streams will show on a row of buttons just beneath the frequency entry.
 Clicking one of these buttons will change to that particular stream.
 Note: No settings other than stream may be changed while the device is playing. 
 
 ## Album Art & Track Info
-Some stations will send album art and station logos. These will fill the Album Art tab, as they are made available by the station.  
-Most stations will send the song title, artist, album, and genre. These are displayed in the Track Info pane, also if available.  
+Some stations will send album art and station logos. These will fill the Album Art tab, as they are made available by the station.
+Most stations will send the song title, artist, album, and genre. These are displayed in the Track Info pane, also if available.
 
 ## Bookmarks
-When a station is playing, you can click the Bookmark Station button to add it to the bookmarks list.  
-You can click on the Name in the bookmarks list to edit it.  
-Double click the Station to tune to that particular station and stream.  
+When a station is playing, you can click the Bookmark Station button to add it to the bookmarks list.
+You can click on the Name in the bookmarks list to edit it.
+Double click the Station to tune to that particular station and stream.
 Click the Delete Bookmark button to delete it.
 
 ## Station Info
@@ -76,15 +76,15 @@ The stations available streams and data services, with a description of each wil
 This is a useful feature for noting which stations have [Total Traffic & Weather Network](https://www.ttwnetwork.com/) traffic and weather images.
 
 ### Signal Strength
-The Modulation Error Ratio for the lower and upper sidebands are displayed as they are determined.  
-Important: High MER values for both sidebands indicates a strong signal.  
+The Modulation Error Ratio for the lower and upper sidebands are displayed as they are determined.
+Important: High MER values for both sidebands indicates a strong signal.
 The current, average, minimum and maximum Bit Error Rates will also be displayed as they are determined.
 High BER values will cause the audio to glitch or drop out.
 The current BER is also shown on the status bar and may be used as a tuning tool.
 
 ## Maps
 When listening to radio stations operated by [iHeartMedia](http://iheartmedia.com/iheartmedia/stations), you may view live traffic maps
-and weather radar. The images are typically sent every few minutes and will fill the tab area once received, processed, and loaded.  
+and weather radar. The images are typically sent every few minutes and will fill the tab area once received, processed, and loaded.
 Clicking the Map Viewer button on the toolbar will open a larger window to view the maps at full size.
 The weather radar information from the last 12 hours will be stored and can be played back by selecting the Animate Radar option.
 The delay between frames (in seconds) can be adjusted by changing the Animation Speed value.
@@ -92,8 +92,8 @@ Other stations provide [Navteq/HERE](https://www.here.com) navigation informatio
 
 ### Map Customization
 The default map used for the weather radar comes from [OpenStreetMap](https://www.openstreetmap.org).
-You can replace the map.png image with a map from any website that will let you export map tiles.  
-The tiles used are (35,84) to (81,110) at zoom level 8. The image is 12032x6912 pixels.  
+You can replace the map.png image with a map from any website that will let you export map tiles.
+The tiles used are (35,84) to (81,110) at zoom level 8. The image is 12032x6912 pixels.
 The portion of the map used for your area is cached in the map directory.
 If you change the map image, you will have to delete the BaseMap images in the map directory so they will be recreated with the new map. 
 
