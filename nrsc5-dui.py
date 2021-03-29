@@ -65,7 +65,7 @@ class NRSC5_DUI(object):
         else:
             # Linux/Mac/proper posix
             # if nrsc5 and transcoder are not in the system path, set the full path here
-            self.nrsc5Path = "nrsc5"
+            self.nrsc5Path = "/usr/local/bin/nrsc5"
 
         self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
 
@@ -726,7 +726,7 @@ class NRSC5_DUI(object):
                 # restart nrsc5 if it crashes
                 self.debugLog("Restarting NRSC5")
                 time.sleep(1)
-                self.nrsc5 = Popen(self.nrsc5Args, stdin=PIPE, stderr=PIPE, stdout=PIPE, universal_newlines=True)
+                self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=PIPE, stderr=PIPE, universal_newlines=True)
 
     def set_synchronization(self, state):
         self.imgNoSynch.set_visible(state == 0)
@@ -1009,10 +1009,12 @@ class NRSC5_DUI(object):
     def proccessWeatherMaps(self):
         global mapDir
         numberOfMaps = 0
-        r     = re.compile("^map.WeatherMap_([a-zA-Z0-9]+)_([0-9]+).png")
+        #r     = re.compile("^map.WeatherMap_([a-zA-Z0-9]+)_([0-9]+).png")
+        r     = re.compile("^.*map.WeatherMap_([a-zA-Z0-9]+)_([0-9]+).png")
         now   = dtToTs(datetime.datetime.now(tz.tzutc()))                                               # get current time
         files = glob.glob(os.path.join(mapDir, "WeatherMap_") + "*.png")                                 # look for weather map files
         files.sort()                                                                                    # sort files
+        #print(files)
         for f in files:  
             m = r.match(f)                                                                              # match regex
             if (m):
@@ -1022,7 +1024,8 @@ class NRSC5_DUI(object):
                 # remove weather maps older than 12 hours
                 if (now - ts > 60*60*12):
                     try:
-                        if (f in self.weatherMaps): self.weatherMaps.pop(self.weatherMaps.index(f))     # remove from list
+                        if (f in self.weatherMaps):
+                            self.weatherMaps.pop(self.weatherMaps.index(f))                             # remove from list
                         os.remove(f)                                                                    # remove file
                         self.debugLog("Deleted old weather map: " + f)
                     except:
@@ -1030,7 +1033,8 @@ class NRSC5_DUI(object):
                         
                 # skip if not the correct location
                 elif (id == self.mapData["weatherID"]):
-                    if (f not in self.weatherMaps): self.weatherMaps.append(f)                          # add to list
+                    if (f not in self.weatherMaps):
+                        self.weatherMaps.append(f)                          # add to list
                     numberOfMaps += 1
         
 
@@ -1536,6 +1540,7 @@ class NRSC5_Map(object):
         # setup gui
         builder = Gtk.Builder()
         builder.add_from_file(os.path.join(resDir,"mapForm.glade"))
+        builder.connect_signals(self)
         
         self.parent         = parent                                                # parent class
         self.callback       = callback                                              # callback function
@@ -1562,8 +1567,10 @@ class NRSC5_Map(object):
         self.config = data["viewerConfig"]                                          # get the map viewer config
         self.mapWindow.resize(*self.config["windowSize"])                           # set the window size
         self.mapWindow.move(*self.config["windowPos"])                              # set the window position
-        if   (self.config["mode"] == 0): self.radMapTraffic.set_active(True)        # set the map radio buttons
-        elif (self.config["mode"] == 1): self.radMapWeather.set_active(True)
+        if (self.config["mode"] == 0):
+            self.radMapTraffic.set_active(True)        # set the map radio buttons
+        elif (self.config["mode"] == 1):
+            self.radMapWeather.set_active(True)
         self.setMap(self.config["mode"])                                            # display the current map
         
         self.chkAnimate.set_active(self.config["animate"])                          # set the animation mode
@@ -1615,7 +1622,7 @@ class NRSC5_Map(object):
         self.config["scale"] = btn.get_active()
         if (self.config["mode"] == 1):
             if (self.config["animate"]):
-                i = len(self.weatherMaps)-1 if (self.mapIndex-1<0) else self.mapIndex-1                 # get the index for the current map in the animation
+                i = len(self.weatherMaps)-1 if (self.mapIndex-1 < 0) else self.mapIndex-1                 # get the index for the current map in the animation
                 self.showImage(self.weatherMaps[i], self.config["scale"])                               # show the current map in the animation
             else:
                 self.showImage(self.data["weatherNow"], self.config["scale"])                           # show the most recent map
@@ -1670,8 +1677,10 @@ class NRSC5_Map(object):
     
     def showImage(self, fileName, scale):
         if (os.path.isfile(fileName)):
-            if (scale): mapImg = Image.open(fileName).resize((600,600), Image.LANCZOS)                  # open and scale map to fit window
-            else:       mapImg = Image.open(fileName)                                                   # open map
+            if (scale):
+                mapImg = Image.open(fileName).resize((600,600), Image.LANCZOS)                  # open and scale map to fit window
+            else:
+                mapImg = Image.open(fileName)                                                   # open map
             
             self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                            # convert image to pixbuf and display
         else:
@@ -1679,8 +1688,11 @@ class NRSC5_Map(object):
             self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)            # display missing image if file is not found
     
     def setMap(self, map):
-        if (map == 0):  self.showImage(os.path.join(mapDir, "TrafficMap.png"), False)                    # show traffic map
-        elif (map == 1):self.showImage(self.data["weatherNow"], self.config["scale"])                   # show weather map
+        global mapDir
+        if (map == 0):
+            self.showImage(os.path.join(mapDir, "TrafficMap.png"), False)                    # show traffic map
+        elif (map == 1):
+            self.showImage(self.data["weatherNow"], self.config["scale"])                    # show weather map
     
     def updated(self, imageType):
         if   (self.config["mode"] == 0):
