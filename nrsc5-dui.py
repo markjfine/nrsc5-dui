@@ -893,10 +893,14 @@ class NRSC5_DUI(object):
                         os.remove(tileFile)                                                             # delete tile image
 
                 # now put a timestamp on it. 
-                imgMap   = imgMap.convert("RGBA")               
-                posTS    = (imgMap.size[0]-235, imgMap.size[1]-29)                                      # calculate position to put timestamp (bottom right)
-                imgTS    = self.mkTimestamp(t, imgMap.size, posTS)                                      # create timestamp
-                imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
+                imgMap   = imgMap.convert("RGBA")
+                imgBig   = (981,981)                                                                     # size of a weather map
+                #posTS    = (imgMap.size[0]-235, imgMap.size[1]-29)                                      # calculate position to put timestamp (bottom right)
+                posTS    = (imgBig[0]-235, imgBig[1]-29)                                                 # calculate position to put timestamp (bottom right)
+                #imgTS    = self.mkTimestamp(t, imgMap.size, posTS)                                      # create timestamp
+                imgTS    = self.mkTimestamp(t, imgBig, posTS)                                            # create timestamp for a weather map
+                imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), Image.LANCZOS)                 # resize it so it's proportional to the size of a traffic map (981 -> 600)
+                imgMap   = Image.alpha_composite(imgMap, imgTS)                                          # overlay timestamp on traffic map
 
                 imgMap.save(os.path.join(mapDir, "TrafficMap.png"))                                      # save traffic map
                 
@@ -1090,7 +1094,7 @@ class NRSC5_DUI(object):
         text  = "{:04g}-{:02g}-{:02g} {:02g}:{:02g}".format(t.year, t.month, t.day, t.hour, t.minute)   # format timestamp
         imgTS = Image.new("RGBA", size, (0,0,0,0))                                                      # create a blank image
         draw  = ImageDraw.Draw(imgTS)                                                                   # the drawing object
-        font  = ImageFont.truetype(os.path.join(resDir,"DejaVuSansMono.ttf"), 24)                  # DejaVu Sans Mono 24pt font
+        font  = ImageFont.truetype(os.path.join(resDir,"DejaVuSansMono.ttf"), 24)                       # DejaVu Sans Mono 24pt font
         draw.rectangle((x,y, x+231,y+25), outline="black", fill=(128,128,128,96))                       # draw a box around the text
         draw.text((x+3,y), text, fill="black", font=font)                                               # draw the text
         return imgTS                                                                                    # return the image
