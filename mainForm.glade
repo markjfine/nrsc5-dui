@@ -428,7 +428,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Name:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -455,7 +455,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Slogan:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -488,7 +488,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Message:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -521,7 +521,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Alert:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -554,7 +554,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Bit Rate:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">4</property>
@@ -586,7 +586,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Streams:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">5</property>
@@ -737,7 +737,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Data Svcs:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">7</property>
@@ -899,7 +899,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">MER:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">10</property>
@@ -944,7 +944,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">BER:</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">11</property>
@@ -1077,8 +1077,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">Gain</property>
-                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">Gain:</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="x_options">GTK_FILL</property>
@@ -1130,8 +1130,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">PPM Error</property>
-                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">PPM Error:</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -1184,8 +1184,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">RTL Device</property>
-                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">RTL Device:</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">2</property>
@@ -1252,9 +1252,9 @@
                           <object class="GtkLabel" id="lblGain3">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">0</property>
+                            <property name="xalign">1</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">Log to File</property>
+                            <property name="label" translatable="yes">Log to File:</property>
                           </object>
                           <packing>
                             <property name="top_attach">3</property>
@@ -1458,8 +1458,8 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
-                        <property name="label" translatable="yes">Title</property>
-                        <property name="xalign">0</property>
+                        <property name="label" translatable="yes">Title:</property>
+                        <property name="xalign">1</property>
                       </object>
                       <packing>
                         <property name="x_options">GTK_FILL</property>
@@ -1471,8 +1471,8 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
-                        <property name="label" translatable="yes">Artist</property>
-                        <property name="xalign">0</property>
+                        <property name="label" translatable="yes">Artist:</property>
+                        <property name="xalign">1</property>
                       </object>
                       <packing>
                         <property name="top_attach">1</property>
@@ -1486,8 +1486,8 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
-                        <property name="label" translatable="yes">Album</property>
-                        <property name="xalign">0</property>
+                        <property name="label" translatable="yes">Album:</property>
+                        <property name="xalign">1</property>
                       </object>
                       <packing>
                         <property name="top_attach">2</property>
@@ -1501,8 +1501,8 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
-                        <property name="label" translatable="yes">Genre</property>
-                        <property name="xalign">0</property>
+                        <property name="label" translatable="yes">Genre:</property>
+                        <property name="xalign">1</property>
                       </object>
                       <packing>
                         <property name="top_attach">3</property>
@@ -1512,13 +1512,16 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtTitle">
+                      <object class="GtkLabel" id="txtTitle">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="editable">False</property>
-                        <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
+                        <property name="can_focus">False</property>
+                        <!--property name="editable">False</property-->
+                        <!--property name="invisible_char">●</property-->
+                        <!--property name="primary_icon_activatable">False</property-->
+                        <!--property name="secondary_icon_activatable">False</property-->
+                        <property name="xpad">10</property>
+                        <property name="ypad">10</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1527,13 +1530,16 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtArtist">
+                      <object class="GtkLabel" id="txtArtist">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="editable">False</property>
-                        <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
+                        <property name="can_focus">False</property>
+                        <!--property name="editable">False</property-->
+                        <!--property name="invisible_char">●</property-->
+                        <!--property name="primary_icon_activatable">False</property-->
+                        <!--property name="secondary_icon_activatable">False</property-->
+                        <property name="xpad">10</property>
+                        <property name="ypad">10</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1544,13 +1550,16 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtAlbum">
+                      <object class="GtkLabel" id="txtAlbum">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="editable">False</property>
-                        <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
+                        <property name="can_focus">False</property>
+                        <!--property name="editable">False</property-->
+                        <!--property name="invisible_char">●</property-->
+                        <!--property name="primary_icon_activatable">False</property-->
+                        <!--property name="secondary_icon_activatable">False</property-->
+                        <property name="xpad">10</property>
+                        <property name="ypad">10</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1561,13 +1570,16 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtGenre">
+                      <object class="GtkLabel" id="txtGenre">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="editable">False</property>
-                        <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
+                        <property name="can_focus">False</property>
+                        <!--property name="editable">False</property-->
+                        <!--property name="invisible_char">●</property-->
+                        <!--property name="primary_icon_activatable">False</property-->
+                        <!--property name="secondary_icon_activatable">False</property-->
+                        <property name="xpad">10</property>
+                        <property name="ypad">10</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>

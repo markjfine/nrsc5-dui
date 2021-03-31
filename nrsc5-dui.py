@@ -178,51 +178,24 @@ class NRSC5_DUI(object):
             76 : "Special Reading Services"
         }
 
+        self.pointer_cursor = Gdk.Cursor(Gdk.CursorType.LEFT_PTR)
+        self.hand_cursor = Gdk.Cursor(Gdk.CursorType.HAND2)
+
         # set events on info labels
-        self.btnAudioPrgs0.set_property("name","btn_prg0")
-        self.btnAudioPrgs0.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.btnAudioPrgs0.connect("button-press-event", self.on_program_select)      
-        self.btnAudioPrgs1.set_property("name","btn_prg1")
-        self.btnAudioPrgs1.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.btnAudioPrgs1.connect("button-press-event", self.on_program_select)
-        self.btnAudioPrgs2.set_property("name","btn_prg2")
-        self.btnAudioPrgs2.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.btnAudioPrgs2.connect("button-press-event", self.on_program_select)
-        self.btnAudioPrgs3.set_property("name","btn_prg3")
-        self.btnAudioPrgs3.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.btnAudioPrgs3.connect("button-press-event", self.on_program_select)
-        self.lblAudioPrgs0.set_property("name","prg0")
-        self.lblAudioPrgs0.set_has_window(True)
-        self.lblAudioPrgs0.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.lblAudioPrgs0.connect("button-press-event", self.on_program_select)      
-        self.lblAudioPrgs1.set_property("name","prg1")
-        self.lblAudioPrgs1.set_has_window(True)
-        self.lblAudioPrgs1.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.lblAudioPrgs1.connect("button-press-event", self.on_program_select)
-        self.lblAudioPrgs2.set_property("name","prg2")
-        self.lblAudioPrgs2.set_has_window(True)
-        self.lblAudioPrgs2.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.lblAudioPrgs2.connect("button-press-event", self.on_program_select)
-        self.lblAudioPrgs3.set_property("name","prg3")
-        self.lblAudioPrgs3.set_has_window(True)
-        self.lblAudioPrgs3.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.lblAudioPrgs3.connect("button-press-event", self.on_program_select)
-        self.lblAudioSvcs0.set_property("name","svc0")
-        self.lblAudioSvcs0.set_has_window(True)
-        self.lblAudioSvcs0.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.lblAudioSvcs0.connect("button-press-event", self.on_program_select)
-        self.lblAudioSvcs1.set_property("name","svc1")
-        self.lblAudioSvcs1.set_has_window(True)
-        self.lblAudioSvcs1.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.lblAudioSvcs1.connect("button-press-event", self.on_program_select)
-        self.lblAudioSvcs2.set_property("name","svc2")
-        self.lblAudioSvcs2.set_has_window(True)
-        self.lblAudioSvcs2.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.lblAudioSvcs2.connect("button-press-event", self.on_program_select)
-        self.lblAudioSvcs3.set_property("name","svc3")
-        self.lblAudioSvcs3.set_has_window(True)
-        self.lblAudioSvcs3.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.lblAudioSvcs3.connect("button-press-event", self.on_program_select)
+        self.set_tuning_actions(self.btnAudioPrgs0, "btn_prg0", False, False)
+        self.set_tuning_actions(self.btnAudioPrgs1, "btn_prg1", False, False)
+        self.set_tuning_actions(self.btnAudioPrgs2, "btn_prg2", False, False)
+        self.set_tuning_actions(self.btnAudioPrgs3, "btn_prg3", False, False)
+
+        self.set_tuning_actions(self.lblAudioPrgs0, "prg0", True, True)
+        self.set_tuning_actions(self.lblAudioPrgs1, "prg1", True, True)
+        self.set_tuning_actions(self.lblAudioPrgs2, "prg2", True, True)
+        self.set_tuning_actions(self.lblAudioPrgs3, "prg3", True, True)
+
+        self.set_tuning_actions(self.lblAudioSvcs0, "svc0", True, True)
+        self.set_tuning_actions(self.lblAudioSvcs1, "svc1", True, True)
+        self.set_tuning_actions(self.lblAudioSvcs2, "svc2", True, True)
+        self.set_tuning_actions(self.lblAudioSvcs3, "svc3", True, True)
 
         # setup bookmarks listview
         nameRenderer = Gtk.CellRendererText()
@@ -287,6 +260,20 @@ class NRSC5_DUI(object):
         
         # set up pty
         self.nrsc5master,self.nrsc5slave = pty.openpty()
+
+    def set_tuning_actions(self, widget, name, has_win, set_curs):
+        widget.set_property("name",name)
+        if has_win:
+            widget.set_has_window(True)
+        widget.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        widget.connect("button-press-event", self.on_program_select)
+        if set_curs:
+            widget.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK)
+            widget.connect("enter-notify-event", self.on_enter_set_cursor)
+
+    def on_enter_set_cursor(self, widget, event):
+        if (widget.get_label() != ""):
+            widget.get_window().set_cursor(self.hand_cursor)
 
     def img_to_pixbuf(self,img):
         """convert PIL.Image to GdkPixbuf.Pixbuf"""
@@ -604,7 +591,8 @@ class NRSC5_DUI(object):
 
     def on_program_select(self, _label, evt):
         stream_num = int(_label.get_property("name")[-1])
-        self.update_btns = not (_label.get_property("name")[0] == "b")
+        is_lbl = _label.get_property("name")[0] != "b"
+        self.update_btns = is_lbl
         self.streamNum = stream_num
         self.on_stream_changed()
 
