@@ -45,11 +45,10 @@ mapDir = os.path.join(runtimeDir, "map")  # map (data we process) file directory
 resDir = os.path.join(runtimeDir, "res")  # resource (application dependencies) file directory
 cfgDir = os.path.join(runtimeDir, "cfg")  # config file directory
 
-
 class NRSC5_DUI(object):
     def __init__(self):
         #gobject.threads_init()
-        Gdk.threads_init()
+        #Gdk.threads_init()
         self.windowsOS      = False                             # save our determination as a var in case we change how we determine.
 
         self.getControls()              # get controls and windows
@@ -184,6 +183,7 @@ class NRSC5_DUI(object):
 
         self.pointer_cursor = Gdk.Cursor(Gdk.CursorType.LEFT_PTR)
         self.hand_cursor = Gdk.Cursor(Gdk.CursorType.HAND2)
+        #self.missing_image = Gtk.Image.new_from_icon_name("MISSING_IMAGE",Gtk.IconSize.LARGE_TOOLBAR)
 
         # set events on info labels
         self.set_tuning_actions(self.btnAudioPrgs0, "btn_prg0", False, False)
@@ -299,13 +299,15 @@ class NRSC5_DUI(object):
                 map_img = Image.open(map_file).resize((img_size, img_size), Image.LANCZOS)
                 self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
             else:
-                self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
+                #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
+                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
         elif (self.mapData["mapMode"] == 1):
             if os.path.isfile(self.mapData["weatherNow"]):
                 map_img = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), Image.LANCZOS)
                 self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
             else:
-                self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
+                #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
+                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
 
     def displayLogo(self):
         global aasDir
@@ -676,7 +678,8 @@ class NRSC5_DUI(object):
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
                 else:
                     #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.ICON_SIZE_LARGE_TOOLBAR)    # display missing image if file is not found
-                    self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)    # display missing image if file is not found
+                    #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)    # display missing image if file is not found
+                    self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
             
             elif (btn == self.radMapWeather):
                 self.mapData["mapMode"] = 1
@@ -685,7 +688,8 @@ class NRSC5_DUI(object):
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display 
                 else:
                     #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.ICON_SIZE_LARGE_TOOLBAR)    # display missing image if file is not found
-                    self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)    # display missing image if file is not found
+                    #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)    # display missing image if file is not found
+                    self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
     
     def on_btnMap_clicked(self, btn):
         # open map viewer window
@@ -750,7 +754,7 @@ class NRSC5_DUI(object):
         # update status information
         def update():
             global aasDir
-            Gdk.threads_enter()
+            #Gdk.threads_enter()
             try:
                 imagePath = ""
                 image = ""
@@ -856,7 +860,8 @@ class NRSC5_DUI(object):
                     #self.handle_window_resize()
                     self.debugLog("Image Changed")
             finally:
-                Gdk.threads_leave()        
+                #Gdk.threads_leave()
+                pass        
         
         if (self.playing):
             #gobject.idle_add(update)
@@ -1716,7 +1721,8 @@ class NRSC5_Map(object):
             self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                            # convert image to pixbuf and display
         else:
             #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.ICON_SIZE_LARGE_TOOLBAR)            # display missing image if file is not found
-            self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)            # display missing image if file is not found
+            #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)            # display missing image if file is not found
+            self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
     
     def setMap(self, map):
         global mapDir
