@@ -94,6 +94,7 @@ class NRSC5_DUI(object):
         self.update_btns    = True
         self.set_program_btns()
         self.bookmarks      = []        # station bookmarks
+        self.booknames      = ["","","",""] # station bookmark names
         self.stationLogos   = {}        # station logos
         self.bookmarked     = False     # is current station bookmarked
         self.mapViewer      = None      # map viewer window
@@ -427,11 +428,21 @@ class NRSC5_DUI(object):
                 if (b[2] == freq):
                     self.bookmarked = True
                     break
-            
+
+            self.get_bookmark_names()
+
             self.btnBookmark.set_sensitive(not self.bookmarked)
             if (self.notebookMain.get_current_page() != 3):
                 self.btnDelete.set_sensitive(self.bookmarked)
     
+    def get_bookmark_names(self):
+        self.booknames = ["","","",""]
+        freq = str(int((self.spinFreq.get_value()+0.005)*10))
+        for b in self.bookmarks:
+            test = str(b[2])
+            if (test[:-1] == freq):
+                self.booknames[int(test[-1])-1] = b[1]
+
     def on_btnStop_clicked(self, btn):
         # stop playback
         if (self.playing):
@@ -487,6 +498,8 @@ class NRSC5_DUI(object):
         if (self.notebookMain.get_current_page() != 3):
             self.btnDelete.set_sensitive(True)  # enable delete button
 
+        self.get_bookmark_names()
+
     def on_btnDelete_clicked(self, btn):
         # select current station if not on bookmarks page
         if (self.notebookMain.get_current_page() != 3):
@@ -512,6 +525,8 @@ class NRSC5_DUI(object):
         if (self.notebookMain.get_current_page() != 3 and self.playing):
             self.btnBookmark.set_sensitive(True)
             self.bookmarked = False
+
+        self.get_bookmark_names()
 
     def on_btnAbout_activate(self, btn):
         # sets up and displays about dialog
@@ -724,6 +739,13 @@ class NRSC5_DUI(object):
         self.imgSynch.set_visible(state == 1)
         self.imgLostDevice.set_visible(state == -1)
 
+    def set_button_name(self, widget, stream):
+        temp = self.streamInfo["Streams"][stream]
+        if ((temp == "") or (temp == "MPS") or (temp[0:3] == "SPS") or (temp[0:2] == "HD") ):
+            if (self.booknames[stream] != ""):
+                temp = self.booknames[stream]
+        widget.set_label(temp)
+
     def checkStatus(self):
         # update status information
         def update():
@@ -754,10 +776,14 @@ class NRSC5_DUI(object):
                 self.lblMessage.set_tooltip_text(self.streamInfo["Message"])
                 self.lblAlert.set_label(self.streamInfo["Alert"])
                 self.lblAlert.set_tooltip_text(self.streamInfo["Alert"])
-                self.btnAudioLbl0.set_label(self.streamInfo["Streams"][0])
-                self.btnAudioLbl1.set_label(self.streamInfo["Streams"][1])
-                self.btnAudioLbl2.set_label(self.streamInfo["Streams"][2])
-                self.btnAudioLbl3.set_label(self.streamInfo["Streams"][3])
+                #self.btnAudioLbl0.set_label(self.streamInfo["Streams"][0])
+                self.set_button_name(self.btnAudioLbl0,0)
+                #self.btnAudioLbl1.set_label(self.streamInfo["Streams"][1])
+                self.set_button_name(self.btnAudioLbl1,1)
+                #self.btnAudioLbl2.set_label(self.streamInfo["Streams"][2])
+                self.set_button_name(self.btnAudioLbl2,2)
+                #self.btnAudioLbl3.set_label(self.streamInfo["Streams"][3])
+                self.set_button_name(self.btnAudioLbl3,3)
                 self.lblAudioPrgs0.set_label(self.streamInfo["Streams"][0])
                 self.lblAudioPrgs0.set_tooltip_text(self.streamInfo["Streams"][0])
                 self.lblAudioPrgs1.set_label(self.streamInfo["Streams"][1])
