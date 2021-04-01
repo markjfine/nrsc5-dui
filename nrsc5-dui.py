@@ -65,8 +65,11 @@ class NRSC5_DUI(object):
         else:
             # Linux/Mac/proper posix
             # if nrsc5 and transcoder are not in the system path, set the full path here
-            self.nrsc5Path = "/usr/local/bin/nrsc5"
-
+            arg1 = ""
+            if (len(sys.argv[1:]) > 0):
+                arg1 = sys.argv[1].strip()
+            self.nrsc5Path = arg1+"nrsc5"
+ 
         self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
 
         self.mapFile        = os.path.join(resDir, "map.png")
@@ -732,9 +735,13 @@ class NRSC5_DUI(object):
                 #ber = [self.streamInfo["BER"][0]*100,self.streamInfo["BER"][1]*100,self.streamInfo["BER"][2]*100,self.streamInfo["BER"][3]*100]
                 ber = [self.streamInfo["BER"][i]*100 for i in range(4)]
                 self.txtTitle.set_text(self.streamInfo["Title"])
+                self.txtTitle.set_tooltip_text(self.streamInfo["Title"])
                 self.txtArtist.set_text(self.streamInfo["Artist"])
+                self.txtArtist.set_tooltip_text(self.streamInfo["Artist"])
                 self.txtAlbum.set_text(self.streamInfo["Album"])
+                self.txtAlbum.set_tooltip_text(self.streamInfo["Album"])
                 self.txtGenre.set_text(self.streamInfo["Genre"])
+                self.txtGenre.set_tooltip_text(self.streamInfo["Genre"])
                 self.lblBitRate.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
                 self.lblBitRate2.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
                 #self.lblError.set_label("{:2.2f}% BER ".format(self.streamInfo["BER"][1]*100))
