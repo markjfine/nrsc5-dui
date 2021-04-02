@@ -14,6 +14,8 @@ The folowing programs are required to run NRSC5-DUI
 * [Python Imaging Library](http://pythonware.com/products/pil)
 * [NumPy](http://www.numpy.org)
 * [Python Dateutil](https://pypi.org/project/python-dateutil)
+* [urllib3](https://pypi.org/project/urllib3)
+* [pyOpenSSL](https://pypi.org/project/pyOpenSSL)
 * [nrsc5](https://github.com/theori-io/nrsc5)
 * [sox](https://github.com/chirlu/sox)
 
@@ -40,12 +42,14 @@ Set the gain to Auto, or optionally enter an RF gain in dB that has known to wor
 Enter a PPM correction value if your RTL-SDR dongle has an offset.  
 Enter the number of the desired device if you have more than one RTL-SDR dongle.  
 Check `Log to file` to enable writing debug information from nrsc5 to nrsc5.log.
+Check `DL Album Art` to enable automated downloading of album art from Discogs.
 
 ## Playing
 Enter the frequency in MHz of the station you want to play and either click the triangular Play button on the toolbar, or just hit return. When the receiver attains synchronization, the pilot in the lower left corner of the status bar will turn green. It will return to gray if synchronization is lost. If the device itself becomes 'lost', the pilot will turn red to indicate an error has occurred (this is the theory, though I've yet to see this status message happen in practice). The synchronization process may take about 10 seconds, and the station will begin to play. This depends upon signal strength and whether it's relatively free from adjacent interference. After a short while, the station name will appear to the right of the frequency, and the available streams will show on a row of buttons just beneath the frequency entry. Clicking one of these buttons will change to that particular stream. Note: No settings other than stream may be changed while the device is playing. 
 
 ## Album Art & Track Info
 Some stations will send album art and station logos. These will fill the Album Art tab, as they are made available by the station. Most stations will send the song title, artist, album, and genre. These are displayed in the Track Info pane, also if available.
+The user can override what the stations send by enabling the DL Album Art setting. This will use the Title and Artist information to search Discogs and retrieve album art. If no album art is found, the station logo will be used, if available.
 
 ## Bookmarks
 When a station is playing, you can click the Bookmark Station button to add it to the bookmarks list. You can click on the Name in the bookmarks list to edit it. Double click the Station to tune to that particular station and stream. Click the Delete Bookmark button to delete it. Note that some stations use the default MPS/SPS or HDn naming for their streams. In this case, the bookmark will be used to name the stream button.
