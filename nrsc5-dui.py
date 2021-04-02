@@ -31,6 +31,9 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib
 
+import urllib3
+from OpenSSL import SSL
+
 # print debug messages to stdout (if debugger is attached)
 debugMessages = (sys.gettrace() != None)
 debugAutoStart = True
@@ -53,6 +56,7 @@ class NRSC5_DUI(object):
 
         self.getControls()              # get controls and windows
         self.initStreamInfo()           # initilize stream info and clear status widgets
+        self.http = urllib3.PoolManager()
 
         self.debugLog("Local path determined as " + runtimeDir)
 
@@ -85,6 +89,7 @@ class NRSC5_DUI(object):
         self.logFile        = None      # nrsc5 log file
         self.lastImage      = ""        # last image file displayed
         self.coverImage     = ""
+        self.id3Changed     = False
         #self.lastXHDR       = ["", -1]  # the last XHDR data received
         self.lastXHDR       = ""        # the last XHDR data received
         self.stationStr     = ""        # current station frequency (string)
@@ -308,6 +313,82 @@ class NRSC5_DUI(object):
             else:
                 #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
                 self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
+
+    def id3_did_change(self):
+        oldTitle = self.txtTitle.get_label()
+        oldArtist = self.txtArtist.get_label()
+        newTitle = self.streamInfo["Title"]
+        newArtist = self.streamInfo["Artist"]
+        return ((newArtist != oldArtist) and (newTitle != oldTitle))
+
+    def get_cover_data(self, response):
+        check = -1
+        resultUrl = ""
+        resultArtist = ""
+        m = re.search(r"card card_large float_fix",response)
+        if (m.start() > -1):
+           response = response[m.start():]
+           m = re.search(r"<img data-src=\"",response)
+           if (m.start() > -1):
+               response = response[m.start()+15:]
+               m = re.search(r"\"",response)
+               if (m.start() > -1):
+                   resultUrl = response[:m.start()]
+                   response = response[m.start()+1:]
+                   m = re.search(r"<span title=\"",response)
+                   if (m.start() > -1):
+                       response = response[m.start()+13:]
+                       m = re.search(r"\"",response)
+                       if (m.start() > -1):
+                           resultArtist = response[:m.start()]
+                           response = response[m.start()+1:]
+                           check = 0
+        return check, response, resultUrl, resultArtist
+        
+
+    def get_cover_image_online(self):
+        got_cover = False
+
+        # only change when there's a new ID3
+        if (self.id3Changed):
+            baseStr = str(self.streamInfo["Artist"]+" - "+self.streamInfo["Title"]).replace("/","_").replace(":","_").replace("and","&")
+            saveStr = "aas/"+ baseStr.replace(" ","_")+".jpg"
+            searchStr = baseStr.replace(" ","+")
+
+            # does it already exist?
+            if (os.path.isfile(saveStr)):
+                self.coverImage = saveStr
+
+            # if not, get it from Discogs
+            else:
+                try:
+                    searchStr = "https://www.discogs.com/search/?q="+searchStr+"&type=all"
+                    r = self.http.request('GET',searchStr)
+                    if (r.status == 200):
+                        response = r.data.decode('utf-8')
+
+                        # loop through the page until you either get an artist match or you run out of page (check)
+                        while (not got_cover):
+                            resultUrl = ""
+                            resultArtist = ""
+                            check, response, resultUrl, resultArtist = self.get_cover_data(response)
+                            got_cover = (resultArtist.lower() in self.streamInfo["Artist"].lower()) and (check == 0)
+                        
+                        # if you got a match, save it
+                        if (resultUrl != ""):
+                            with self.http.request('GET', resultUrl, preload_content=False) as r, open(saveStr, 'wb') as out_file:       
+                                if (r.status == 200):
+                                    shutil.copyfileobj(r, out_file)
+                                    self.coverImage = saveStr
+
+                        # If no match use the station logo if there is one
+                        else:
+                            self.coverImage = self.stationLogos[self.stationStr][self.streamNum]
+                except:
+                    pass
+
+            # now display it by simulating a window resize
+            self.on_cover_resize(self.mainWindow)
 
     def displayLogo(self):
         global aasDir
@@ -763,6 +844,7 @@ class NRSC5_DUI(object):
                 image = ""
                 #ber = [self.streamInfo["BER"][0]*100,self.streamInfo["BER"][1]*100,self.streamInfo["BER"][2]*100,self.streamInfo["BER"][3]*100]
                 ber = [self.streamInfo["BER"][i]*100 for i in range(4)]
+                self.id3Changed = self.id3_did_change()
                 self.txtTitle.set_text(self.streamInfo["Title"])
                 self.txtTitle.set_tooltip_text(self.streamInfo["Title"])
                 self.txtArtist.set_text(self.streamInfo["Artist"])
@@ -836,6 +918,9 @@ class NRSC5_DUI(object):
                 
                 # second param is lot id, if -1, show cover, otherwise show cover
                 # technically we should show the file with the matching lot id
+
+                if (self.cbCovers.get_active() and self.id3Changed):
+                    self.get_cover_image_online()
 
                 #if (int(self.lastXHDR[1]) > 0 and self.streamInfo["Cover"] != None):
                 if self.lastXHDR == "0":
@@ -1302,6 +1387,7 @@ class NRSC5_DUI(object):
         self.spinRTL       = builder.get_object("spinRTL")
         self.cbAutoGain    = builder.get_object("cbAutoGain")
         self.cbLog         = builder.get_object("cbLog")
+        self.cbCovers      = builder.get_object("cbCovers")
         self.btnPlay       = builder.get_object("btnPlay")
         self.btnStop       = builder.get_object("btnStop")
         self.btnBookmark   = builder.get_object("btnBookmark")
@@ -1478,6 +1564,8 @@ class NRSC5_DUI(object):
                 self.spinPPM.set_value(config["PPMError"])
                 self.spinRTL.set_value(config["RTL"])
                 self.cbLog.set_active(config["LogToFile"])
+                if ("DLoadArt" in config):
+                    self.cbCovers.set_active(config["DLoadArt"])
                 self.bookmarks = config["Bookmarks"]
                 for bookmark in self.bookmarks:
                     self.lsBookmarks.append(bookmark)
@@ -1556,6 +1644,7 @@ class NRSC5_DUI(object):
                     "PPMError"  : int(self.spinPPM.get_value()),
                     "RTL"       : int(self.spinRTL.get_value()),
                     "LogToFile" : self.cbLog.get_active(),
+                    "DLoadArt"  : self.cbCovers.get_active(),
                     "Bookmarks" : self.bookmarks,
                     "MapData"   : self.mapData,
                 }
