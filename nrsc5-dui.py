@@ -538,11 +538,13 @@ class NRSC5_DUI(object):
 
         authors = [
             "Cody Nybo <cmnybo@gmail.com>",
-            "Clayton Smith <argilo@gmail.com>"
+            "Clayton Smith <argilo@gmail.com>",
+            "nefie <zefie@zefie.net>",
+            "Mark J. Fine <mark.fine@fineware-swl.com>"
         ]
 
         license = """
-        NRSC5 DUI - A graphical interface for nrsc5
+        NRSC5 DUI - A second-generation graphical interface for nrsc5
         Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -559,10 +561,11 @@ class NRSC5_DUI(object):
         about_dialog.set_transient_for(self.mainWindow)
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 DUI")
+        about_dialog.set_program_name("NRSC5 DUI")
         about_dialog.set_version("2.1.0")
         about_dialog.set_copyright("Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine")
         about_dialog.set_website("https://github.com/markjfine/nrsc5-dui")
-        about_dialog.set_comments("A second generation graphical interface for nrsc5.")
+        about_dialog.set_comments("A second-generation graphical interface for nrsc5.")
         about_dialog.set_authors(authors)
         about_dialog.set_license(license)
         #about_dialog.set_logo(Gtk.gdk.pixbuf_new_from_file("logo.png"))
