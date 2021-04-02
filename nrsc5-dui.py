@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #    NRSC5 DUI - A graphical interface for nrsc5
-#    Copyright (C) 2017  Cody Nybo
+#    Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -543,7 +543,7 @@ class NRSC5_DUI(object):
 
         license = """
         NRSC5 DUI - A graphical interface for nrsc5
-        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith
+        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -566,7 +566,7 @@ class NRSC5_DUI(object):
         about_dialog.set_authors(authors)
         about_dialog.set_license(license)
         #about_dialog.set_logo(Gtk.gdk.pixbuf_new_from_file("logo.png"))
-        about_dialog.set_logo(GdkPixbuf.Pixbuf.new_from_file("logo.png"))
+        about_dialog.set_logo(GdkPixbuf.Pixbuf.new_from_file("res/logo.png"))
 
         # callbacks for destroying the dialog
         def close(dialog, response, editor):
