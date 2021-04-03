@@ -305,14 +305,14 @@ class NRSC5_DUI(object):
                 self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
             else:
                 #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
-                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
+                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
         elif (self.mapData["mapMode"] == 1):
             if os.path.isfile(self.mapData["weatherNow"]):
                 map_img = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), Image.LANCZOS)
                 self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
             else:
                 #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
-                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
+                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
 
     def id3_did_change(self):
         oldTitle = self.txtTitle.get_label()
@@ -345,13 +345,22 @@ class NRSC5_DUI(object):
                            check = 0
         return check, response, resultUrl, resultArtist
         
+    def fix_artist(self):
+        newArtist = self.streamInfo["Artist"]
+        if ("/" in newArtist):
+            m = re.search(r"/",newArtist)
+            if (m.start() > -1):
+                newArtist = newArtist[:m.start()].strip()
+        return newArtist
 
     def get_cover_image_online(self):
         got_cover = False
 
         # only change when there's a new ID3
         if (self.id3Changed):
-            baseStr = str(self.streamInfo["Artist"]+" - "+self.streamInfo["Title"]).replace("/","_").replace(":","_").replace("and","&")
+            # only care about the first artist listed if separated by slashes
+            newArtist = self.fix_artist()
+            baseStr = str(newArtist +" - "+self.streamInfo["Title"]).replace("/","_").replace(":","_")
             saveStr = "aas/"+ baseStr.replace(" ","_")+".jpg"
             searchStr = baseStr.replace(" ","+")
 
@@ -372,7 +381,7 @@ class NRSC5_DUI(object):
                             resultUrl = ""
                             resultArtist = ""
                             check, response, resultUrl, resultArtist = self.get_cover_data(response)
-                            got_cover = (resultArtist.lower() in self.streamInfo["Artist"].lower()) and (check == 0)
+                            got_cover = (newArtist.lower() in resultArtist.lower()) and (check == 0)
                         
                         # if you got a match, save it
                         if (resultUrl != ""):
@@ -763,7 +772,7 @@ class NRSC5_DUI(object):
                 else:
                     #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.ICON_SIZE_LARGE_TOOLBAR)    # display missing image if file is not found
                     #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)    # display missing image if file is not found
-                    self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
+                    self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
             
             elif (btn == self.radMapWeather):
                 self.mapData["mapMode"] = 1
@@ -773,7 +782,7 @@ class NRSC5_DUI(object):
                 else:
                     #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.ICON_SIZE_LARGE_TOOLBAR)    # display missing image if file is not found
                     #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)    # display missing image if file is not found
-                    self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
+                    self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
     
     def on_btnMap_clicked(self, btn):
         # open map viewer window
@@ -919,9 +928,6 @@ class NRSC5_DUI(object):
                 # second param is lot id, if -1, show cover, otherwise show cover
                 # technically we should show the file with the matching lot id
 
-                if (self.cbCovers.get_active() and self.id3Changed):
-                    self.get_cover_image_online()
-
                 #if (int(self.lastXHDR[1]) > 0 and self.streamInfo["Cover"] != None):
                 if self.lastXHDR == "0":
                     imagePath = os.path.join(aasDir, self.streamInfo["Cover"])
@@ -947,6 +953,10 @@ class NRSC5_DUI(object):
                     self.imgCover.set_from_pixbuf(self.pixbuf)
                     #self.handle_window_resize()
                     self.debugLog("Image Changed")
+
+                if (self.cbCovers.get_active() and self.id3Changed):
+                    self.get_cover_image_online()
+
             finally:
                 #Gdk.threads_leave()
                 pass        
@@ -1814,7 +1824,7 @@ class NRSC5_Map(object):
         else:
             #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.ICON_SIZE_LARGE_TOOLBAR)            # display missing image if file is not found
             #self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)            # display missing image if file is not found
-            self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.LARGE_TOOLBAR)
+            self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
     
     def setMap(self, map):
         global mapDir
