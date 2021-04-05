@@ -292,10 +292,11 @@ class NRSC5_DUI(object):
     def on_cover_resize(self, container):
         global mapDir
         if self.coverImage != "":
-            img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file(self.coverImage)
-            pixbuf = pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
-            self.imgCover.set_from_pixbuf(pixbuf)
+            #img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
+            #pixbuf = GdkPixbuf.Pixbuf.new_from_file(self.coverImage)
+            #pixbuf = pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
+            #self.imgCover.set_from_pixbuf(pixbuf)
+            self.showArtwork(self.coverImage)
 
         img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12           
         if (self.mapData["mapMode"] == 0):
@@ -361,7 +362,8 @@ class NRSC5_DUI(object):
             # only care about the first artist listed if separated by slashes
             newArtist = self.fix_artist()
             baseStr = str(newArtist +" - "+self.streamInfo["Title"]).replace("/","_").replace(":","_")
-            saveStr = "aas/"+ baseStr.replace(" ","_")+".jpg"
+            #saveStr = "aas/"+ baseStr.replace(" ","_")+".jpg"
+            saveStr = os.path.join(aasDir, baseStr.replace(" ","_")+".jpg")
             searchStr = baseStr.replace(" ","+")
 
             # does it already exist?
@@ -392,12 +394,18 @@ class NRSC5_DUI(object):
 
                         # If no match use the station logo if there is one
                         else:
-                            self.coverImage = self.stationLogos[self.stationStr][self.streamNum]
+                            self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
                 except:
                     pass
 
             # now display it by simulating a window resize
             self.on_cover_resize(self.mainWindow)
+
+    def showArtwork(self, art):
+        img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
+        self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(art)
+        self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
+        self.imgCover.set_from_pixbuf(self.pixbuf)
 
     def displayLogo(self):
         global aasDir
@@ -407,13 +415,14 @@ class NRSC5_DUI(object):
             logo = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
             if (os.path.isfile(logo)):
                 self.streamInfo["Logo"] = self.stationLogos[self.stationStr][self.streamNum]
-                img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
+                #img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
                 #self.pixbuf = Gtk.gdk.pixbuf_new_from_file(logo)
-                self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(logo)
+                #self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(logo)
                 self.coverImage = logo
                 #self.handle_window_resize()
-                self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
-                self.imgCover.set_from_pixbuf(self.pixbuf)
+                #self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
+                #self.imgCover.set_from_pixbuf(self.pixbuf)
+                self.showArtwork(logo)
         else:
             # add entry in database for the station if it doesn't exist
             self.stationLogos[self.stationStr] = ["", "", "", ""]
@@ -440,7 +449,6 @@ class NRSC5_DUI(object):
 
     def on_window_resized(self,window):
         self.handle_window_resize()
-
 
     def on_btnPlay_clicked(self, btn):
         global aasDir
@@ -945,12 +953,13 @@ class NRSC5_DUI(object):
                 if (self.lastImage != image) and os.path.isfile(imagePath):
                     self.xhdrChanged = False
                     self.lastImage = image
-                    img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
+                    #img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
                     #self.pixbuf = Gtk.gdk.pixbuf_new_from_file(imagePath)
-                    self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
+                    #self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
                     self.coverImage = imagePath
-                    self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
-                    self.imgCover.set_from_pixbuf(self.pixbuf)
+                    #self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
+                    #self.imgCover.set_from_pixbuf(self.pixbuf)
+                    self.showArtwork(imagePath)
                     #self.handle_window_resize()
                     self.debugLog("Image Changed")
 
