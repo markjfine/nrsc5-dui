@@ -260,7 +260,8 @@ class NRSC5_DUI(object):
             re.compile("^[0-9\:]{8,8} .*Audio component:.* id=([\d]+).* port=([\d]+).* type=([\d]+) .*$"),      # 18 match port (and type)
             re.compile("^[0-9\:]{8,8} Synchronized$"),                                                          # 19 synchronized
             re.compile("^[0-9\:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
-            re.compile("^[0-9\:]{8,8} Lost device$")                                                            # 21 lost device
+            re.compile("^[0-9\:]{8,8} Lost device$"),                                                           # 21 lost device
+            re.compile("^[0-9\:]{8,8} Open device failed.$")                                                    # 22 No device
         ]
         
         self.loadSettings()
@@ -553,7 +554,7 @@ class NRSC5_DUI(object):
             if (self.nrsc5 is not None and not self.nrsc5.poll()):
                 self.nrsc5.terminate()
             
-            if (self.playerThread is not None):
+            if (self.playerThread is not None) and (btn is not None):
                 self.playerThread.join(1)
             
             # stop timer
@@ -1367,6 +1368,10 @@ class NRSC5_DUI(object):
         elif (self.regex[21].match(line)):
             # match lost device
             self.set_synchronization(-1)
+        elif (self.regex[22].match(line)):
+            # match Open device failed
+            self.on_btnStop_clicked(None)
+            self.set_synchronization(-1)
 
     def getControls(self):
         global resDir
@@ -1635,7 +1640,7 @@ class NRSC5_DUI(object):
         if (self.statusTimer is not None):
             self.statusTimer.cancel()
         
-        # wair for player thread to exit
+        # wait for player thread to exit
         #if (self.playerThread is not None and self.playerThread.isAlive()):
         if (self.playerThread is not None and self.playerThread.is_alive()):
             self.playerThread.join(1)
