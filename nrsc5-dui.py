@@ -1728,7 +1728,8 @@ class NRSC5_Map(object):
         self.spnSpeed       = builder.get_object("spnSpeed")
         self.adjSpeed       = builder.get_object("adjSpeed")
         self.imgKey         = builder.get_object("imgKey")
-        
+
+        self.imgKey.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file(os.path.join(resDir,"radar_key.png")))
         self.mapWindow.connect("delete-event", self.on_mapWindow_delete)
         
         self.config = data["viewerConfig"]                                          # get the map viewer config
