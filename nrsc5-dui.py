@@ -741,7 +741,7 @@ class NRSC5_DUI(object):
             # stop playback if playing
             if (self.playing):
                  self.on_btnStop_clicked(None)
-            
+            time.sleep(1)
             # play bookmarked station
             self.on_btnPlay_clicked(None)
 
