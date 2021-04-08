@@ -50,6 +50,7 @@ cfgDir = os.path.join(runtimeDir, "cfg")  # config file directory
 
 class NRSC5_DUI(object):
     def __init__(self):
+        global runtimeDir, resDir
         #gobject.threads_init()
         #Gdk.threads_init()
         self.windowsOS      = False                             # save our determination as a var in case we change how we determine.
@@ -357,6 +358,7 @@ class NRSC5_DUI(object):
         return newArtist
 
     def get_cover_image_online(self):
+        global aasDir
         got_cover = False
 
         # only change when there's a new ID3
@@ -631,6 +633,7 @@ class NRSC5_DUI(object):
         self.get_bookmark_names()
 
     def on_btnAbout_activate(self, btn):
+        global resDir
         # sets up and displays about dialog
         if self.about_dialog:
             self.about_dialog.present()
@@ -669,7 +672,7 @@ class NRSC5_DUI(object):
         about_dialog.set_authors(authors)
         about_dialog.set_license(license)
         #about_dialog.set_logo(Gtk.gdk.pixbuf_new_from_file("logo.png"))
-        about_dialog.set_logo(GdkPixbuf.Pixbuf.new_from_file("res/logo.png"))
+        about_dialog.set_logo(GdkPixbuf.Pixbuf.new_from_file(os.path.join(resDir,"logo.png")))
 
         # callbacks for destroying the dialog
         def close(dialog, response, editor):
@@ -1036,7 +1039,7 @@ class NRSC5_DUI(object):
                 if (self.mapViewer is not None): self.mapViewer.updated(0)                              # notify map viwerer if it's open
     
     def processWeatherOverlay(self, fileName):
-        global mapDir
+        global aasDir, mapDir
         r = re.compile("^[\d]+_DWRO_(.*)_.*_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2})_([0-9A-Fa-f]+)\..*$")                    # match file name
         m = r.match(fileName)
         
@@ -1211,6 +1214,7 @@ class NRSC5_DUI(object):
         return True
     
     def mkTimestamp(self, t, size, pos):
+        global resDir
         # create a timestamp image to overlay on the weathermap
         x,y   = pos
         text  = "{:04g}-{:02g}-{:02g} {:02g}:{:02g}".format(t.year, t.month, t.day, t.hour, t.minute)   # format timestamp
@@ -1382,11 +1386,13 @@ class NRSC5_DUI(object):
         
         # Windows
         self.mainWindow = builder.get_object("mainWindow")
+        self.mainWindow.set_icon_from_file(os.path.join(resDir,"logo.png"))
         self.mainWindow.connect("delete-event", self.shutdown)
         self.mainWindow.connect("destroy", Gtk.main_quit)
         self.about_dialog = None
         
         # get controls
+        self.image1        = builder.get_object("image1")
         self.notebookMain  = builder.get_object("notebookMain")
         self.alignmentCover = builder.get_object("alignmentCover")
         self.imgCover      = builder.get_object("imgCover")
@@ -1404,6 +1410,7 @@ class NRSC5_DUI(object):
         self.btnStop       = builder.get_object("btnStop")
         self.btnBookmark   = builder.get_object("btnBookmark")
         self.btnDelete     = builder.get_object("btnDelete")
+        self.btnMap        = builder.get_object("btnMap")
         self.radMapTraffic = builder.get_object("radMapTraffic")
         self.radMapWeather = builder.get_object("radMapWeather")
         self.txtTitle      = builder.get_object("txtTitle")
@@ -1457,6 +1464,12 @@ class NRSC5_DUI(object):
         
         self.lvBookmarks.set_model(self.lsBookmarks)
         self.lvBookmarks.get_selection().connect("changed", self.on_lvBookmarks_selection_changed)
+        
+        self.image1.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file(os.path.join(resDir,"weather.png")))
+        self.imgNoSynch.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file(os.path.join(resDir,"nosynch.png")))
+        self.imgSynch.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file(os.path.join(resDir,"synchpilot.png")))
+        self.imgLostDevice.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file(os.path.join(resDir,"lostdevice.png")))
+        self.btnMap.set_icon_widget(self.image1)
     
         self.mainWindow.connect("check-resize", self.on_cover_resize)
 
@@ -1619,6 +1632,7 @@ class NRSC5_DUI(object):
             self.debugLog("Error: Unable to create log file", True) 
     
     def shutdown(self, *args):
+        global cfgDir
         # stop map viewer animation if it's running
         if (self.mapViewer is not None and self.mapViewer.animateTimer is not None):
             self.mapViewer.animateTimer.cancel()
@@ -1689,6 +1703,7 @@ class NRSC5_DUI(object):
 
 class NRSC5_Map(object):
     def __init__(self, parent, callback, data):
+        global resDir
         # setup gui
         builder = Gtk.Builder()
         builder.add_from_file(os.path.join(resDir,"mapForm.glade"))
