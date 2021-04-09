@@ -362,48 +362,48 @@ class NRSC5_DUI(object):
         got_cover = False
 
         # only change when there's a new ID3
-        if (self.id3Changed):
-            # only care about the first artist listed if separated by slashes
-            newArtist = self.fix_artist()
-            baseStr = str(newArtist +" - "+self.streamInfo["Title"]).replace("/","_").replace(":","_")
-            #saveStr = "aas/"+ baseStr.replace(" ","_")+".jpg"
-            saveStr = os.path.join(aasDir, baseStr.replace(" ","_")+".jpg")
-            searchStr = baseStr.replace(" ","+")
+        #if (self.id3Changed):
 
-            # does it already exist?
-            if (os.path.isfile(saveStr)):
-                self.coverImage = saveStr
+        # only care about the first artist listed if separated by slashes
+        newArtist = self.fix_artist()
+        baseStr = str(newArtist +" - "+self.streamInfo["Title"]).replace("/","_").replace(":","_")
+        saveStr = os.path.join(aasDir, baseStr.replace(" ","_")+".jpg")
+        searchStr = baseStr.replace(" ","+")
 
-            # if not, get it from Discogs
-            else:
-                try:
-                    searchStr = "https://www.discogs.com/search/?q="+searchStr+"&type=all"
-                    r = self.http.request('GET',searchStr)
-                    if (r.status == 200):
-                        response = r.data.decode('utf-8')
+        # does it already exist?
+        if (os.path.isfile(saveStr)):
+            self.coverImage = saveStr
 
-                        # loop through the page until you either get an artist match or you run out of page (check)
-                        while (not got_cover):
-                            resultUrl = ""
-                            resultArtist = ""
-                            check, response, resultUrl, resultArtist = self.get_cover_data(response)
-                            got_cover = (newArtist.lower() in resultArtist.lower()) and (check == 0)
-                        
-                        # if you got a match, save it
-                        if (resultUrl != ""):
-                            with self.http.request('GET', resultUrl, preload_content=False) as r, open(saveStr, 'wb') as out_file:       
-                                if (r.status == 200):
-                                    shutil.copyfileobj(r, out_file)
-                                    self.coverImage = saveStr
+        # if not, get it from Discogs
+        else:
+            try:
+                searchStr = "https://www.discogs.com/search/?q="+searchStr+"&type=all"
+                r = self.http.request('GET',searchStr)
+                if (r.status == 200):
+                    response = r.data.decode('utf-8')
 
-                        # If no match use the station logo if there is one
-                        else:
-                            self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
-                except:
-                    pass
+                    # loop through the page until you either get an artist match or you run out of page (check)
+                    while (not got_cover):
+                        resultUrl = ""
+                        resultArtist = ""
+                        check, response, resultUrl, resultArtist = self.get_cover_data(response)
+                        got_cover = (newArtist.lower() in resultArtist.lower()) and (check == 0)
+                    
+                    # if you got a match, save it
+                    if (resultUrl != ""):
+                        with self.http.request('GET', resultUrl, preload_content=False) as r, open(saveStr, 'wb') as out_file:       
+                            if (r.status == 200):
+                                shutil.copyfileobj(r, out_file)
+                                self.coverImage = saveStr
 
-            # now display it by simulating a window resize
-            self.on_cover_resize(self.mainWindow)
+                    # If no match use the station logo if there is one
+                    else:
+                        self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
+            except:
+                pass
+
+        # now display it by simulating a window resize
+        self.on_cover_resize(self.mainWindow)
 
     def showArtwork(self, art):
         img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
