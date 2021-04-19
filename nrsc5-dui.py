@@ -933,12 +933,12 @@ class NRSC5_DUI(object):
                 # technically we should show the file with the matching lot id
 
                 #if (int(self.lastXHDR[1]) > 0 and self.streamInfo["Cover"] != None):
-                if self.lastXHDR == "0":
+                if ((self.lastXHDR == "0") and (self.streamInfo["Cover"] != "")):
                     imagePath = os.path.join(aasDir, self.streamInfo["Cover"])
                     image = self.streamInfo["Cover"]
                     #print("lastXHDR is 0, set image to Cover:"+imagePath)
                 #elif (int(self.lastXHDR[1]) < 0 or self.streamInfo["Cover"] == None):
-                elif self.lastXHDR == "1":
+                elif (((self.lastXHDR == "1") or (self.lastImage != "")) and (self.streamInfo["Logo"] != "")):
                     imagePath = os.path.join(aasDir, self.streamInfo["Logo"])
                     image = self.streamInfo["Logo"]
                     #print("lastXHDR is 1, set image to Logo:"+imagePath)
