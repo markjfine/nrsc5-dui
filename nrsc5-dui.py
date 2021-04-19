@@ -58,6 +58,7 @@ class NRSC5_DUI(object):
         self.getControls()              # get controls and windows
         self.initStreamInfo()           # initilize stream info and clear status widgets
         self.http = urllib3.PoolManager()
+        # self.headers = urllib3.util.make_headers(keep_alive=True, accept_encoding=True, user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:87.0) Gecko/20100101 Firefox/87.0")
 
         self.debugLog("Local path determined as " + runtimeDir)
 
@@ -247,7 +248,7 @@ class NRSC5_DUI(object):
             re.compile("^[0-9\:]{8,8} Title: (.*)$"),                                                           #  4 match title
             re.compile("^[0-9\:]{8,8} Artist: (.*)$"),                                                          #  5 match artist
             re.compile("^[0-9\:]{8,8} Album: (.*)$"),                                                           #  6 match album
-            re.compile("^[0-9\:]{8,8} LOT file: port=([\d]+) lot=([\d]+) name=(.*\.(?:jpg|png|txt)) size=([\d]+) mime=([\w]+)$"), #  7 match file (album art, maps, weather info)
+            re.compile("^[0-9\:]{8,8} LOT file: port=([\d]+) lot=([\d]+) name=(.*\.(?:jpg|jpeg|png|txt)) size=([\d]+) mime=([\w]+)$"), #  7 match file (album art, maps, weather info)
             re.compile("^[0-9\:]{8,8} MER: (-?[\d]+\.[\d]+) dB \(lower\), (-?[\d]+\.[\d]+) dB \(upper\)$"),     #  8 match MER
             re.compile("^[0-9\:]{8,8} BER: (0\.[\d]+), avg: (0\.[\d]+), min: (0\.[\d]+), max: (0\.[\d]+)$"),    #  9 match BER
             re.compile("^[0-9\:]{8,8} Best gain: (.*) dB,.*$"),                                                 # 10 match gain
@@ -319,10 +320,10 @@ class NRSC5_DUI(object):
                 self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
 
     def id3_did_change(self):
-        oldTitle = self.txtTitle.get_label()
-        oldArtist = self.txtArtist.get_label()
-        newTitle = self.streamInfo["Title"]
-        newArtist = self.streamInfo["Artist"]
+        oldTitle = self.txtTitle.get_label().strip()
+        oldArtist = self.txtArtist.get_label().strip()
+        newTitle = self.streamInfo["Title"].strip()
+        newArtist = self.streamInfo["Artist"].strip()
         return ((newArtist != oldArtist) and (newTitle != oldTitle))
 
     def get_cover_data(self, response):
@@ -378,7 +379,8 @@ class NRSC5_DUI(object):
         else:
             try:
                 searchStr = "https://www.discogs.com/search/?q="+searchStr+"&type=all"
-                r = self.http.request('GET',searchStr)
+                #r = self.http.request('GET', searchStr, self.headers)
+                r = self.http.request('GET', searchStr)
                 if (r.status == 200):
                     response = r.data.decode('utf-8')
 
@@ -513,7 +515,8 @@ class NRSC5_DUI(object):
             self.playing = True
             #self.lastXHDR = ["", -1]
             self.lastXHDR = ""
-            
+            #print("lastXHDR reset")            
+
             # start the player thread
             self.playerThread = Thread(target=self.play)
             self.playerThread.start()
@@ -699,6 +702,7 @@ class NRSC5_DUI(object):
         self.streamInfo["Logo"] = ""
         self.streamInfo["Bitrate"] = 0
         self.set_program_btns()
+        #print("lastXHDR, cover, and logo reset")
         if self.playing:
             self.nrsc5msg = str(self.streamNum)
             self.displayLogo()
@@ -932,17 +936,20 @@ class NRSC5_DUI(object):
                 if self.lastXHDR == "0":
                     imagePath = os.path.join(aasDir, self.streamInfo["Cover"])
                     image = self.streamInfo["Cover"]
+                    #print("lastXHDR is 0, set image to Cover:"+imagePath)
                 #elif (int(self.lastXHDR[1]) < 0 or self.streamInfo["Cover"] == None):
                 elif self.lastXHDR == "1":
                     imagePath = os.path.join(aasDir, self.streamInfo["Logo"])
                     image = self.streamInfo["Logo"]
+                    #print("lastXHDR is 1, set image to Logo:"+imagePath)
                     if (not os.path.isfile(imagePath)):
                         self.imgCover.clear()
                         self.coverImage = ""
                     
                 # resize and display image if it changed and exists
-                #if (self.xhdrChanged and self.lastImage != image and os.path.isfile(imagePath)):
-                if (self.lastImage != image) and os.path.isfile(imagePath):
+                if (self.xhdrChanged and (self.lastImage != image) and os.path.isfile(imagePath)):
+                #if ((self.lastImage != image) and os.path.isfile(imagePath)):
+                    #print("xhdrChanged, image changed, and file exists:"+imagePath)
                     self.xhdrChanged = False
                     self.lastImage = image
                     #img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
@@ -952,6 +959,7 @@ class NRSC5_DUI(object):
                     #self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
                     #self.imgCover.set_from_pixbuf(self.pixbuf)
                     self.showArtwork(imagePath)
+                    #print("displaying image:"+imagePath)
                     #self.handle_window_resize()
                     self.debugLog("Image Changed")
 
@@ -1264,6 +1272,7 @@ class NRSC5_DUI(object):
             xhdr = m.group(1)
             mime = m.group(2)
             lot  = m.group(3)
+            #print("got XHDR msg xhdr:"+xhdr+" for lot:"+lot)
             if (xhdr != self.lastXHDR):
                 self.lastXHDR = xhdr
                 self.xhdrChanged = True
@@ -1279,6 +1288,7 @@ class NRSC5_DUI(object):
 
                 p = int(m.group(1),16)
 
+                #print("got LOT msg, port:"+str(p)+" lot_name:"+fileName+" size:"+str(fileSize))
                 # check file existance and size .. right now we just debug log
                 if (not os.path.isfile(os.path.join(aasDir,fileName))):
                     self.debugLog("Missing file: " + fileName)
@@ -1294,11 +1304,13 @@ class NRSC5_DUI(object):
                 if (p == self.streams[int(self.streamNum)][0]):
                     self.streamInfo["Cover"] = fileName
                     self.debugLog("Got Album Cover: " + fileName)
+                    #print("got Cover:"+fileName)
                 #elif (p == self.streams[int(self.spinStream.get_value()-1)][1]):
                 elif (p == self.streams[int(self.streamNum)][1]):
                     self.streamInfo["Logo"] = fileName
                     self.stationLogos[self.stationStr][self.streamNum] = fileName    # add station logo to database
                     self.debugLog("Got Station Logo: " + fileName)
+                    #print("got Logo:"+fileName)
 
                 elif(fileName[headerOffset:(5+headerOffset)] == "DWRO_" and mapDir is not None):
                     self.processWeatherOverlay(fileName)
@@ -1495,6 +1507,7 @@ class NRSC5_DUI(object):
             "BER": [0,0,0,0],       # bit error rate: current, average, min, max
             "Gain": 0               # automatic gain
         }
+        #print("reset cover and logo")
         
         self.streams      = [[],[],[],[]]
         self.numStreams   = 0
