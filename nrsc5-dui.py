@@ -94,6 +94,7 @@ class NRSC5_DUI(object):
         self.id3Changed     = False
         #self.lastXHDR       = ["", -1]  # the last XHDR data received
         self.lastXHDR       = ""        # the last XHDR data received
+        self.lastLOT        = ""        # the last LOT received with XHDR
         self.stationStr     = ""        # current station frequency (string)
         self.streamNum      = 0         # current station stream number
         self.nrsc5msg       = ""        # send key command to nrsc5 (streamNum)
@@ -515,6 +516,7 @@ class NRSC5_DUI(object):
             self.playing = True
             #self.lastXHDR = ["", -1]
             self.lastXHDR = ""
+            self.lastLOT = ""
             #print("lastXHDR reset")            
 
             # start the player thread
@@ -694,6 +696,7 @@ class NRSC5_DUI(object):
 
     def on_stream_changed(self):
         self.lastXHDR = ""
+        self.lastLOT = ""
         self.streamInfo["Title"] = ""
         self.streamInfo["Album"] = ""
         self.streamInfo["Artist"] = ""
@@ -867,6 +870,12 @@ class NRSC5_DUI(object):
         if (doSens):
             lblWidget.set_sensitive(inString != "")
 
+    def getImageLot(self,imgStr):
+        r = re.compile("^([\d]+)_.*$")
+        m = r.match(imgStr)
+        #print("lot is "+m.group(1))
+        return m.group(1)
+
     def checkStatus(self):
         # update status information
         def update():
@@ -932,10 +941,12 @@ class NRSC5_DUI(object):
                 # second param is lot id, if -1, show cover, otherwise show cover
                 # technically we should show the file with the matching lot id
 
+                lot = -1
                 #if (int(self.lastXHDR[1]) > 0 and self.streamInfo["Cover"] != None):
                 if ((self.lastXHDR == "0") and (self.streamInfo["Cover"] != "")):
                     imagePath = os.path.join(aasDir, self.streamInfo["Cover"])
                     image = self.streamInfo["Cover"]
+                    lot = self.getImageLot(image)
                     #print("lastXHDR is 0, set image to Cover:"+imagePath)
                 #elif (int(self.lastXHDR[1]) < 0 or self.streamInfo["Cover"] == None):
                 elif (((self.lastXHDR == "1") or (self.lastImage != "")) and (self.streamInfo["Logo"] != "")):
@@ -947,9 +958,9 @@ class NRSC5_DUI(object):
                         self.coverImage = ""
                     
                 # resize and display image if it changed and exists
-                if (self.xhdrChanged and (self.lastImage != image) and os.path.isfile(imagePath)):
+                if (self.xhdrChanged and (self.lastImage != image) and ((self.lastLOT == lot) or (lot == -1)) and os.path.isfile(imagePath)):
                 #if ((self.lastImage != image) and os.path.isfile(imagePath)):
-                    #print("xhdrChanged, image changed, and file exists:"+imagePath)
+                    #print("xhdrChanged, image changed, lot matches image, and file exists:"+imagePath)
                     self.xhdrChanged = False
                     self.lastImage = image
                     #img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
@@ -1233,6 +1244,14 @@ class NRSC5_DUI(object):
         draw.text((x+3,y), text, fill="black", font=font)                                               # draw the text
         return imgTS                                                                                    # return the image
 
+    def checkPorts(self, port, type):
+        result = -1
+        for i in range(0,3):
+            if (len(self.streams[i]) > type):
+                if (port == self.streams[i][type]):
+                    result = i
+        return result
+
     def parseFeedback(self, line):
         global aasDir, mapDir
         line = line.strip()
@@ -1273,8 +1292,10 @@ class NRSC5_DUI(object):
             mime = m.group(2)
             lot  = m.group(3)
             #print("got XHDR msg xhdr:"+xhdr+" for lot:"+lot)
-            if (xhdr != self.lastXHDR):
+            if (xhdr != self.lastXHDR) or (lot != self.lastLOT):
+                #print("xhdr changed:"+xhdr+" for lot:"+lot)
                 self.lastXHDR = xhdr
+                self.lastLOT = lot
                 self.xhdrChanged = True
                 #self.debugLog("XHDR Changed: {:s} (lot {:s})".format(xhdr[0],xhdr[1]))
                 self.debugLog("XHDR Changed: {:s} (lot {:s})".format(xhdr,lot))
@@ -1287,6 +1308,8 @@ class NRSC5_DUI(object):
                 headerOffset = int(len(m.group(2))) + 1
 
                 p = int(m.group(1),16)
+                coverStream = self.checkPorts(p,0)
+                logoStream = self.checkPorts(p,1)
 
                 #print("got LOT msg, port:"+str(p)+" lot_name:"+fileName+" size:"+str(fileSize))
                 # check file existance and size .. right now we just debug log
@@ -1298,19 +1321,23 @@ class NRSC5_DUI(object):
                         self.debugLog("Corrupt file: " + fileName + " (expected: "+fileSize+" bytes, got "+actualFileSize+" bytes)")
 
                 #tmp = self.streams[int(self.spinStream.get_value()-1)][0]
-                tmp = self.streams[int(self.streamNum)][0]
+                #tmp = self.streams[int(self.streamNum)][0]
 
                 #if (p == self.streams[int(self.spinStream.get_value()-1)][0]):
-                if (p == self.streams[int(self.streamNum)][0]):
-                    self.streamInfo["Cover"] = fileName
+                #if (p == self.streams[int(self.streamNum)][0]):
+                if (coverStream > -1):
+                    if coverStream == self.streamNum:
+                        self.streamInfo["Cover"] = fileName
                     self.debugLog("Got Album Cover: " + fileName)
-                    #print("got Cover:"+fileName)
+                    #print("got Cover:"+fileName+" for stream "+str(coverStream))
                 #elif (p == self.streams[int(self.spinStream.get_value()-1)][1]):
-                elif (p == self.streams[int(self.streamNum)][1]):
-                    self.streamInfo["Logo"] = fileName
-                    self.stationLogos[self.stationStr][self.streamNum] = fileName    # add station logo to database
-                    self.debugLog("Got Station Logo: " + fileName)
-                    #print("got Logo:"+fileName)
+                #elif (p == self.streams[int(self.streamNum)][1]):
+                elif (logoStream > -1):
+                    if logoStream == self.streamNum:
+                        self.streamInfo["Logo"] = fileName
+                    self.stationLogos[self.stationStr][logoStream] = fileName    # add station logo to database
+                    self.debugLog("Got Station Logo: "+fileName)
+                    #print("got Logo:"+fileName+" for stream "+str(logoStream))
 
                 elif(fileName[headerOffset:(5+headerOffset)] == "DWRO_" and mapDir is not None):
                     self.processWeatherOverlay(fileName)
