@@ -476,6 +476,11 @@ class NRSC5_DUI(object):
                 self.nrsc5Args.append("--dump-aas-files")
                 self.nrsc5Args.append(aasDir)
             
+            # set IP address if rtl_tcp is used
+            if (self.cbDevIP.get_active()):
+                self.nrsc5Args.append("-H")
+                self.nrsc5Args.append(self.txtDevIP.get_text())
+            
             # set gain if auto gain is not selected
             if (not self.cbAutoGain.get_active()):
                 self.streamInfo["Gain"] = self.spinGain.get_value()
@@ -1442,7 +1447,9 @@ class NRSC5_DUI(object):
         self.spinGain      = builder.get_object("spinGain")
         self.spinPPM       = builder.get_object("spinPPM")
         self.spinRTL       = builder.get_object("spinRTL")
+        self.txtDevIP      = builder.get_object("txtDevIP")
         self.cbAutoGain    = builder.get_object("cbAutoGain")
+        self.cbDevIP       = builder.get_object("cbDevIP")
         self.cbLog         = builder.get_object("cbLog")
         self.cbCovers      = builder.get_object("cbCovers")
         self.btnPlay       = builder.get_object("btnPlay")
@@ -1643,6 +1650,10 @@ class NRSC5_DUI(object):
                 self.cbLog.set_active(config["LogToFile"])
                 if ("DLoadArt" in config):
                     self.cbCovers.set_active(config["DLoadArt"])
+                if ("UseIP" in config):
+                    self.cbDevIP.set_active(config["UseIP"])
+                if ("DevIP" in config):
+                    self.txtDevIP.set_text(config["DevIP"])
                 self.bookmarks = config["Bookmarks"]
                 for bookmark in self.bookmarks:
                     self.lsBookmarks.append(bookmark)
@@ -1721,8 +1732,10 @@ class NRSC5_DUI(object):
                     "AutoGain"  : self.cbAutoGain.get_active(),
                     "PPMError"  : int(self.spinPPM.get_value()),
                     "RTL"       : int(self.spinRTL.get_value()),
+                    "DevIP"     : self.txtDevIP.get_text(),
                     "LogToFile" : self.cbLog.get_active(),
                     "DLoadArt"  : self.cbCovers.get_active(),
+                    "UseIP"     : self.cbDevIP.get_active(),
                     "Bookmarks" : self.bookmarks,
                     "MapData"   : self.mapData,
                 }
