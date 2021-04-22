@@ -979,8 +979,9 @@ class NRSC5_DUI(object):
                     #self.handle_window_resize()
                     self.debugLog("Image Changed")
 
-                if (self.cbCovers.get_active() and self.id3Changed):
-                    self.get_cover_image_online()
+                # Disable downloaded cover images until fixed with MusicBrainz
+                #if (self.cbCovers.get_active() and self.id3Changed):
+                    #self.get_cover_image_online()
 
             finally:
                 #Gdk.threads_leave()
