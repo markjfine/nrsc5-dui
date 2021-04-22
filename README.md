@@ -40,6 +40,7 @@ to include the path to nrsc5 when using scripts (like Apple Script) that seeming
 You may first change some optional parameters of how nrsc5 works from the Settings tab in nrsc5-dui:
 Set the gain to Auto, or optionally enter an RF gain in dB that has known to work well for some stations.  
 Enter a PPM correction value if your RTL-SDR dongle has an offset.  
+Enter the IP address that rtl_tcp is listening to and check the Enabled box if you are using a remote RTL-SDR.
 Enter the number of the desired device if you have more than one RTL-SDR dongle.  
 Check `Log to file` to enable writing debug information from nrsc5 to nrsc5.log.
 Check `DL Album Art` to enable automated downloading of album art from Discogs.
