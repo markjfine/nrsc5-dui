@@ -11,7 +11,6 @@ The folowing programs are required to run NRSC5-DUI
 * [Python 3](https://www.python.org/downloads/release)
 * [PyGObject](https://pygobject.readthedocs.io/en/latest/)
 * [Pillow](https://pillow.readthedocs.io/en/stable/)
-* [Python Imaging Library](http://pythonware.com/products/pil)
 * [NumPy](http://www.numpy.org)
 * [Python Dateutil](https://pypi.org/project/python-dateutil)
 * [urllib3](https://pypi.org/project/urllib3)
