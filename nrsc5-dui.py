@@ -354,25 +354,37 @@ class NRSC5_DUI(object):
         # if not, get it from MusicBrainz
         else:
             try:
-                result = musicbrainzngs.search_releases(artist=self.streamInfo["Artist"], release=self.streamInfo["Title"])
+                result = musicbrainzngs.search_recordings(artist=self.streamInfo["Artist"], recording=self.streamInfo["Title"])
 
-                if result['release-list']:
+                if result['recording-list']:
 
                     # loop through the list until you get a match
-                    #print()
                     resultID = ""
-                    for (idx, release) in enumerate(result['release-list']):
-                        #print(release["artist-credit-phrase"]+" - "+release['title']+" "+release['id'])
-                        artistMatch = (newArtist.lower() in release["artist-credit-phrase"].lower())
-                        titleMatch = (self.streamInfo["Title"].lower() in release['title'].lower())
-                        if (artistMatch and titleMatch):
-                            resultID = release['id']
-
+                    imgSaved = False
+                    for (idx, release) in enumerate(result['recording-list']):
+                        resultScore=release['ext:score']
+                        resultArtist=release['artist-credit-phrase']
+                        resultTitle=release['title']
+                        resultid=release['id']
+                        for (idx2, release2) in enumerate(release['release-list']):
+                            resultStatus=release2['status']
+                            resultType=release2['release-group']['type']
+                            resultid = release2['id']
+                            typeMatch = (resultType in ['Single','Album','EP'])
+                            statusMatch = (resultStatus == 'Official')
+                            if (typeMatch and statusMatch):
+                                break
+                        scoreMatch = (int(resultScore) > 90)
+                        artistMatch = (newArtist.lower() in resultArtist.lower())
+                        titleMatch = (self.streamInfo["Title"].lower() in resultTitle.lower())
+                        if (artistMatch and titleMatch and scoreMatch):
+                            resultID=resultid
+ 
                             # got a match, now get the cover art
-                            #print("Found {} - {}, {}".format(release["artist-credit-phrase"], release['title'], resultID))                    
+                            #print("Found {}: {} - {}, {} {}%".format(resultType, resultArtist, resultTitle, resultID, resultScore))                    
                             imageList = musicbrainzngs.get_image_list(resultID)
                             for image in imageList["images"]:
-                                if "Front" in image["types"] and image["approved"]:
+                                if "Front" in image["types"]: # and image["approved"]:
 
                                     # now save it
                                     #print("Found approved image")
@@ -382,9 +394,13 @@ class NRSC5_DUI(object):
                                         imgCvr = Image.open(dataBytes)
                                         imgCvr.save(saveStr)
                                         self.coverImage = saveStr
+                                        imgSaved = True
+
+                                if (imgSaved):
                                     break
 
-                            break
+                        if (imgSaved):
+                           break
 
                     # If no match use the station logo if there is one
                     else:
