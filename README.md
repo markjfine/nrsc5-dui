@@ -13,7 +13,6 @@ The folowing programs are required to run NRSC5-DUI
 * [Pillow](https://pillow.readthedocs.io/en/stable/)
 * [NumPy](http://www.numpy.org)
 * [Python Dateutil](https://pypi.org/project/python-dateutil)
-* [urllib3](https://pypi.org/project/urllib3)
 * [musicbrainzngs](https://pypi.org/project/musicbrainzngs)
 * [nrsc5](https://github.com/theori-io/nrsc5)
 * [sox](https://github.com/chirlu/sox)

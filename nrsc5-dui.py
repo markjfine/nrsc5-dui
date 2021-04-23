@@ -21,7 +21,7 @@
 #    Updated and enhanced by markjfine ~ 2021
 
 #import os, sys, shutil, re, gtk, gobject, json, datetime, numpy, glob, time, platform
-import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform
+import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform, io
 from subprocess import Popen, PIPE
 from threading import Timer, Thread
 from dateutil import tz
@@ -31,8 +31,6 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib
 
-import urllib3
-#from OpenSSL import SSL
 import musicbrainzngs
 
 # print debug messages to stdout (if debugger is attached)
@@ -58,7 +56,6 @@ class NRSC5_DUI(object):
 
         self.getControls()              # get controls and windows
         self.initStreamInfo()           # initilize stream info and clear status widgets
-        self.http = urllib3.PoolManager()
 
         self.debugLog("Local path determined as " + runtimeDir)
 
@@ -345,15 +342,10 @@ class NRSC5_DUI(object):
         global aasDir
         got_cover = False
 
-        # only change when there's a new ID3
-        #if (self.id3Changed):
-
         # only care about the first artist listed if separated by slashes
         newArtist = self.fix_artist()
         baseStr = str(newArtist+" - "+self.streamInfo["Title"])
         saveStr = os.path.join(aasDir, baseStr.replace(" ","_").replace("/","_").replace(":","_")+".jpg")
-        #searchStr = baseStr.replace(" ","+")
-        #print("Searching for:"+searchStr)
 
         # does it already exist?
         if (os.path.isfile(saveStr)):
@@ -371,7 +363,9 @@ class NRSC5_DUI(object):
                     resultID = ""
                     for (idx, release) in enumerate(result['release-list']):
                         #print(release["artist-credit-phrase"]+" - "+release['title']+" "+release['id'])
-                        if (newArtist.lower() in release["artist-credit-phrase"].lower()) and (self.streamInfo["Title"].lower() in release['title'].lower()):
+                        artistMatch = (newArtist.lower() in release["artist-credit-phrase"].lower())
+                        titleMatch = (self.streamInfo["Title"].lower() in release['title'].lower())
+                        if (artistMatch and titleMatch):
                             resultID = release['id']
 
                             # got a match, now get the cover art
@@ -379,17 +373,17 @@ class NRSC5_DUI(object):
                             imageList = musicbrainzngs.get_image_list(resultID)
                             for image in imageList["images"]:
                                 if "Front" in image["types"] and image["approved"]:
-                                    resultURL = image["thumbnails"]["large"]
-                                    #print("{} is an approved front image".format(resultURL))
 
                                     # now save it
-                                    # TODO - Use built-in MusicBrainz routine to eliminate need for urllib3 and OpenSSL for just this remaining call
-                                    #with musicbrainzngs.get_image_front(resultID, size="500") as r, open(saveStr, 'wb') as out_file:
-                                    with self.http.request('GET', resultURL, preload_content=False) as r, open(saveStr, 'wb') as out_file:       
-                                        if (r.status == 200):
-                                            shutil.copyfileobj(r, out_file)
-                                            self.coverImage = saveStr
+                                    #print("Found approved image")
+                                    imgData = musicbrainzngs.get_image_front(resultID, size="500")
+                                    if (len(imgData) > 0):
+                                        dataBytes = io.BytesIO(imgData)
+                                        imgCvr = Image.open(dataBytes)
+                                        imgCvr.save(saveStr)
+                                        self.coverImage = saveStr
                                     break
+
                             break
 
                     # If no match use the station logo if there is one
