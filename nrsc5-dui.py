@@ -33,6 +33,7 @@ from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib
 
 import urllib3
 from OpenSSL import SSL
+import musicbrainzngs
 
 # print debug messages to stdout (if debugger is attached)
 debugMessages = (sys.gettrace() != None)
@@ -58,7 +59,6 @@ class NRSC5_DUI(object):
         self.getControls()              # get controls and windows
         self.initStreamInfo()           # initilize stream info and clear status widgets
         self.http = urllib3.PoolManager()
-        # self.headers = urllib3.util.make_headers(keep_alive=True, accept_encoding=True, user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:87.0) Gecko/20100101 Firefox/87.0")
 
         self.debugLog("Local path determined as " + runtimeDir)
 
@@ -76,6 +76,12 @@ class NRSC5_DUI(object):
             self.nrsc5Path = arg1+"nrsc5"
  
         self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
+
+        self.app_name       = "NRSC5-DUI"
+        self.version        = "2.1.0"
+        self.web_addr       = "https://github.com/markjfine/nrsc5-dui"
+        self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine"
+        musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
 
         self.mapFile        = os.path.join(resDir, "map.png")
         self.defaultSize    = [490,250] # default width,height of main app
@@ -327,30 +333,6 @@ class NRSC5_DUI(object):
         newArtist = self.streamInfo["Artist"].strip()
         return ((newArtist != oldArtist) and (newTitle != oldTitle))
 
-    def get_cover_data(self, response):
-        check = -1
-        resultUrl = ""
-        resultArtist = ""
-        m = re.search(r"card card_large float_fix",response)
-        if (m.start() > -1):
-           response = response[m.start():]
-           m = re.search(r"<img data-src=\"",response)
-           if (m.start() > -1):
-               response = response[m.start()+15:]
-               m = re.search(r"\"",response)
-               if (m.start() > -1):
-                   resultUrl = response[:m.start()]
-                   response = response[m.start()+1:]
-                   m = re.search(r"<span title=\"",response)
-                   if (m.start() > -1):
-                       response = response[m.start()+13:]
-                       m = re.search(r"\"",response)
-                       if (m.start() > -1):
-                           resultArtist = response[:m.start()]
-                           response = response[m.start()+1:]
-                           check = 0
-        return check, response, resultUrl, resultArtist
-        
     def fix_artist(self):
         newArtist = self.streamInfo["Artist"]
         if ("/" in newArtist):
@@ -368,36 +350,47 @@ class NRSC5_DUI(object):
 
         # only care about the first artist listed if separated by slashes
         newArtist = self.fix_artist()
-        baseStr = str(newArtist +" - "+self.streamInfo["Title"]).replace("/","_").replace(":","_")
-        saveStr = os.path.join(aasDir, baseStr.replace(" ","_")+".jpg")
-        searchStr = baseStr.replace(" ","+")
+        baseStr = str(newArtist+" - "+self.streamInfo["Title"])
+        saveStr = os.path.join(aasDir, baseStr.replace(" ","_").replace("/","_").replace(":","_")+".jpg")
+        #searchStr = baseStr.replace(" ","+")
+        #print("Searching for:"+searchStr)
 
         # does it already exist?
         if (os.path.isfile(saveStr)):
             self.coverImage = saveStr
 
-        # if not, get it from Discogs
+        # if not, get it from MusicBrainz
         else:
             try:
-                searchStr = "https://www.discogs.com/search/?q="+searchStr+"&type=all"
-                #r = self.http.request('GET', searchStr, self.headers)
-                r = self.http.request('GET', searchStr)
-                if (r.status == 200):
-                    response = r.data.decode('utf-8')
+                result = musicbrainzngs.search_releases(artist=self.streamInfo["Artist"], release=self.streamInfo["Title"])
 
-                    # loop through the page until you either get an artist match or you run out of page (check)
-                    while (not got_cover):
-                        resultUrl = ""
-                        resultArtist = ""
-                        check, response, resultUrl, resultArtist = self.get_cover_data(response)
-                        got_cover = (newArtist.lower() in resultArtist.lower()) and (check == 0)
-                    
-                    # if you got a match, save it
-                    if (resultUrl != ""):
-                        with self.http.request('GET', resultUrl, preload_content=False) as r, open(saveStr, 'wb') as out_file:       
-                            if (r.status == 200):
-                                shutil.copyfileobj(r, out_file)
-                                self.coverImage = saveStr
+                if result['release-list']:
+
+                    # loop through the list until you get a match
+                    #print()
+                    resultID = ""
+                    for (idx, release) in enumerate(result['release-list']):
+                        #print(release["artist-credit-phrase"]+" - "+release['title']+" "+release['id'])
+                        if (newArtist.lower() in release["artist-credit-phrase"].lower()) and (self.streamInfo["Title"].lower() in release['title'].lower()):
+                            resultID = release['id']
+
+                            # got a match, now get the cover art
+                            #print("Found {} - {}, {}".format(release["artist-credit-phrase"], release['title'], resultID))                    
+                            imageList = musicbrainzngs.get_image_list(resultID)
+                            for image in imageList["images"]:
+                                if "Front" in image["types"] and image["approved"]:
+                                    resultURL = image["thumbnails"]["large"]
+                                    #print("{} is an approved front image".format(resultURL))
+
+                                    # now save it
+                                    # TODO - Use built-in MusicBrainz routine to eliminate need for urllib3 and OpenSSL for just this remaining call
+                                    #with musicbrainzngs.get_image_front(resultID, size="500") as r, open(saveStr, 'wb') as out_file:
+                                    with self.http.request('GET', resultURL, preload_content=False) as r, open(saveStr, 'wb') as out_file:       
+                                        if (r.status == 200):
+                                            shutil.copyfileobj(r, out_file)
+                                            self.coverImage = saveStr
+                                    break
+                            break
 
                     # If no match use the station logo if there is one
                     else:
@@ -673,11 +666,11 @@ class NRSC5_DUI(object):
         about_dialog = Gtk.AboutDialog()
         about_dialog.set_transient_for(self.mainWindow)
         about_dialog.set_destroy_with_parent(True)
-        about_dialog.set_name("NRSC5 DUI")
-        about_dialog.set_program_name("NRSC5 DUI")
-        about_dialog.set_version("2.1.0")
-        about_dialog.set_copyright("Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine")
-        about_dialog.set_website("https://github.com/markjfine/nrsc5-dui")
+        about_dialog.set_name(self.app_name)
+        about_dialog.set_program_name(self.app_name)
+        about_dialog.set_version(self.version)
+        about_dialog.set_copyright(self.copyright)
+        about_dialog.set_website(self.web_addr)
         about_dialog.set_comments("A second-generation graphical interface for nrsc5.")
         about_dialog.set_authors(authors)
         about_dialog.set_license(license)
@@ -980,8 +973,8 @@ class NRSC5_DUI(object):
                     self.debugLog("Image Changed")
 
                 # Disable downloaded cover images until fixed with MusicBrainz
-                #if (self.cbCovers.get_active() and self.id3Changed):
-                    #self.get_cover_image_online()
+                if (self.cbCovers.get_active() and self.id3Changed):
+                    self.get_cover_image_online()
 
             finally:
                 #Gdk.threads_leave()
