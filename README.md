@@ -14,13 +14,12 @@ The folowing programs are required to run NRSC5-DUI
 * [NumPy](http://www.numpy.org)
 * [Python Dateutil](https://pypi.org/project/python-dateutil)
 * [urllib3](https://pypi.org/project/urllib3)
-* [pyOpenSSL](https://pypi.org/project/pyOpenSSL)
 * [musicbrainzngs](https://pypi.org/project/musicbrainzngs)
 * [nrsc5](https://github.com/theori-io/nrsc5)
 * [sox](https://github.com/chirlu/sox)
 
 # Setup
-1. Install the latest version of Python 3.9, PyGObject, Pillow, etc.
+1. Install the latest version of Python 3.9, PyGObject, Pillow, and other dependencies.
 2. Compile and install nrsc5.
 3. Install sox
 4. Install nrsc5-dui files in a directory where you have write permissions.

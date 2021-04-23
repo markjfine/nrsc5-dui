@@ -32,7 +32,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib
 
 import urllib3
-from OpenSSL import SSL
+#from OpenSSL import SSL
 import musicbrainzngs
 
 # print debug messages to stdout (if debugger is attached)
