@@ -338,12 +338,19 @@ class NRSC5_DUI(object):
                 newArtist = newArtist[:m.start()].strip()
         return newArtist
 
+    def check_value(self,arg,group,default):
+        result = default
+        if(arg in group):
+            result = group[arg]
+        return result
+
     def get_cover_image_online(self):
         global aasDir
         got_cover = False
 
         # only care about the first artist listed if separated by slashes
         newArtist = self.fix_artist()
+        newTitle = self.streamInfo["Title"].replace("'","’")
         baseStr = str(newArtist+" - "+self.streamInfo["Title"])
         saveStr = os.path.join(aasDir, baseStr.replace(" ","_").replace("/","_").replace(":","_")+".jpg")
 
@@ -354,58 +361,101 @@ class NRSC5_DUI(object):
         # if not, get it from MusicBrainz
         else:
             try:
-                result = musicbrainzngs.search_recordings(artist=self.streamInfo["Artist"], recording=self.streamInfo["Title"])
+                imgSaved = False
+                result = None
 
-                if result['recording-list']:
+                #print()
+                #print("searching for {} - {}".format(self.streamInfo["Artist"],newTitle))
+
+                try:
+                    result = musicbrainzngs.search_recordings(artist=self.streamInfo["Artist"], recording=newTitle)
+                    #print("recording search succeeded")
+                except:
+                    #print("mb recording search error")
+                    pass
+
+                if (result is not None) and ('recording-list' in result):
+                    #print("got recording search result")
 
                     # loop through the list until you get a match
-                    resultID = ""
-                    imgSaved = False
                     for (idx, release) in enumerate(result['recording-list']):
-                        resultScore=release['ext:score']
-                        resultArtist=release['artist-credit-phrase']
-                        resultTitle=release['title']
-                        resultid=release['id']
-                        for (idx2, release2) in enumerate(release['release-list']):
-                            resultStatus=release2['status']
-                            resultType=release2['release-group']['type']
-                            resultid = release2['id']
-                            typeMatch = (resultType in ['Single','Album','EP'])
-                            statusMatch = (resultStatus == 'Official')
-                            if (typeMatch and statusMatch):
-                                break
+                        #print(release)
+                        resultid = self.check_value('id',release,"")
+                        resultScore = self.check_value('ext:score',release,"0")
+                        resultArtist = self.check_value('artist-credit-phrase',release,"")
+                        resultTitle = self.check_value('title',release,"")
                         scoreMatch = (int(resultScore) > 90)
                         artistMatch = (newArtist.lower() in resultArtist.lower())
-                        titleMatch = (self.streamInfo["Title"].lower() in resultTitle.lower())
-                        if (artistMatch and titleMatch and scoreMatch):
+                        titleMatch = (newTitle.lower() in resultTitle.lower())
+                        if ('release-list' in release):
+                            #print("got release-list")
+                            for (idx2, release2) in enumerate(release['release-list']):
+                                #print(release2)
+                                resultid = self.check_value('id',release2,"")
+                                resultStatus = self.check_value('status',release2,"")
+                                resultType = self.check_value('type',self.check_value('release-group',release2,""),"")
+                                resultAlbum = self.check_value('title',release2,"")
+                                typeMatch = (resultType in ['Single','Album','EP'])
+                                statusMatch = (resultStatus == 'Official')
+                                #print("  release-list: #{} of {}".format(idx2, len(release['release-list'])))
+                                if (typeMatch and statusMatch and ((idx2+1) < len(release['release-list']))):
+                                    break
+                        #print("#{} {} {}: {} - {} - {}, {} {}%".format(idx, resultStatus, resultType, resultArtist, resultTitle, resultAlbum, resultid, resultScore))                    
+                        if (artistMatch and titleMatch and scoreMatch and typeMatch and statusMatch):
                             resultID=resultid
  
                             # got a match, now get the cover art
-                            #print("Found {}: {} - {}, {} {}%".format(resultType, resultArtist, resultTitle, resultID, resultScore))                    
-                            imageList = musicbrainzngs.get_image_list(resultID)
-                            for image in imageList["images"]:
-                                if "Front" in image["types"]: # and image["approved"]:
+                            #print("Found {}: {} - {} - {}, {} {}%".format(resultType, resultArtist, resultTitle, resultAlbum, resultID, resultScore))
+                            imageList = None
 
-                                    # now save it
-                                    #print("Found approved image")
-                                    imgData = musicbrainzngs.get_image_front(resultID, size="500")
-                                    if (len(imgData) > 0):
-                                        dataBytes = io.BytesIO(imgData)
-                                        imgCvr = Image.open(dataBytes)
-                                        imgCvr.save(saveStr)
-                                        self.coverImage = saveStr
-                                        imgSaved = True
+                            try:
+                                imageList = musicbrainzngs.get_image_list(resultID)
+                            except:
+                                #print("mb image error")
+                                pass
 
-                                if (imgSaved):
-                                    break
+                            if (imageList is not None) and ('images' in imageList):
+                                #print('has images')
+                                for (idx3, image) in enumerate(imageList['images']):
+                                    imgTypes = self.check_value('types', image, None)
+                                    imgApproved = self.check_value('approved', image, "False")
+                                    #print("image: {} {}".format(imgTypes, imgApproved))       
+                                    if ('Front' in imgTypes) and imgApproved:
 
-                        if (imgSaved):
+                                        # now save it
+                                        #print("Found approved image")
+                                        imgData = None
+
+                                        try:
+                                            imgData = musicbrainzngs.get_image_front(resultID, size="500")
+                                        except:
+                                            #print("mb image retrieval error")
+                                            pass
+
+                                        #if (len(imgData) > 0):
+                                        if (imgData is not None) and (len(imgData) > 0):
+                                            dataBytes = io.BytesIO(imgData)
+                                            imgCvr = Image.open(dataBytes)
+                                            imgCvr.save(saveStr)
+                                            self.coverImage = saveStr
+                                            imgSaved = True
+
+                                    #print("image-list: #{} of {}".format(idx3, len(imageList['images'])))
+                                    if (imgSaved) and ((idx3+1) < len(imageList['images'])):
+                                        break
+                                #print("End of image-list") 
+
+                        #print("recording-list: #{} of {}".format(idx, len(result['recording-list'])))
+                        if (imgSaved) and ((idx+1) < len(result['recording-list'])) or (not scoreMatch):
                            break
+                    #print("End of recording-list") 
 
-                    # If no match use the station logo if there is one
-                    else:
-                        self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
+                # If no match use the station logo if there is one
+                if (not imgSaved):
+                    #print("No image found, using logo")
+                    self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
             except:
+                #print("general error")
                 pass
 
         # now display it by simulating a window resize
