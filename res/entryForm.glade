@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.38.2 -->
+<interface>
+  <requires lib="gtk+" version="3.0"/>
+  <object class="GtkWindow" id="entryWindow">
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">Update Station Logo</property>
+    <property name="modal">True</property>
+    <child>
+      <object class="GtkVBox" id="boxEntry">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="hexpand">True</property>
+        <property name="vexpand">False</property>
+        <property name="baseline-position">top</property>
+        <child>
+          <object class="GtkTable" id="tableEntry">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="n-rows">3</property>
+            <property name="n-columns">3</property>
+            <property name="column-spacing">3</property>
+            <child>
+              <object class="GtkLabel" id="lblEntry">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="hexpand">True</property>
+                <property name="xpad">10</property>
+                <property name="label" translatable="yes">Enter URL for new station logo:</property>
+              </object>
+              <packing>
+                <property name="right-attach">3</property>
+                <property name="x-options">GTK_FILL</property>
+                <property name="y-options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="txtEntry">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="tooltip-text" translatable="yes">URL for external station logo</property>
+                <property name="hexpand">True</property>
+                <property name="width-chars">50</property>
+              </object>
+              <packing>
+                <property name="right-attach">3</property>
+                <property name="top-attach">1</property>
+                <property name="bottom-attach">2</property>
+                <property name="x-options">GTK_FILL</property>
+                <property name="y-options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblBuffer">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+              </object>
+              <packing>
+                <property name="top-attach">2</property>
+                <property name="bottom-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn_cancel">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">False</property>
+                <property name="halign">end</property>
+                <signal name="clicked" handler="on_cleanup" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="right-attach">2</property>
+                <property name="top-attach">2</property>
+                <property name="bottom-attach">3</property>
+                <property name="x-options">GTK_FILL</property>
+                <property name="y-options">GTK_FILL</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn_ok">
+                <property name="label" translatable="yes">Ok</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">False</property>
+                <property name="halign">end</property>
+                <signal name="clicked" handler="on_cleanup" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left-attach">2</property>
+                <property name="right-attach">3</property>
+                <property name="top-attach">2</property>
+                <property name="bottom-attach">3</property>
+                <property name="x-options">GTK_FILL</property>
+                <property name="y-options">GTK_FILL</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
