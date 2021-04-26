@@ -6,13 +6,15 @@ As such, we have changed the name to 'DUI' as a play on the Italian word for 'tw
 
 # Dependencies
 
-The folowing programs are required to run NRSC5-DUI
+The following programs are required to run NRSC5-DUI
 
 * [Python 3](https://www.python.org/downloads/release)
 * [PyGObject](https://pygobject.readthedocs.io/en/latest/)
 * [Pillow](https://pillow.readthedocs.io/en/stable/)
 * [NumPy](http://www.numpy.org)
 * [Python Dateutil](https://pypi.org/project/python-dateutil)
+* [urllib3](https://pypi.org/project/urllib3)
+* [pyOpenSSL](https://pypi.org/project/pyOpenSSL)
 * [musicbrainzngs](https://pypi.org/project/musicbrainzngs)
 * [nrsc5](https://github.com/theori-io/nrsc5)
 * [sox](https://github.com/chirlu/sox)
@@ -74,7 +76,7 @@ The default map used for the weather radar comes from [OpenStreetMap](https://ww
 
 ## Version History
 1.0.0 Initial Release  
-1.0.1 Fixed compatibility with display scailing  
+1.0.1 Fixed compatibility with display scaling  
 1.1.0 Added weather radar and traffic map viewer  
 1.2.0 zefie update to modern nrsc5 build  
 2.0.0 Updated to use the nrsc5 API  
