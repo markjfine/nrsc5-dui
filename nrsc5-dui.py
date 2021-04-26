@@ -301,6 +301,11 @@ class NRSC5_DUI(object):
         if (widget.get_label() != ""):
             widget.get_window().set_cursor(self.hand_cursor)
 
+    def on_cbCovers_clicked(self, btn):
+        dlCoversSet = self.cbCovers.get_active()
+        self.lblCoverIncl.set_sensitive(dlCoversSet)
+        self.cbCoverIncl.set_sensitive(dlCoversSet)
+
     def img_to_pixbuf(self,img):
         """convert PIL.Image to GdkPixbuf.Pixbuf"""
         data = GLib.Bytes.new(img.tobytes())
@@ -1464,7 +1469,9 @@ class NRSC5_DUI(object):
                 #if (p == self.streams[int(self.streamNum)][0]):
                 if (coverStream > -1):
                     if coverStream == self.streamNum:
-                        self.streamInfo["Cover"] = fileName
+                        #set cover only if downloading covers and including station covers
+                        if (self.cbCoverIncl.get_active() or (not self.cbCovers.get_active())):
+                            self.streamInfo["Cover"] = fileName
                     self.debugLog("Got Album Cover: " + fileName)
                     #print("got Cover:"+fileName+" for stream "+str(coverStream))
                 #elif (p == self.streams[int(self.spinStream.get_value()-1)][1]):
@@ -1585,6 +1592,8 @@ class NRSC5_DUI(object):
         self.cbDevIP       = builder.get_object("cbDevIP")
         self.cbLog         = builder.get_object("cbLog")
         self.cbCovers      = builder.get_object("cbCovers")
+        self.lblCoverIncl  = builder.get_object("lblCoverIncl")
+        self.cbCoverIncl   = builder.get_object("cbCoverIncl")
         self.btnPlay       = builder.get_object("btnPlay")
         self.btnStop       = builder.get_object("btnStop")
         self.btnBookmark   = builder.get_object("btnBookmark")
@@ -1788,6 +1797,8 @@ class NRSC5_DUI(object):
                 self.cbLog.set_active(config["LogToFile"])
                 if ("DLoadArt" in config):
                     self.cbCovers.set_active(config["DLoadArt"])
+                if ("StationArt" in config):
+                    self.cbCoverIncl.set_active(config["StationArt"])
                 if ("UseIP" in config):
                     self.cbDevIP.set_active(config["UseIP"])
                 if ("DevIP" in config):
@@ -1873,6 +1884,7 @@ class NRSC5_DUI(object):
                     "DevIP"     : self.txtDevIP.get_text(),
                     "LogToFile" : self.cbLog.get_active(),
                     "DLoadArt"  : self.cbCovers.get_active(),
+                    "StationArt" : self.cbCoverIncl.get_active(),
                     "UseIP"     : self.cbDevIP.get_active(),
                     "Bookmarks" : self.bookmarks,
                     "MapData"   : self.mapData,
