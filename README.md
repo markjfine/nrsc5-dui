@@ -51,6 +51,7 @@ Enter the frequency in MHz of the station you want to play and either click the 
 ## Album Art & Track Info
 Some stations will send album art and station logos. These will fill the Album Art tab, as they are made available by the station. Most stations will send the song title, artist, album, and genre. These are displayed in the Track Info pane, also if available.
 The user can override what the stations send by enabling the DL Album Art setting. This will use the Title and Artist information to retrieve album art from MusicBrainz. If no album art is found, the station logo will be used, if available.
+The user can change the logo of the playing station by right-clicking in the Album Art area. This will display a popup prompting you for the URL of an image found on the web. Pasting the URL in the box and clicking 'Ok' will download the image and set the logo of the playing station with it.
 
 ## Bookmarks
 When a station is playing, you can click the Bookmark Station button to add it to the bookmarks list. You can click on the Name in the bookmarks list to edit it. Double click the Station to tune to that particular station and stream. Click the Delete Bookmark button to delete it. Note that some stations use the default MPS/SPS or HDn naming for their streams. In this case, the bookmark will be used to name the stream button.
