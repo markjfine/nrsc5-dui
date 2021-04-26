@@ -31,6 +31,9 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib
 
+import urllib3
+from OpenSSL import SSL
+
 import musicbrainzngs
 
 # print debug messages to stdout (if debugger is attached)
@@ -56,6 +59,7 @@ class NRSC5_DUI(object):
 
         self.getControls()              # get controls and windows
         self.initStreamInfo()           # initilize stream info and clear status widgets
+        self.http = urllib3.PoolManager()
 
         self.debugLog("Local path determined as " + runtimeDir)
 
@@ -133,6 +137,11 @@ class NRSC5_DUI(object):
                 "windowSize"     : (764,632),
                 "animationSpeed" : 0.5
             }
+        }
+
+        self.slPopup        = None      # entry for external station logo URL
+        self.slData = {
+            "externalURL"   : ""
         }
 
         self.ServiceDataType = {
@@ -906,7 +915,41 @@ class NRSC5_DUI(object):
     def mapViewerCallback(self):
         # delete the map viewer
         self.mapViewer = None
-    
+
+    def on_alignmentCover_clicked(self, widget, event):
+        if (event.button == Gdk.BUTTON_SECONDARY):
+            if (self.slPopup is None) and (self.playing):
+                self.slPopup = NRSC5_SLPopup(self, self.slPopupCallback, self.slData)
+                self.slPopup.txtEntry.set_text(self.slData['externalURL'])
+                self.slPopup.entryWindow.show()
+                # now center it
+                winX, winY = self.mainWindow.get_position()
+                winW, winH = self.mainWindow.get_size()
+                slW, slH = self.slPopup.entryWindow.get_size()
+                self.slPopup.entryWindow.move(int(winW/2 - slW/2)+winX, int(winH/2 - slH/2)+winY)
+                self.slPopup.entryWindow.set_keep_above(True)
+
+    def slPopupCallback(self):
+        extensions = ['.gif','.jpg','.jpeg','.png']
+        useExt = ""
+        self.slData['externalURL'] = self.slPopup.txtEntry.get_text()
+        self.slPopup = None
+        if (self.slData['externalURL'] != ""):
+            freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum + 1)
+            fileName = str(freq)+"_SL"+self.streamInfo["Callsign"]+"$$"+str(int(self.streamNum + 1))
+            for extension in extensions:
+                if extension in self.slData['externalURL']:
+                    useExt = extension
+                    break
+            if (useExt != ""):
+                fileName = fileName + useExt
+                saveStr=os.path.join(aasDir,fileName)
+                with self.http.request('GET',self.slData['externalURL'], preload_content=False) as r, open(saveStr, 'wb') as out_file:
+                    if(r.status == 200):
+                        shutil.copyfileobj(r, out_file)
+                        self.stationLogos[self.stationStr][self.streamNum] = fileName
+                        self.displayLogo()
+
     def play(self):
         FNULL = open(os.devnull, 'w')
         FTMP = open('tmp.log','w')
@@ -1527,6 +1570,7 @@ class NRSC5_DUI(object):
         # get controls
         self.image1        = builder.get_object("image1")
         self.notebookMain  = builder.get_object("notebookMain")
+        self.frameCover    = builder.get_object("frameCover")
         self.alignmentCover = builder.get_object("alignmentCover")
         self.imgCover      = builder.get_object("imgCover")
         self.alignmentMap  = builder.get_object("alignment_map")
@@ -1607,6 +1651,11 @@ class NRSC5_DUI(object):
         self.btnMap.set_icon_widget(self.image1)
     
         self.mainWindow.connect("check-resize", self.on_cover_resize)
+
+        self.alignmentCover.set_sensitive(True)
+        self.alignmentCover.set_has_window(True)
+        self.alignmentCover.set_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        self.alignmentCover.connect("button-press-event", self.on_alignmentCover_clicked)
 
     def initStreamInfo(self):
         # stream information
@@ -1842,6 +1891,34 @@ class NRSC5_DUI(object):
         if (debugMessages or force):
             now = datetime.datetime.now()
             print (now.strftime("%b %d %H:%M:%S : ") + message)
+
+class NRSC5_SLPopup(object):
+    def __init__(self, parent, callback, data):
+        global resDir
+        # setup gui
+        builder = Gtk.Builder()
+        builder.add_from_file(os.path.join(resDir,"entryForm.glade"))
+        builder.connect_signals(self)
+
+        self.parent        = parent
+        self.callback      = callback
+        self.data          = data
+        
+        # get the controls
+        self.entryWindow    = builder.get_object("entryWindow")
+        self.txtEntry       = builder.get_object("txtEntry")
+        self.btn_cancel     = builder.get_object("btn_cancel")
+        self.btn_ok         = builder.get_object("btn_ok")
+
+        self.entryWindow.connect("delete-event", self.on_entryWindow_delete)
+
+    def on_cleanup(self, btn):
+        if (btn == self.btn_cancel):
+            self.txtEntry.set_text('')
+        self.entryWindow.close()
+
+    def on_entryWindow_delete(self, *args):
+        self.callback()                                                                                 # run the callback    
 
 class NRSC5_Map(object):
     def __init__(self, parent, callback, data):
