@@ -110,6 +110,7 @@ class NRSC5_DUI(object):
         self.bookmarks      = []        # station bookmarks
         self.booknames      = ["","","",""] # station bookmark names
         self.stationLogos   = {}        # station logos
+        self.coverMetas     = {}        # cover metadata
         self.bookmarked     = False     # is current station bookmarked
         self.mapViewer      = None      # map viewer window
         self.weatherMaps    = []        # list of current weathermaps sorted by time
@@ -305,6 +306,8 @@ class NRSC5_DUI(object):
         dlCoversSet = self.cbCovers.get_active()
         self.lblCoverIncl.set_sensitive(dlCoversSet)
         self.cbCoverIncl.set_sensitive(dlCoversSet)
+        self.lblStrict.set_sensitive(dlCoversSet)
+        self.cbStrict.set_sensitive(dlCoversSet)
 
     def img_to_pixbuf(self,img):
         """convert PIL.Image to GdkPixbuf.Pixbuf"""
@@ -410,11 +413,15 @@ class NRSC5_DUI(object):
 
         # only care about the first artist listed if separated by slashes
         newArtist = self.fix_artist().replace("'","’")
+
+        setStrict = (self.cbStrict.get_sensitive() and self.cbStrict.get_active())
+        #if setStrict:
         searchArtist = newArtist
-        #searchArtist = artist=self.streamInfo["Artist"].replace("'","’")
+        #else:
+        #searchArtist = artist=self.streamInfo["Artist"].replace("'","’").replace("/","ft.")
         newTitle = self.streamInfo["Title"].replace("'","’")
-        baseStr = str(newArtist+" - "+self.streamInfo["Title"])
-        saveStr = os.path.join(aasDir, baseStr.replace(" ","_").replace("/","_").replace(":","_")+".jpg")
+        baseStr = str(newArtist+" - "+self.streamInfo["Title"]).replace(" ","_").replace("/","_").replace(":","_")+".jpg"
+        saveStr = os.path.join(aasDir, baseStr)
 
         if (newArtist=="") and (newTitle==""):
             return
@@ -422,6 +429,9 @@ class NRSC5_DUI(object):
         # does it already exist?
         if (os.path.isfile(saveStr)):
             self.coverImage = saveStr
+            if (baseStr in self.coverMetas):
+                self.streamInfo['Album'] = self.coverMetas[baseStr][2]
+                self.streamInfo['Genre'] = self.coverMetas[baseStr][3]
 
         # if not, get it from MusicBrainz
         else:
@@ -433,7 +443,7 @@ class NRSC5_DUI(object):
                 #print("searching for {} - {}".format(searchArtist,newTitle))
 
                 try:
-                    result = musicbrainzngs.search_recordings(strict=True, artist=searchArtist, recording=newTitle, type='Album', status='Official')
+                    result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type='Album', status='Official')
                     #print("recording search succeeded")
                 except:
                     print("MusicBrainz recording search error")
@@ -494,6 +504,7 @@ class NRSC5_DUI(object):
                                 imgSaved = True
                                 if (self.streamInfo['Album'] == ""):
                                     self.streamInfo['Album']=resultAlbum
+                                self.coverMetas[baseStr] = [self.streamInfo["Title"],self.streamInfo["Artist"],self.streamInfo["Album"],self.streamInfo["Genre"]]
 
                         if (imgSaved) and ((idx+1) < len(result['recording-list'])) or (not scoreMatch):
                            break
@@ -1594,6 +1605,8 @@ class NRSC5_DUI(object):
         self.cbCovers      = builder.get_object("cbCovers")
         self.lblCoverIncl  = builder.get_object("lblCoverIncl")
         self.cbCoverIncl   = builder.get_object("cbCoverIncl")
+        self.lblStrict     = builder.get_object("lblStrict")
+        self.cbStrict      = builder.get_object("cbStrict")
         self.btnPlay       = builder.get_object("btnPlay")
         self.btnStop       = builder.get_object("btnStop")
         self.btnBookmark   = builder.get_object("btnBookmark")
@@ -1757,17 +1770,30 @@ class NRSC5_DUI(object):
 
         # load station logos
         try:
-            with open(os.path.join(cfgDir,"stationLogos.json"), mode='r') as f:
-                self.stationLogos = json.load(f)
+            stationLogos = os.path.join(cfgDir,"stationLogos.json")
+            if (os.path.isfile(stationLogos)):
+                with open(stationLogos, mode='r') as f:
+                    self.stationLogos = json.load(f)
         except:
             self.debugLog("Error: Unable to load station logo database", True)
+
+        #load cover metadata
+        try:
+            coverMetas = os.path.join(cfgDir,"coverMetas.json")
+            if (os.path.isfile(coverMetas)):
+                with open(coverMetas, mode='r') as f:
+                    self.coverMetas = json.load(f)
+        except:
+            self.debugLog("Error: Unable to load cover metadata database", True)
 
         self.mainWindow.resize(self.defaultSize[0],self.defaultSize[1])
 
         # load settings
         try:
-            with open(os.path.join(cfgDir,"config.json"), mode='r') as f:
-                config = json.load(f)
+            configFile = os.path.join(cfgDir,"config.json")
+            if (os.path.isfile(configFile)):
+                with open(configFile, mode='r') as f:
+                    config = json.load(f)
                 
                 if "MapData" in config:
                     self.mapData = config["MapData"]
@@ -1799,6 +1825,8 @@ class NRSC5_DUI(object):
                     self.cbCovers.set_active(config["DLoadArt"])
                 if ("StationArt" in config):
                     self.cbCoverIncl.set_active(config["StationArt"])
+                if ("StrictQ" in config):
+                    self.cbStrict.set_active(config["StrictQ"])
                 if ("UseIP" in config):
                     self.cbDevIP.set_active(config["UseIP"])
                 if ("DevIP" in config):
@@ -1885,6 +1913,7 @@ class NRSC5_DUI(object):
                     "LogToFile" : self.cbLog.get_active(),
                     "DLoadArt"  : self.cbCovers.get_active(),
                     "StationArt" : self.cbCoverIncl.get_active(),
+                    "StrictQ"   : self.cbStrict.get_active(),
                     "UseIP"     : self.cbDevIP.get_active(),
                     "Bookmarks" : self.bookmarks,
                     "MapData"   : self.mapData,
@@ -1896,6 +1925,9 @@ class NRSC5_DUI(object):
             
             with open(os.path.join(cfgDir,"stationLogos.json"), mode='w') as f:
                 json.dump(self.stationLogos, f, indent=2)
+
+            with open(os.path.join(cfgDir,"coverMetas.json"), mode='w') as f:
+                json.dump(self.coverMetas, f, indent=2)
         except:
             self.debugLog("Error: Unable to save config", True)
     
