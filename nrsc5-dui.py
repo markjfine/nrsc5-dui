@@ -415,9 +415,7 @@ class NRSC5_DUI(object):
         newArtist = self.fix_artist().replace("'","’")
 
         setStrict = (self.cbStrict.get_sensitive() and self.cbStrict.get_active())
-        #if setStrict:
         searchArtist = newArtist
-        #else:
         #searchArtist = artist=self.streamInfo["Artist"].replace("'","’").replace("/","ft.")
         newTitle = self.streamInfo["Title"].replace("'","’")
         baseStr = str(newArtist+" - "+self.streamInfo["Title"]).replace(" ","_").replace("/","_").replace(":","_")+".jpg"
@@ -437,83 +435,101 @@ class NRSC5_DUI(object):
         else:
             try:
                 imgSaved = False
-                result = None
+                i = 1
 
-                #print()
-                #print("searching for {} - {}".format(searchArtist,newTitle))
+                while (not imgSaved):
+                    #if no image was downloaded the first time through and Strict was True, try again setting Strict to False
+                    print()
+                    if (i==2) and (setStrict):
+                        setStrict = False
+                        print("Running through again, setStrict is ",setStrict)
+                    else:
+                        print("Running through first time, setStrict is ",setStrict)
 
-                try:
-                    result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type='Album', status='Official')
-                    #print("recording search succeeded")
-                except:
-                    print("MusicBrainz recording search error")
-                    #pass
+                    result = None
+    
+                    print("searching for {} - {}".format(searchArtist,newTitle))
+  
+                    try:
+                        result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type='Album', status='Official')
+                        print("recording search succeeded")
+                    except:
+                        print("MusicBrainz recording search error")
+                        #pass
+    
+                    if (result is not None) and ('recording-list' in result) and (len(result['recording-list']) != 0):
+                        print("got recording search result with {} recordings".format(len(result['recording-list'])))
+    
+                        # loop through the list until you get a match
+                        for (idx, release) in enumerate(result['recording-list']):
+                            #print(release)
+                            resultID = self.check_value('id',release,"")
+                            resultScore = self.check_value('ext:score',release,"0")
+                            resultArtist = self.check_value('artist-credit-phrase',release,"")
+                            resultTitle = self.check_value('title',release,"")
+                            resultGenre = self.check_value('name',self.check_value('tag-list',release,""),"")
+                            scoreMatch = (int(resultScore) > 90)
+                            artistMatch = (newArtist.lower() in resultArtist.lower())
+                            titleMatch = (newTitle.lower() in resultTitle.lower())
+                            recordingMatch = (artistMatch and titleMatch and scoreMatch)
+    
+                            # don't bother dealing with releases if artist, title and score don't match
+                            resultStatus = ""
+                            resultType = ""
+                            resultAlbum = ""
+                            resultArtist2 = ""
+                            releaseMatch = False
+                            imageMatch = False
+                            if recordingMatch and ('release-list' in release):
+                                print("got release list with {} releases".format(len(release['release-list'])))
+                                for (idx2, release2) in enumerate(release['release-list']):
+                                    #print(release2)
+                                    imageMatch = False
+                                    resultID = self.check_value('id',release2,"")
+                                    resultStatus = self.check_value('status',release2,"Official")
+                                    resultType = self.check_value('type',self.check_value('release-group',release2,""),"")
+                                    resultAlbum = self.check_value('title',release2,"")
+                                    resultArtist2 = self.check_value('artist-credit-phrase',release2,"")
+                                    typeMatch = (resultType in ['Single','Album','EP'])
+                                    statusMatch = (resultStatus == 'Official')
+                                    albumMatch = (not self.check_terms(resultAlbum, albumExclude))
+                                    #artistMatch2 = (resultArtist2 != "") and (not ('Various' in resultArtist2))
+                                    artistMatch2 = (not ('Various' in resultArtist2))
+                                    releaseMatch = (artistMatch2 and albumMatch and typeMatch and statusMatch)
+                                    print("#{} {}: Track: {} - {}, {}: {} - {}, {} {}% {}".format(idx, resultStatus, resultArtist, resultTitle, resultType, resultArtist2, resultAlbum, resultID, resultScore, resultGenre))                    
+                                    # don't bother checking for covers unless album, type, and status match
+                                    if releaseMatch:
+                                        imageMatch = self.check_musicbrainz_cover(resultID)
+                                    if (releaseMatch and imageMatch and ((idx2+1) < len(release['release-list']))):
+                                        break
+    
+                            if (recordingMatch and releaseMatch and imageMatch):
+     
+                                # got a full match, now get the cover art
+                                print("Found {}: Track: {} - {}, {}: {} - {}, {} {}% {}".format(resultStatus, resultArtist, resultTitle, resultType, resultArtist2, resultAlbum, resultID, resultScore, resultGenre))
+                                if self.save_musicbrainz_cover(resultID,saveStr):
+                                    self.coverImage = saveStr
+                                    imgSaved = True
+                                    if (self.streamInfo['Album'] == ""):
+                                        self.streamInfo['Album']=resultAlbum
+                                    if (self.streamInfo['Genre'] == ""):
+                                        self.streamInfo['Genre']=resultGenre
+                                    self.coverMetas[baseStr] = [self.streamInfo["Title"],self.streamInfo["Artist"],self.streamInfo["Album"],self.streamInfo["Genre"]]
 
-                if (result is not None) and ('recording-list' in result):
-                    #print("got recording search result with {} recordings".format(len(result['recording-list'])))
+                            if (imgSaved) and ((idx+1) < len(result['recording-list'])) or (not scoreMatch):
+                               break
 
-                    # loop through the list until you get a match
-                    for (idx, release) in enumerate(result['recording-list']):
-                        #print(release)
-                        resultID = self.check_value('id',release,"")
-                        resultScore = self.check_value('ext:score',release,"0")
-                        resultArtist = self.check_value('artist-credit-phrase',release,"")
-                        resultTitle = self.check_value('title',release,"")
-                        resultGenre = self.check_value('name',self.check_value('tag-list',release,""),"")
-                        scoreMatch = (int(resultScore) > 90)
-                        artistMatch = (newArtist.lower() in resultArtist.lower())
-                        titleMatch = (newTitle.lower() in resultTitle.lower())
-                        recordingMatch = (artistMatch and titleMatch and scoreMatch)
-
-                        # don't bother dealing with releases if artist, title and score don't match
-                        resultStatus = ""
-                        resultType = ""
-                        resultAlbum = ""
-                        resultArtist2 = ""
-                        releaseMatch = False
-                        imageMatch = False
-                        if recordingMatch and ('release-list' in release):
-                            #print("got release list with {} releases".format(len(release['release-list'])))
-                            for (idx2, release2) in enumerate(release['release-list']):
-                                #print(release2)
-                                imageMatch = False
-                                resultID = self.check_value('id',release2,"")
-                                resultStatus = self.check_value('status',release2,"Official")
-                                resultType = self.check_value('type',self.check_value('release-group',release2,""),"")
-                                resultAlbum = self.check_value('title',release2,"")
-                                resultArtist2 = self.check_value('artist-credit-phrase',release2,"")
-                                typeMatch = (resultType in ['Single','Album','EP'])
-                                statusMatch = (resultStatus == 'Official')
-                                albumMatch = (not self.check_terms(resultAlbum, albumExclude))
-                                #artistMatch2 = (resultArtist2 != "") and (not ('Various' in resultArtist2))
-                                artistMatch2 = (not ('Various' in resultArtist2))
-                                releaseMatch = (artistMatch2 and albumMatch and typeMatch and statusMatch)
-                                #print("#{} {}: Track: {} - {}, {}: {} - {}, {} {}% {}".format(idx, resultStatus, resultArtist, resultTitle, resultType, resultArtist2, resultAlbum, resultID, resultScore, resultGenre))                    
-                                # don't bother checking for covers unless album, type, and status match
-                                if releaseMatch:
-                                    imageMatch = self.check_musicbrainz_cover(resultID)
-                                if (releaseMatch and imageMatch and ((idx2+1) < len(release['release-list']))):
-                                    break
-
-                        if (recordingMatch and releaseMatch and imageMatch):
- 
-                            # got a full match, now get the cover art
-                            #print("Found {}: Track: {} - {}, {}: {} - {}, {} {}% {}".format(resultStatus, resultArtist, resultTitle, resultType, resultArtist2, resultAlbum, resultID, resultScore, resultGenre))
-                            if self.save_musicbrainz_cover(resultID,saveStr):
-                                self.coverImage = saveStr
-                                imgSaved = True
-                                if (self.streamInfo['Album'] == ""):
-                                    self.streamInfo['Album']=resultAlbum
-                                self.coverMetas[baseStr] = [self.streamInfo["Title"],self.streamInfo["Artist"],self.streamInfo["Album"],self.streamInfo["Genre"]]
-
-                        if (imgSaved) and ((idx+1) < len(result['recording-list'])) or (not scoreMatch):
-                           break
+                    i = 2
+                    # if we got an image or Strict was false the first time through, there's no need to run through it again
+                    if (imgSaved) or (setStrict==False):
+                        break
 
                 # If no match use the station logo if there is one
                 if (not imgSaved):
-                    #print("No image found, using logo")
+                    print("No image found, using logo")
                     self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
                     self.streamInfo['Album']=""
+                    self.streamInfo['Genre']=""
             except:
                 print("general error in the musicbrainz routine")
                 #pass
