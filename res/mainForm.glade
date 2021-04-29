@@ -1412,12 +1412,12 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblStrict">
+                          <object class="GtkLabel" id="lblExtend">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xalign">1</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">Strict Queries:</property>
+                            <property name="label" translatable="yes">Extended Queries:</property>
                             <property name="sensitive">False</property>
                           </object>
                           <packing>
@@ -1428,16 +1428,16 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkCheckButton" id="cbStrict">
+                          <object class="GtkCheckButton" id="cbExtend">
                             <property name="label" translatable="yes">Enable</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
-                            <property name="tooltip_text" translatable="yes">Force MusicBrainz to use Strict Queries</property>
+                            <property name="tooltip_text" translatable="yes">Use Extended MusicBrainz Queries (may be slow)</property>
                             <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                             <property name="sensitive">False</property>
-                            <property name="active">True</property>
+                            <property name="active">False</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
