@@ -306,8 +306,8 @@ class NRSC5_DUI(object):
         dlCoversSet = self.cbCovers.get_active()
         self.lblCoverIncl.set_sensitive(dlCoversSet)
         self.cbCoverIncl.set_sensitive(dlCoversSet)
-        self.lblStrict.set_sensitive(dlCoversSet)
-        self.cbStrict.set_sensitive(dlCoversSet)
+        self.lblExtend.set_sensitive(dlCoversSet)
+        self.cbExtend.set_sensitive(dlCoversSet)
 
     def img_to_pixbuf(self,img):
         """convert PIL.Image to GdkPixbuf.Pixbuf"""
@@ -414,14 +414,18 @@ class NRSC5_DUI(object):
         # only care about the first artist listed if separated by slashes
         newArtist = self.fix_artist().replace("'","’")
 
-        setStrict = (self.cbStrict.get_sensitive() and self.cbStrict.get_active())
+        setExtend = (self.cbExtend.get_sensitive() and self.cbExtend.get_active())
         searchArtist = newArtist
         #searchArtist = artist=self.streamInfo["Artist"].replace("'","’").replace("/","ft.")
         newTitle = self.streamInfo["Title"].replace("'","’")
         baseStr = str(newArtist+" - "+self.streamInfo["Title"]).replace(" ","_").replace("/","_").replace(":","_")+".jpg"
         saveStr = os.path.join(aasDir, baseStr)
 
-        if (newArtist=="") and (newTitle==""):
+        print("lastXHDR: "+self.lastXHDR)
+        if ((newArtist=="") and (newTitle=="")) or (self.lastXHDR == "1"):
+            self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
+            self.streamInfo['Album']=""
+            self.streamInfo['Genre']=""
             return
 
         # does it already exist?
@@ -440,18 +444,27 @@ class NRSC5_DUI(object):
                 while (not imgSaved):
                     #if no image was downloaded the first time through and Strict was True, try again setting Strict to False
                     print()
-                    if (i==2) and (setStrict):
-                        setStrict = False
-                        print("Running through again, setStrict is ",setStrict)
-                    else:
-                        print("Running through first time, setStrict is ",setStrict)
+                    #if (i==2) and (setStrict):
+                    #    setStrict = False
+                    #    print("Running through again, setStrict is ",setStrict)
+                    #else:
+                    #    print("Running through first time, setStrict is ",setStrict)
+                    setStrict = (i in [1,3,5,7])
+                    setType = ''
+                    if (i in [1,2,3,4]):
+                        setType = 'Album'
+                    setStatus = ''
+                    if (i in [1,2,5,6]):
+                        setStatus = 'Official'
+                    print("Search pass #{}: setStrict={}, setType={}, setStatus={}".format(i,setStrict,setType,setStatus))
 
                     result = None
     
                     print("searching for {} - {}".format(searchArtist,newTitle))
   
                     try:
-                        result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type='Album', status='Official')
+                        #result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type='Album', status='Official')
+                        result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type=setType, status=setStatus)
                         print("recording search succeeded")
                     except:
                         print("MusicBrainz recording search error")
@@ -510,18 +523,18 @@ class NRSC5_DUI(object):
                                 if self.save_musicbrainz_cover(resultID,saveStr):
                                     self.coverImage = saveStr
                                     imgSaved = True
-                                    if (self.streamInfo['Album'] == ""):
-                                        self.streamInfo['Album']=resultAlbum
-                                    if (self.streamInfo['Genre'] == ""):
-                                        self.streamInfo['Genre']=resultGenre
+                                    self.streamInfo['Album']=resultAlbum
+                                    self.streamInfo['Genre']=resultGenre
                                     self.coverMetas[baseStr] = [self.streamInfo["Title"],self.streamInfo["Artist"],self.streamInfo["Album"],self.streamInfo["Genre"]]
 
                             if (imgSaved) and ((idx+1) < len(result['recording-list'])) or (not scoreMatch):
                                break
 
-                    i = 2
+                    #i = 2
+                    i = i + 1
                     # if we got an image or Strict was false the first time through, there's no need to run through it again
-                    if (imgSaved) or (setStrict==False):
+                    #if (imgSaved) or (setStrict==False):
+                    if (imgSaved) or (i == 9) or ((not setExtend) and (i == 2)):
                         break
 
                 # If no match use the station logo if there is one
@@ -1462,7 +1475,7 @@ class NRSC5_DUI(object):
             lot  = m.group(3)
             #print("got XHDR msg xhdr:"+xhdr+" for lot:"+lot)
             if (xhdr != self.lastXHDR) or (lot != self.lastLOT):
-                #print("xhdr changed:"+xhdr+" for lot:"+lot)
+                print("xhdr changed:"+xhdr+" for lot:"+lot)
                 self.lastXHDR = xhdr
                 self.lastLOT = lot
                 self.xhdrChanged = True
@@ -1621,8 +1634,8 @@ class NRSC5_DUI(object):
         self.cbCovers      = builder.get_object("cbCovers")
         self.lblCoverIncl  = builder.get_object("lblCoverIncl")
         self.cbCoverIncl   = builder.get_object("cbCoverIncl")
-        self.lblStrict     = builder.get_object("lblStrict")
-        self.cbStrict      = builder.get_object("cbStrict")
+        self.lblExtend     = builder.get_object("lblExtend")
+        self.cbExtend      = builder.get_object("cbExtend")
         self.btnPlay       = builder.get_object("btnPlay")
         self.btnStop       = builder.get_object("btnStop")
         self.btnBookmark   = builder.get_object("btnBookmark")
@@ -1841,8 +1854,8 @@ class NRSC5_DUI(object):
                     self.cbCovers.set_active(config["DLoadArt"])
                 if ("StationArt" in config):
                     self.cbCoverIncl.set_active(config["StationArt"])
-                if ("StrictQ" in config):
-                    self.cbStrict.set_active(config["StrictQ"])
+                if ("ExtendQ" in config):
+                    self.cbExtend.set_active(config["ExtendQ"])
                 if ("UseIP" in config):
                     self.cbDevIP.set_active(config["UseIP"])
                 if ("DevIP" in config):
@@ -1929,7 +1942,7 @@ class NRSC5_DUI(object):
                     "LogToFile" : self.cbLog.get_active(),
                     "DLoadArt"  : self.cbCovers.get_active(),
                     "StationArt" : self.cbCoverIncl.get_active(),
-                    "StrictQ"   : self.cbStrict.get_active(),
+                    "ExtendQ"   : self.cbExtend.get_active(),
                     "UseIP"     : self.cbDevIP.get_active(),
                     "Bookmarks" : self.bookmarks,
                     "MapData"   : self.mapData,
