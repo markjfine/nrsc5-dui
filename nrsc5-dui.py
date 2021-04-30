@@ -421,8 +421,9 @@ class NRSC5_DUI(object):
         baseStr = str(newArtist+" - "+self.streamInfo["Title"]).replace(" ","_").replace("/","_").replace(":","_")+".jpg"
         saveStr = os.path.join(aasDir, baseStr)
 
-        print("lastXHDR: "+self.lastXHDR)
-        if ((newArtist=="") and (newTitle=="")) or (setExtend and (self.lastXHDR == "1")):
+        #print("lastXHDR: "+self.lastXHDR)
+        #if ((newArtist=="") and (newTitle=="")) or (setExtend and (self.lastXHDR == "1")):
+        if ((newArtist=="") and (newTitle=="")):
             self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
             self.streamInfo['Album']=""
             self.streamInfo['Genre']=""
@@ -443,7 +444,7 @@ class NRSC5_DUI(object):
 
                 while (not imgSaved):
                     #if no image was downloaded the first time through and Strict was True, try again setting Strict to False
-                    print()
+                    #print()
                     #if (i==2) and (setStrict):
                     #    setStrict = False
                     #    print("Running through again, setStrict is ",setStrict)
@@ -456,23 +457,22 @@ class NRSC5_DUI(object):
                     setStatus = ''
                     if (i in [1,2,5,6]):
                         setStatus = 'Official'
-                    print("Search pass #{}: setStrict={}, setType={}, setStatus={}".format(i,setStrict,setType,setStatus))
+                    #print("Search pass #{}: setStrict={}, setType={}, setStatus={}".format(i,setStrict,setType,setStatus))
 
                     result = None
     
-                    print("searching for {} - {}".format(searchArtist,newTitle))
+                    #print("searching for {} - {}".format(searchArtist,newTitle))
   
                     try:
                         #result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type='Album', status='Official')
                         result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type=setType, status=setStatus)
-                        print("recording search succeeded")
+                        #print("recording search succeeded")
                     except:
                         print("MusicBrainz recording search error")
                         #pass
     
-                    if (result is not None) and ('recording-list' in result) and (len(result['recording-list']) != 0):
-                        print("got recording search result with {} recordings".format(len(result['recording-list'])))
-    
+                    #print("got recording search result with {} recordings".format(len(result['recording-list'])))
+                    if (result is not None) and ('recording-list' in result) and (len(result['recording-list']) != 0):    
                         # loop through the list until you get a match
                         for (idx, release) in enumerate(result['recording-list']):
                             #print(release)
@@ -493,8 +493,8 @@ class NRSC5_DUI(object):
                             resultArtist2 = ""
                             releaseMatch = False
                             imageMatch = False
+                            #print("    #{} got release list with {} releases and recordingMatch is {}".format(idx, len(release['release-list']),recordingMatch))
                             if recordingMatch and ('release-list' in release):
-                                print("got release list with {} releases".format(len(release['release-list'])))
                                 for (idx2, release2) in enumerate(release['release-list']):
                                     #print(release2)
                                     imageMatch = False
@@ -509,7 +509,7 @@ class NRSC5_DUI(object):
                                     #artistMatch2 = (resultArtist2 != "") and (not ('Various' in resultArtist2))
                                     artistMatch2 = (not ('Various' in resultArtist2))
                                     releaseMatch = (artistMatch2 and albumMatch and typeMatch and statusMatch)
-                                    print("#{} {}: Track: {} - {}, {}: {} - {}, {} {}% {}".format(idx, resultStatus, resultArtist, resultTitle, resultType, resultArtist2, resultAlbum, resultID, resultScore, resultGenre))                    
+                                    #print("    #{} {}: Track: {} - {}, {}: {} - {}, {} {}% {}".format(idx, resultStatus, resultArtist, resultTitle, resultType, resultArtist2, resultAlbum, resultID, resultScore, resultGenre))                    
                                     # don't bother checking for covers unless album, type, and status match
                                     if releaseMatch:
                                         imageMatch = self.check_musicbrainz_cover(resultID)
@@ -519,7 +519,7 @@ class NRSC5_DUI(object):
                             if (recordingMatch and releaseMatch and imageMatch):
      
                                 # got a full match, now get the cover art
-                                print("Found {}: Track: {} - {}, {}: {} - {}, {} {}% {}".format(resultStatus, resultArtist, resultTitle, resultType, resultArtist2, resultAlbum, resultID, resultScore, resultGenre))
+                                #print("Found {}: Track: {} - {}, {}: {} - {}, {} {}% {}".format(resultStatus, resultArtist, resultTitle, resultType, resultArtist2, resultAlbum, resultID, resultScore, resultGenre))
                                 if self.save_musicbrainz_cover(resultID,saveStr):
                                     self.coverImage = saveStr
                                     imgSaved = True
@@ -528,7 +528,8 @@ class NRSC5_DUI(object):
                                     self.coverMetas[baseStr] = [self.streamInfo["Title"],self.streamInfo["Artist"],self.streamInfo["Album"],self.streamInfo["Genre"]]
 
                             if (imgSaved) and ((idx+1) < len(result['recording-list'])) or (not scoreMatch):
-                               break
+                                #print("#{} scoreMatch is {}... breaking".format(idx, scoreMatch))
+                                break
 
                     #i = 2
                     i = i + 1
@@ -539,7 +540,7 @@ class NRSC5_DUI(object):
 
                 # If no match use the station logo if there is one
                 if (not imgSaved):
-                    print("No image found, using logo")
+                    #print("No image found, using logo")
                     self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
                     self.streamInfo['Album']=""
                     self.streamInfo['Genre']=""
@@ -1475,7 +1476,7 @@ class NRSC5_DUI(object):
             lot  = m.group(3)
             #print("got XHDR msg xhdr:"+xhdr+" for lot:"+lot)
             if (xhdr != self.lastXHDR) or (lot != self.lastLOT):
-                print("xhdr changed:"+xhdr+" for lot:"+lot)
+                #print("xhdr changed:"+xhdr+" for lot:"+lot)
                 self.lastXHDR = xhdr
                 self.lastLOT = lot
                 self.xhdrChanged = True
