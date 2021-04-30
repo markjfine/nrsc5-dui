@@ -422,7 +422,7 @@ class NRSC5_DUI(object):
         saveStr = os.path.join(aasDir, baseStr)
 
         print("lastXHDR: "+self.lastXHDR)
-        if ((newArtist=="") and (newTitle=="")) or (self.lastXHDR == "1"):
+        if ((newArtist=="") and (newTitle=="")) or (setExtend and (self.lastXHDR == "1")):
             self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
             self.streamInfo['Album']=""
             self.streamInfo['Genre']=""
