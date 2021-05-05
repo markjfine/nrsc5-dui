@@ -29,6 +29,15 @@ The configuration and resource directories will be created in a new `cfg` and `r
 
 nrsc5 should be installed in a directory that is in your `$PATH` environment variable. Otherwise add the full path to nrsc5 (e.g., `/usr/local/bin/`) may be entered at runtime.
 
+## Windows 10 setup notes
+One of the goals of this project was to provide a stand-alone, cross-platform application. Please note that NRSC5-DUI will not operate natively in this manner under Windows 10 at this time. This is even when built under a MinGW environment (such as MSYS2) or cross-compiled using MinGW-compatible compilers. The issues found are as follows:  
+  
+1. The resulting RTL_SDR library used by NRSC5.EXE doesn't seem to work correctly with respect to communicating with the RTL_SDR dongle, as well as any appropriate signal detection and bit error rate evaluation. There has been some success in getting NRSC5.EXE to run using the -H option when the dongle is operating under rtl_tcp on another platform, but again, that's outside a stand-alone operating environment. There is also a question of whether NRSC5.EXE responds to keyboard input properly under a MinGW-environment, which may preclude changing streams (`0` thru `3` keypress) as well as exiting it properly (`q`keypress) without typing Ctrl-C.  
+2. PyGObject, which is a critical module, seems to require an older version of Microsoft C/C++ in order to properly build the gi library. This is true when trying to install it using either pip or pacman, however, some have had success installing PyGObject using conda.  
+3. Win10, which is not Posix-compliant, does not provide a good pty solution under Python. This is required to spawn and interact with NRSC5.EXE via a pipe. WinPty does exist as an alternative, however it requires a complete rewrite of how the current version of NRSC5-DUI operates. This does not appear to be an issue when running under a MinGW environment.  
+  
+The bottom line is that some have had success installing and running the application and it's dependencies under specific MinGW environments such as WSL2, but may still require the dongle to operate under RTL-TCP, not directly through NRSC5.EXE.
+
 # Usage
 Please ensure your RTL-SDR dongle is first connected to an available USB port. Then, from the terminal, start nrsc5-dui by entering:
 `python3 nrsc5-dui.py`
