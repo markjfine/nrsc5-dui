@@ -36,7 +36,7 @@ One of the goals of this project was to provide a stand-alone, cross-platform ap
 2. PyGObject, which is a critical module, seems to require an older version of Microsoft C/C++ in order to properly build the gi library. This is true when trying to install it using either pip or pacman, however, some have had success installing PyGObject using conda.  
 3. Win10, which is not Posix-compliant, does not provide a good pty solution under Python. This is required to spawn and interact with NRSC5.EXE via a pipe. WinPty does exist as an alternative, however it requires a complete rewrite of how the current version of NRSC5-DUI operates. This does not appear to be an issue when running under a MinGW environment.  
   
-The bottom line is that some have had success installing and running the application and it's dependencies under specific MinGW environments such as WSL2, but may still require the dongle to operate under RTL-TCP, not directly through NRSC5.EXE.
+The bottom line is that some have had success installing and running the application and it's dependencies under specific MinGW environments such as WSL2, but may still require the dongle to operate under RTL_TCP and not directly via NRSC5.EXE.
 
 # Usage
 Please ensure your RTL-SDR dongle is first connected to an available USB port. Then, from the terminal, start nrsc5-dui by entering:
