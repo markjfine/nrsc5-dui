@@ -17,13 +17,11 @@ The following programs are required to run NRSC5-DUI
 * [pyOpenSSL](https://pypi.org/project/pyOpenSSL)
 * [musicbrainzngs](https://pypi.org/project/musicbrainzngs)
 * [nrsc5](https://github.com/theori-io/nrsc5)
-* [sox](https://github.com/chirlu/sox)
 
 # Setup
 1. Install the latest version of Python 3.9, PyGObject, Pillow, and other dependencies.
 2. Compile and install nrsc5.
-3. Install sox
-4. Install nrsc5-dui files in a directory where you have write permissions.
+3. Install nrsc5-dui files in a directory where you have write permissions.
 
 The configuration and resource directories will be created in a new `cfg` and `res` directory under where nrsc5-dui.py resides. Similarly, an `aas` directory will be created for downloaded files and a `map` directory will be created to store weather & traffic maps.
 
