@@ -21,13 +21,13 @@ gtk_package_files.append([os.path.join('lib','gtk-2.0','modules'), get_files_rec
 gtk_package_files.append([os.path.join('share','icons'), get_files_recursive(os.path.join(gtk_base_path,'..','runtime','share','icons'))])
 
 setup(
-    name = 'nrsc5-gui',
+    name = 'nrsc5-dui',
     description = 'Graphical frontend for nrsc5 cli utility',
     version = '1.0',
 
     windows = [
                   {
-                      'script': 'nrsc5-gui.py',
+                      'script': 'nrsc5-dui.py',
                       'icon_resources': [(1, os.path.join("res","nrsc5-gui.ico"))],
                   }
               ],
