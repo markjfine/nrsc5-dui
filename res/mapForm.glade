@@ -37,8 +37,6 @@
                   <object class="GtkScrolledWindow" id="scrolledwindow1">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <!--property name="hscrollbar_policy">automatic</property-->
-                    <!--property name="vscrollbar_policy">automatic</property-->
                     <child>
                       <object class="GtkViewport" id="viewport1">
                         <property name="visible">True</property>
@@ -172,7 +170,6 @@
                         <property name="primary_icon_activatable">False</property>
                         <property name="secondary_icon_activatable">False</property>
                         <property name="primary_icon_sensitive">True</property>
-                        <!--property name="secondary_icon_sensitive">True</property-->
                         <property name="adjustment">adjSpeed</property>
                         <property name="digits">2</property>
                         <signal name="value-changed" handler="on_spnSpeed_value_changed" swapped="no"/>
@@ -216,7 +213,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="yalign">1</property>
-                        <!--property name="pixbuf">radar_key.png</property-->
                       </object>
                       <packing>
                         <property name="top_attach">7</property>

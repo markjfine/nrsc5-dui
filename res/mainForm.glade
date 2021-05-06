@@ -35,12 +35,10 @@
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <!--property name="pixbuf">weather.png</property-->
   </object>
   <object class="GtkWindow" id="mainWindow">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">NRSC5 DUI</property>
-    <!--property name="icon">logo.png</property-->
     <child>
       <placeholder/>
     </child>
@@ -149,7 +147,6 @@
                 <property name="tooltip_text" translatable="yes">Weather and Traffic Map Viewer</property>
                 <property name="label" translatable="yes">Weather &amp; Traffic Maps</property>
                 <property name="use_underline">True</property>
-                <!--property name="icon_widget">image1</property-->
                 <signal name="clicked" handler="on_btnMap_clicked" swapped="no"/>
               </object>
               <packing>
@@ -1545,8 +1542,6 @@
                             <property name="can_focus">False</property>
                             <child>
                               <object class="GtkImage" id="imgMap">
-                                <!--property name="width_request">200</property-->
-                                <!--property name="height_request">200</property-->
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="expand">TRUE</property>
@@ -1713,10 +1708,6 @@
                       <object class="GtkLabel" id="txtTitle">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <!--property name="editable">False</property-->
-                        <!--property name="invisible_char">●</property-->
-                        <!--property name="primary_icon_activatable">False</property-->
-                        <!--property name="secondary_icon_activatable">False</property-->
                         <property name="xpad">10</property>
                         <property name="ypad">10</property>
                         <property name="xalign">0</property>
@@ -1732,10 +1723,6 @@
                       <object class="GtkLabel" id="txtArtist">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <!--property name="editable">False</property-->
-                        <!--property name="invisible_char">●</property-->
-                        <!--property name="primary_icon_activatable">False</property-->
-                        <!--property name="secondary_icon_activatable">False</property-->
                         <property name="xpad">10</property>
                         <property name="ypad">10</property>
                         <property name="xalign">0</property>
@@ -1753,10 +1740,6 @@
                       <object class="GtkLabel" id="txtAlbum">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <!--property name="editable">False</property-->
-                        <!--property name="invisible_char">●</property-->
-                        <!--property name="primary_icon_activatable">False</property-->
-                        <!--property name="secondary_icon_activatable">False</property-->
                         <property name="xpad">10</property>
                         <property name="ypad">10</property>
                         <property name="xalign">0</property>
@@ -1774,10 +1757,6 @@
                       <object class="GtkLabel" id="txtGenre">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <!--property name="editable">False</property-->
-                        <!--property name="invisible_char">●</property-->
-                        <!--property name="primary_icon_activatable">False</property-->
-                        <!--property name="secondary_icon_activatable">False</property-->
                         <property name="xpad">10</property>
                         <property name="ypad">10</property>
                         <property name="xalign">0</property>
@@ -1823,7 +1802,6 @@
                   <object class="GtkImage" id="img_nosynch">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <!--property name="pixbuf">nosynch.png</property-->
                     <property name="halign">GTK_ALIGN_START</property>
                     <property name="tooltip_text" translatable="yes">Synchronization</property>
                   </object>
@@ -1832,7 +1810,6 @@
                   <object class="GtkImage" id="img_synchpilot">
                     <property name="visible">False</property>
                     <property name="can_focus">False</property>
-                    <!--property name="pixbuf">synchpilot.png</property-->
                     <property name="halign">GTK_ALIGN_START</property>
                     <property name="tooltip_text" translatable="yes">Synchronization</property>
                   </object>
@@ -1841,7 +1818,6 @@
                   <object class="GtkImage" id="img_lostdevice">
                     <property name="visible">False</property>
                     <property name="can_focus">False</property>
-                    <!--property name="pixbuf">lostdevice.png</property-->
                     <property name="halign">GTK_ALIGN_START</property>
                     <property name="tooltip_text" translatable="yes">Device failure</property>
                   </object>
