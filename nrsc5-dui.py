@@ -81,6 +81,8 @@ class NRSC5_DUI(object):
         self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine"
         musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
 
+        self.width          = 0         # window width
+        self.height         = 0         # window height
         self.mapFile        = os.path.join(resDir, "map.png")
         self.defaultSize    = [490,250] # default width,height of main app
         self.nrsc5          = None      # nrsc5 process
@@ -295,23 +297,27 @@ class NRSC5_DUI(object):
 
     def on_cover_resize(self, container):
         global mapDir
-        if self.coverImage != "":
-            self.showArtwork(self.coverImage)
+        width, height = self.mainWindow.get_size()
+        if (self.width != width) or (self.height != height):
+            self.width = width
+            self.height = height
+            if (self.coverImage != "") and (self.coverImage[-5:] != "/aas/"):
+                self.showArtwork(self.coverImage)
 
-        img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12           
-        if (self.mapData["mapMode"] == 0):
-            map_file = os.path.join(mapDir, "TrafficMap.png")
-            if os.path.isfile(map_file):
-                map_img = Image.open(map_file).resize((img_size, img_size), Image.LANCZOS)
-                self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
-            else:
-                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
-        elif (self.mapData["mapMode"] == 1):
-            if os.path.isfile(self.mapData["weatherNow"]):
-                map_img = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), Image.LANCZOS)
-                self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
-            else:
-                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
+            img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12           
+            if (self.mapData["mapMode"] == 0):
+                map_file = os.path.join(mapDir, "TrafficMap.png")
+                if os.path.isfile(map_file):
+                    map_img = Image.open(map_file).resize((img_size, img_size), Image.LANCZOS)
+                    self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
+                else:
+                    self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
+            elif (self.mapData["mapMode"] == 1):
+                if os.path.isfile(self.mapData["weatherNow"]):
+                    map_img = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), Image.LANCZOS)
+                    self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
+                else:
+                    self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
 
     def id3_did_change(self):
         oldTitle = self.txtTitle.get_label().strip()
@@ -491,6 +497,8 @@ class NRSC5_DUI(object):
                 print("general error in the musicbrainz routine")
 
         # now display it by simulating a window resize
+        self.height = 0
+        self.width = 0
         self.on_cover_resize(self.mainWindow)
 
     def showArtwork(self, art):
