@@ -25,7 +25,7 @@ The following programs are required to run NRSC5-DUI
 
 The configuration and resource directories will be created in a new `cfg` and `res` directory under where nrsc5-dui.py resides. Similarly, an `aas` directory will be created for downloaded files and a `map` directory will be created to store weather & traffic maps.
 
-nrsc5 should be installed in a directory that is in your `$PATH` environment variable. Otherwise add the full path to nrsc5 (e.g., `/usr/local/bin/`) may be entered at runtime.
+nrsc5 should be installed in a directory that is in your `$PATH` environment variable. Otherwise the full path to nrsc5 (e.g., `/usr/local/bin/`) may be entered at runtime (see Usage for details, below).
 
 ## Windows 10 setup notes
 One of the goals of this project was to provide a stand-alone, cross-platform application. Please note that NRSC5-DUI will not operate natively in this manner under Windows 10 at this time. This is even when built under a MinGW environment (such as MSYS2) or cross-compiled using MinGW-compatible compilers. The issues found are as follows:  
