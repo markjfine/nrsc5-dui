@@ -295,16 +295,19 @@ class NRSC5_DUI(object):
         data = GLib.Bytes.new(img.tobytes())
         return GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, 'A' in img.getbands(),8, img.width, img.height, len(img.getbands())*img.width)
 
+    def did_resize(self):
+        result = False
+        width, height = self.mainWindow.get_size()
+        if (self.width != width) or (self.height != height):
+            self.width = width
+            self.height = height
+            result = True
+        return result
+
     def on_cover_resize(self, container):
         global mapDir
-        #width, height = self.mainWindow.get_size()
-        if True:
-        #if (self.width != width) or (self.height != height):
-            #self.width = width
-            #self.height = height
-
-            if (self.coverImage != "") and (self.coverImage[-5:] != "/aas/"):
-                self.showArtwork(self.coverImage)
+        if (self.did_resize()):
+            self.showArtwork(self.coverImage)
 
             img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12           
             if (self.mapData["mapMode"] == 0):
@@ -501,13 +504,15 @@ class NRSC5_DUI(object):
         # now display it by simulating a window resize
         #self.height = 0
         #self.width = 0
-        self.on_cover_resize(self.mainWindow)
+        #self.on_cover_resize(self.mainWindow)
+        self.showArtwork(self.coverImage)
 
     def showArtwork(self, art):
-        img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
-        self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(art)
-        self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
-        self.imgCover.set_from_pixbuf(self.pixbuf)
+        if (art != "") and (art[-5:] != "/aas/"):
+            img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
+            self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(art)
+            self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
+            self.imgCover.set_from_pixbuf(self.pixbuf)
 
     def displayLogo(self):
         global aasDir
@@ -849,11 +854,14 @@ class NRSC5_DUI(object):
     def on_radMap_toggled(self, btn):
         global mapDir
         if (btn.get_active()):
+            img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
+            if (img_size < 200):
+                img_size = 200
             if (btn == self.radMapTraffic):
                 self.mapData["mapMode"] = 0
                 mapFile = os.path.join(mapDir, "TrafficMap.png")
                 if (os.path.isfile(mapFile)):                                                           # check if map exists
-                    mapImg = Image.open(mapFile).resize((200,200), Image.LANCZOS)                       # scale map to fit window
+                    mapImg = Image.open(mapFile).resize((img_size, img_size), Image.LANCZOS)                       # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)                # display missing image if file is not found
@@ -861,7 +869,7 @@ class NRSC5_DUI(object):
             elif (btn == self.radMapWeather):
                 self.mapData["mapMode"] = 1
                 if (os.path.isfile(self.mapData["weatherNow"])):
-                    mapImg = Image.open(self.mapData["weatherNow"]).resize((200,200), Image.LANCZOS)    # scale map to fit window
+                    mapImg = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), Image.LANCZOS)    # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display 
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)                # display missing image if file is not found
