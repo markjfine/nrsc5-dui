@@ -19,7 +19,7 @@ The following programs are required to run NRSC5-DUI
 * [nrsc5](https://github.com/theori-io/nrsc5)
 
 # Setup
-1. Install the latest version of Python 3.9, PyGObject, Pillow, and other dependencies.
+1. Install the latest version of Python 3.9, PyGObject, Pillow, and other python dependencies.
 2. Compile and install nrsc5.
 3. Install nrsc5-dui files in a directory where you have write permissions.
 
