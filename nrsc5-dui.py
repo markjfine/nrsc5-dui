@@ -297,10 +297,12 @@ class NRSC5_DUI(object):
 
     def on_cover_resize(self, container):
         global mapDir
-        width, height = self.mainWindow.get_size()
-        if (self.width != width) or (self.height != height):
-            self.width = width
-            self.height = height
+        #width, height = self.mainWindow.get_size()
+        if True:
+        #if (self.width != width) or (self.height != height):
+            #self.width = width
+            #self.height = height
+
             if (self.coverImage != "") and (self.coverImage[-5:] != "/aas/"):
                 self.showArtwork(self.coverImage)
 
@@ -497,8 +499,8 @@ class NRSC5_DUI(object):
                 print("general error in the musicbrainz routine")
 
         # now display it by simulating a window resize
-        self.height = 0
-        self.width = 0
+        #self.height = 0
+        #self.width = 0
         self.on_cover_resize(self.mainWindow)
 
     def showArtwork(self, art):
