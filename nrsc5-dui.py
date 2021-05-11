@@ -76,7 +76,7 @@ class NRSC5_DUI(object):
         self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
 
         self.app_name       = "NRSC5-DUI"
-        self.version        = "2.1.0"
+        self.version        = "2.1.1"
         self.web_addr       = "https://github.com/markjfine/nrsc5-dui"
         self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine"
         musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
@@ -402,7 +402,7 @@ class NRSC5_DUI(object):
         saveStr = os.path.join(aasDir, baseStr)
 
         if ((newArtist=="") and (newTitle=="")):
-            self.coverImage = os.path.join(aasDir, self.stationLogos[self.stationStr][self.streamNum])
+            self.displayLogo()
             self.streamInfo['Album']=""
             self.streamInfo['Genre']=""
             return
@@ -502,9 +502,6 @@ class NRSC5_DUI(object):
                 print("general error in the musicbrainz routine")
 
         # now display it by simulating a window resize
-        #self.height = 0
-        #self.width = 0
-        #self.on_cover_resize(self.mainWindow)
         self.showArtwork(self.coverImage)
 
     def showArtwork(self, art):
