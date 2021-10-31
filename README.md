@@ -18,6 +18,8 @@ The following programs are required to run NRSC5-DUI
 * [musicbrainzngs](https://pypi.org/project/musicbrainzngs)
 * [nrsc5](https://github.com/theori-io/nrsc5)
 
+It is also assumed you have a fully operational Gtk3 environment installed from [Homebrew](https://brew.sh/), if running on macOS.
+
 # Setup
 1. Install the latest version of Python 3.9, PyGObject, Pillow, and other python dependencies.
 2. Compile and install nrsc5.
