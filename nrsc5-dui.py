@@ -1387,7 +1387,7 @@ class NRSC5_DUI(object):
                 else:
                     actualFileSize = os.path.getsize(os.path.join(aasDir,fileName))
                     if (fileSize != actualFileSize):
-                        self.debugLog("Corrupt file: " + fileName + " (expected: "+fileSize+" bytes, got "+actualFileSize+" bytes)")
+                        self.debugLog("Corrupt file: " + fileName + " (expected: "+str(fileSize)+" bytes, got "+str(actualFileSize)+" bytes)")
 
                 if (coverStream > -1):
                     if coverStream == self.streamNum:
