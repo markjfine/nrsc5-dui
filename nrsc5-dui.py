@@ -290,6 +290,15 @@ class NRSC5_DUI(object):
         self.lblExtend.set_sensitive(dlCoversSet)
         self.cbExtend.set_sensitive(dlCoversSet)
 
+    def on_cbSDRPlay_clicked(self, btn):
+        useSDRPlay = self.cbSDRPlay.get_active()
+        self.lblSdrPlay.set_sensitive(useSDRPlay)
+        self.txtSDRPlaySer.set_sensitive(useSDRPlay)
+        self.txtSDRPlaySer.set_can_focus(useSDRPlay)
+        self.lblSDRPlayAnt.set_sensitive(useSDRPlay)
+        self.txtSDRPlayAnt.set_sensitive(useSDRPlay)
+        self.txtSDRPlayAnt.set_can_focus(useSDRPlay)
+
     def img_to_pixbuf(self,img):
         """convert PIL.Image to GdkPixbuf.Pixbuf"""
         data = GLib.Bytes.new(img.tobytes())
@@ -581,11 +590,27 @@ class NRSC5_DUI(object):
             if (self.spinRTL.get_value() != 0):
                 self.nrsc5Args.append("-d")
                 self.nrsc5Args.append(str(int(self.spinRTL.get_value())))
+
+            # set log level to 2 if SDRPLay enabled
+            if (self.cbSDRPlay.get_active()):
+                self.nrsc5Args.append("-l2")
+            
+            # set SDRPlay serial number if not blank
+            if (self.cbSDRPlay.get_active()) and (self.txtSDRPlaySer.get_text() != ""):
+                self.nrsc5Args.append("-d")
+                self.nrsc5Args.append(self.txtSDRPlaySer.get_text())
+            
+            # set SDRPlay antenna if not blank
+            if (self.cbSDRPlay.get_active()) and (self.txtSDRPlayAnt.get_text() != ""):
+                self.nrsc5Args.append("-A")
+                self.nrsc5Args.append("\"Antenna "+self.txtSDRPlayAnt.get_text()+"\"")
             
             # set frequency and stream
             self.nrsc5Args.append(str(self.spinFreq.get_value()))
             self.nrsc5Args.append(str(int(self.streamNum)))
-                        
+            
+            print(self.nrsc5Args)
+
             # start the timer
             self.statusTimer = Timer(1, self.checkStatus)
             self.statusTimer.start()
@@ -1505,6 +1530,11 @@ class NRSC5_DUI(object):
         self.spinPPM       = builder.get_object("spinPPM")
         self.spinRTL       = builder.get_object("spinRTL")
         self.txtDevIP      = builder.get_object("txtDevIP")
+        self.lblSdrPlay    = builder.get_object("lblSdrPlay")
+        self.txtSDRPlaySer = builder.get_object("txtSDRPlaySer")
+        self.cbSDRPlay     = builder.get_object("cbSDRPlay")
+        self.lblSDRPlayAnt = builder.get_object("lblSDRPlayAnt")
+        self.txtSDRPlayAnt = builder.get_object("txtSDRPlayAnt")
         self.cbAutoGain    = builder.get_object("cbAutoGain")
         self.cbDevIP       = builder.get_object("cbDevIP")
         self.cbLog         = builder.get_object("cbLog")
@@ -1724,6 +1754,12 @@ class NRSC5_DUI(object):
                 self.cbAutoGain.set_active(config["AutoGain"])
                 self.spinPPM.set_value(config["PPMError"])
                 self.spinRTL.set_value(config["RTL"])
+                if ("SDRPlay" in config):
+                    self.cbSDRPlay.set_active(config["SDRPlay"])
+                if ("SDRPlaySer" in config):
+                    self.txtSDRPlaySer.set_text(config["SDRPlaySer"])
+                if ("SDRPlayAnt" in config):
+                    self.txtSDRPlayAnt.set_text(config["SDRPlayAnt"])
                 self.cbLog.set_active(config["LogToFile"])
                 if ("DLoadArt" in config):
                     self.cbCovers.set_active(config["DLoadArt"])
@@ -1812,6 +1848,9 @@ class NRSC5_DUI(object):
                     "PPMError"  : int(self.spinPPM.get_value()),
                     "RTL"       : int(self.spinRTL.get_value()),
                     "DevIP"     : self.txtDevIP.get_text(),
+                    "SDRPlay"   : self.cbSDRPlay.get_active(),
+                    "SDRPlaySer" : self.txtSDRPlaySer.get_text(),
+                    "SDRPlayAnt" : self.txtSDRPlayAnt.get_text(),
                     "LogToFile" : self.cbLog.get_active(),
                     "DLoadArt"  : self.cbCovers.get_active(),
                     "StationArt" : self.cbCoverIncl.get_active(),
