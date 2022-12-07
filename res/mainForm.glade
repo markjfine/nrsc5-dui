@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.0"/>
   <object class="GtkAdjustment" id="adjFreq">
-    <property name="lower">88.099999999999994</property>
-    <property name="upper">107.90000000000001</property>
-    <property name="value">88.099999999999994</property>
-    <property name="step_increment">0.20000000000000001</property>
+    <property name="lower">88.10</property>
+    <property name="upper">107.90</property>
+    <property name="value">88.10</property>
+    <property name="step_increment">0.20</property>
     <property name="page_increment">1</property>
   </object>
   <object class="GtkAdjustment" id="adjGain">
-    <property name="upper">49.600000000000001</property>
-    <property name="step_increment">0.10000000000000001</property>
+    <property name="upper">49.60</property>
+    <property name="step_increment">0.10</property>
     <property name="page_increment">1</property>
   </object>
   <object class="GtkAdjustment" id="adjPPM">
@@ -25,7 +25,7 @@
     <property name="step_increment">1</property>
     <property name="page_increment">16</property>
   </object>
-  <object class="GtkAdjustment" id="adjStream">
+    <object class="GtkAdjustment" id="adjStream">
     <property name="lower">1</property>
     <property name="upper">4</property>
     <property name="value">1</property>
@@ -196,6 +196,8 @@
                     <property name="can_focus">False</property>
                     <property name="xpad">10</property>
                     <property name="label" translatable="yes">Frequency</property>
+                    <property name="justify">center</property>
+                    <property name="single_line_mode">True</property>
                     <property name="xalign">0</property>
                   </object>
                   <packing>
@@ -232,6 +234,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="xpad">10</property>
+                    <property name="single_line_mode">True</property>
                     <property name="xalign">0</property>
                   </object>
                   <packing>
@@ -259,16 +262,16 @@
               <object class="GtkTable" id="tableStream">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="homogeneous">True</property>
                 <property name="n_columns">4</property>
                 <property name="n_rows">1</property>
                 <property name="column_spacing">3</property>
+                <property name="homogeneous">True</property>
                 <child>
                   <object class="GtkToggleButton" id="btn_audio_prgs0">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
                     <property name="hexpand">True</property>
-                    <property name="active">False</property>
                     <child>
                       <object class="GtkLabel" id="btn_audio_lbl0">
                         <property name="visible">True</property>
@@ -287,8 +290,8 @@
                   <object class="GtkToggleButton" id="btn_audio_prgs1">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
                     <property name="hexpand">True</property>
-                    <property name="active">False</property>
                     <child>
                       <object class="GtkLabel" id="btn_audio_lbl1">
                         <property name="visible">True</property>
@@ -307,8 +310,8 @@
                   <object class="GtkToggleButton" id="btn_audio_prgs2">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
                     <property name="hexpand">True</property>
-                    <property name="active">False</property>
                     <child>
                       <object class="GtkLabel" id="btn_audio_lbl2">
                         <property name="visible">True</property>
@@ -327,8 +330,8 @@
                   <object class="GtkToggleButton" id="btn_audio_prgs3">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
                     <property name="hexpand">True</property>
-                    <property name="active">False</property>
                     <child>
                       <object class="GtkLabel" id="btn_audio_lbl3">
                         <property name="visible">True</property>
@@ -377,8 +380,8 @@
                         <property name="valign">GTK_ALIGN_FILL</property>
                       </object>
                     </child>
-                  </object>
-                </child>
+                 </object>
+                </child>                
                 <child type="label">
                   <object class="GtkLabel" id="lblCover">
                     <property name="visible">True</property>
@@ -394,6 +397,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Album Art</property>
+                <property name="justify">center</property>
               </object>
               <packing>
                 <property name="tab_fill">False</property>
@@ -425,6 +429,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Name:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -438,6 +444,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -452,6 +459,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Slogan:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -468,6 +477,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -485,6 +495,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Message:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -501,6 +513,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -518,6 +531,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Alert:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -534,6 +549,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -551,6 +567,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Bit Rate:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -567,6 +585,7 @@
                             <property name="tooltip_text" translatable="yes">Audio Bit Rate</property>
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -583,6 +602,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Streams:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -599,6 +620,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -616,6 +638,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -633,6 +656,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -650,6 +674,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -667,6 +692,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -684,6 +710,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -701,6 +728,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -718,6 +746,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -734,6 +763,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">Data Svcs:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -750,6 +781,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -767,6 +799,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -784,6 +817,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -801,6 +835,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -818,6 +853,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -835,6 +871,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -852,6 +889,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -869,6 +907,7 @@
                             <property name="xpad">5</property>
                             <property name="ypad">5</property>
                             <property name="ellipsize">end</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -896,6 +935,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">MER:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -911,6 +952,7 @@
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Modulation Error Ratio (Lower)</property>
                             <property name="ypad">5</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -926,6 +968,7 @@
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Modulation Error Ratio (Upper)</property>
                             <property name="ypad">5</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">3</property>
@@ -941,6 +984,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
                             <property name="label" translatable="yes">BER:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -956,6 +1001,7 @@
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Bit Error Rate</property>
                             <property name="ypad">5</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -971,6 +1017,7 @@
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Bit Error Rate (Average)</property>
                             <property name="ypad">5</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">3</property>
@@ -986,6 +1033,7 @@
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Bit Error Rate (Minimum)</property>
                             <property name="ypad">5</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -1001,6 +1049,7 @@
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Bit Error Rate (Maximum)</property>
                             <property name="ypad">5</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">3</property>
@@ -1020,6 +1069,7 @@
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">&lt;b&gt;Station Info&lt;/b&gt;</property>
                     <property name="use_markup">True</property>
+                    <property name="single_line_mode">True</property>
                   </object>
                 </child>
               </object>
@@ -1032,6 +1082,8 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Info</property>
+                <property name="justify">center</property>
+                <property name="single_line_mode">True</property>
               </object>
               <packing>
                 <property name="position">1</property>
@@ -1075,6 +1127,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Gain:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -1128,6 +1182,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">PPM Error:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -1165,6 +1221,7 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">PPM</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">0</property>
                           </object>
                           <packing>
@@ -1182,6 +1239,8 @@
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">RTL Device:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -1213,13 +1272,29 @@
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
-
                         <child>
+                          <object class="GtkLabel" id="label14b">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="single_line_mode">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">2</property>
+                            <property name="right_attach">3</property>
+                            <property name="top_attach">2</property>
+                            <property name="bottom_attach">3</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                          </packing>
+                        </child>
+                       <child>
                           <object class="GtkLabel" id="lblDevIP">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">RTL_TCP IP:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
                           </object>
                           <packing>
@@ -1234,6 +1309,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="tooltip_text" translatable="yes">RTL-TCP listening address</property>
+                            <property name="max_length">16</property>
                             <property name="max_width_chars">16</property>
                           </object>
                           <packing>
@@ -1253,7 +1329,6 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="tooltip_text" translatable="yes">Use rtl_tcp</property>
-                            <property name="active">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -1265,15 +1340,16 @@
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
-
                         <child>
                           <object class="GtkLabel" id="lblSdrPlay">
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">SDRPlay #:</property>
+                            <property name="label" translatable="yes">SDRPlay Ser#:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
-                            <property name="sensitive">False</property>
                           </object>
                           <packing>
                             <property name="top_attach">4</property>
@@ -1285,10 +1361,11 @@
                         <child>
                           <object class="GtkEntry" id="txtSDRPlaySer">
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">SDRPlay Serial Number</property>
-                            <property name="max_width_chars">16</property>
-                            <property name="sensitive">False</property>
+                            <property name="max_length">10</property>
+                            <property name="max_width_chars">10</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -1307,7 +1384,6 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="tooltip_text" translatable="yes">Use SDRPlay</property>
-                            <property name="active">False</property>
                             <property name="draw_indicator">True</property>
                             <signal name="clicked" handler="on_cbSDRPlay_clicked" swapped="no"/>
                           </object>
@@ -1320,15 +1396,16 @@
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
-
                         <child>
                           <object class="GtkLabel" id="lblSDRPlayAnt">
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">1</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">SDRPlay Ant:</property>
-                            <property name="sensitive">False</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">5</property>
@@ -1340,10 +1417,11 @@
                         <child>
                           <object class="GtkEntry" id="txtSDRPlayAnt">
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">SDRPlay antenna</property>
+                            <property name="max_length">1</property>
                             <property name="max_width_chars">1</property>
-                            <property name="sensitive">False</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -1358,6 +1436,7 @@
                           <object class="GtkLabel" id="label14a">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -1368,14 +1447,15 @@
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
-
                         <child>
                           <object class="GtkLabel" id="lblGain3">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">1</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Log to File:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">6</property>
@@ -1387,11 +1467,11 @@
                         <child>
                           <object class="GtkCheckButton" id="cbLog">
                             <property name="label" translatable="yes">Enable</property>
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="tooltip_text" translatable="yes">Enable Logging of NRSC5 to Disk</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -1406,6 +1486,7 @@
                           <object class="GtkLabel" id="label14">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -1420,9 +1501,11 @@
                           <object class="GtkLabel" id="lblCovers">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">1</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Download Album Art:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">7</property>
@@ -1434,11 +1517,11 @@
                         <child>
                           <object class="GtkCheckButton" id="cbCovers">
                             <property name="label" translatable="yes">Enable</property>
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="tooltip_text" translatable="yes">Enable Automated Downloading of Album Art</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                             <signal name="clicked" handler="on_cbCovers_clicked" swapped="no"/>
                           </object>
@@ -1454,6 +1537,7 @@
                           <object class="GtkLabel" id="label15">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -1467,11 +1551,13 @@
                         <child>
                           <object class="GtkLabel" id="lblCoverIncl">
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">1</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Include Station Art:</property>
-                            <property name="sensitive">False</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">8</property>
@@ -1483,13 +1569,13 @@
                         <child>
                           <object class="GtkCheckButton" id="cbCoverIncl">
                             <property name="label" translatable="yes">Enable</property>
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="tooltip_text" translatable="yes">Include Station-Generated Album Art</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
-                            <property name="sensitive">False</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -1503,6 +1589,7 @@
                           <object class="GtkLabel" id="label16">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -1516,11 +1603,13 @@
                         <child>
                           <object class="GtkLabel" id="lblExtend">
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">False</property>
-                            <property name="xalign">1</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Extended Queries:</property>
-                            <property name="sensitive">False</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
+                            <property name="xalign">1</property>
                           </object>
                           <packing>
                             <property name="top_attach">9</property>
@@ -1532,14 +1621,13 @@
                         <child>
                           <object class="GtkCheckButton" id="cbExtend">
                             <property name="label" translatable="yes">Enable</property>
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="tooltip_text" translatable="yes">Use Extended MusicBrainz Queries (may be slow)</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="active">False</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -1553,6 +1641,7 @@
                           <object class="GtkLabel" id="label17">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -1573,6 +1662,7 @@
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">&lt;b&gt;Settings&lt;/b&gt;</property>
                     <property name="use_markup">True</property>
+                    <property name="single_line_mode">True</property>
                   </object>
                 </child>
               </object>
@@ -1585,6 +1675,8 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Settings</property>
+                <property name="justify">center</property>
+                <property name="single_line_mode">True</property>
               </object>
               <packing>
                 <property name="position">2</property>
@@ -1615,6 +1707,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Bookmarks</property>
+                <property name="justify">center</property>
               </object>
               <packing>
                 <property name="position">3</property>
@@ -1706,6 +1799,7 @@
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">&lt;b&gt;Traffic &amp;amp; Weather Maps&lt;/b&gt;</property>
                     <property name="use_markup">True</property>
+                    <property name="single_line_mode">True</property>
                   </object>
                 </child>
               </object>
@@ -1718,6 +1812,8 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Maps</property>
+                <property name="justify">center</property>
+                <property name="single_line_mode">True</property>
               </object>
               <packing>
                 <property name="position">4</property>
@@ -1757,6 +1853,8 @@
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
                         <property name="label" translatable="yes">Title:</property>
+                        <property name="justify">right</property>
+                        <property name="single_line_mode">True</property>
                         <property name="xalign">1</property>
                       </object>
                       <packing>
@@ -1770,6 +1868,8 @@
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
                         <property name="label" translatable="yes">Artist:</property>
+                        <property name="justify">right</property>
+                        <property name="single_line_mode">True</property>
                         <property name="xalign">1</property>
                       </object>
                       <packing>
@@ -1785,6 +1885,8 @@
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
                         <property name="label" translatable="yes">Album:</property>
+                        <property name="justify">right</property>
+                        <property name="single_line_mode">True</property>
                         <property name="xalign">1</property>
                       </object>
                       <packing>
@@ -1800,6 +1902,8 @@
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
                         <property name="label" translatable="yes">Genre:</property>
+                        <property name="justify">right</property>
+                        <property name="single_line_mode">True</property>
                         <property name="xalign">1</property>
                       </object>
                       <packing>
@@ -1815,8 +1919,9 @@
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
                         <property name="ypad">10</property>
-                        <property name="xalign">0</property>
                         <property name="ellipsize">end</property>
+                        <property name="single_line_mode">True</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1830,8 +1935,9 @@
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
                         <property name="ypad">10</property>
-                        <property name="xalign">0</property>
                         <property name="ellipsize">end</property>
+                        <property name="single_line_mode">True</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1847,8 +1953,9 @@
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
                         <property name="ypad">10</property>
-                        <property name="xalign">0</property>
                         <property name="ellipsize">end</property>
+                        <property name="single_line_mode">True</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1864,8 +1971,9 @@
                         <property name="can_focus">False</property>
                         <property name="xpad">10</property>
                         <property name="ypad">10</property>
-                        <property name="xalign">0</property>
                         <property name="ellipsize">end</property>
+                        <property name="single_line_mode">True</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -1885,6 +1993,7 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">&lt;b&gt;Track Info&lt;/b&gt;</property>
                 <property name="use_markup">True</property>
+                <property name="single_line_mode">True</property>
               </object>
             </child>
           </object>
@@ -1907,24 +2016,24 @@
                   <object class="GtkImage" id="img_nosynch">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="halign">GTK_ALIGN_START</property>
                     <property name="tooltip_text" translatable="yes">Synchronization</property>
+                    <property name="halign">GTK_ALIGN_START</property>
                   </object>
                 </child>
                 <child>
                   <object class="GtkImage" id="img_synchpilot">
                     <property name="visible">False</property>
                     <property name="can_focus">False</property>
-                    <property name="halign">GTK_ALIGN_START</property>
                     <property name="tooltip_text" translatable="yes">Synchronization</property>
+                    <property name="halign">GTK_ALIGN_START</property>
                   </object>
                 </child>
                 <child>
                   <object class="GtkImage" id="img_lostdevice">
                     <property name="visible">False</property>
                     <property name="can_focus">False</property>
-                    <property name="halign">GTK_ALIGN_START</property>
                     <property name="tooltip_text" translatable="yes">Device failure</property>
+                    <property name="halign">GTK_ALIGN_START</property>
                   </object>
                 </child>
               </object>
@@ -1939,6 +2048,7 @@
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Current Bitrate</property>
                 <property name="width_chars">8</property>
+                <property name="single_line_mode">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -1952,7 +2062,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Current Error Rate</property>
+                <property name="justify">right</property>
                 <property name="width_chars">9</property>
+                <property name="single_line_mode">True</property>
                 <property name="xalign">1</property>
               </object>
               <packing>
@@ -1967,7 +2079,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Automatic Gain</property>
+                <property name="justify">center</property>
                 <property name="width_chars">8</property>
+                <property name="single_line_mode">True</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
