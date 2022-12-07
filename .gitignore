@@ -1,0 +1,7 @@
+**/._*
+**/.DS_Store
+./*.txt
+./*.log
+aas/**
+cfg/*.txt
+map/**
