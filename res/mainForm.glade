@@ -1415,6 +1415,7 @@
                           </packing>
                         </child>
                         <child>
+<!--
                           <object class="GtkEntry" id="txtSDRPlayAnt">
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
@@ -1423,6 +1424,20 @@
                             <property name="max_length">1</property>
                             <property name="max_width_chars">1</property>
                           </object>
+-->                          
+                          <object class="GtkComboBoxText" id="cbxSDRPlayAnt">
+                            <property name="visible">True</property>
+                            <property name="sensitive">False</property>
+    			    <property name="can_focus">False</property>
+    			    <property name="tooltip_text" translatable="yes">Choose SDRPlay antenna</property>
+     			    <property name="has_entry">False</property>
+                            <property name="active">0</property>
+                            <items>
+      			      <item translatable="yes" id="antA">A</item>
+                              <item translatable="yes" id="antB">B</item>
+                              <item translatable="yes" id="antC">C</item>
+                            </items>
+                          </object>                          
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>

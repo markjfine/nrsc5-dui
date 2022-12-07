@@ -296,8 +296,8 @@ class NRSC5_DUI(object):
         self.txtSDRPlaySer.set_sensitive(useSDRPlay)
         self.txtSDRPlaySer.set_can_focus(useSDRPlay)
         self.lblSDRPlayAnt.set_sensitive(useSDRPlay)
-        self.txtSDRPlayAnt.set_sensitive(useSDRPlay)
-        self.txtSDRPlayAnt.set_can_focus(useSDRPlay)
+        self.cbxSDRPlayAnt.set_sensitive(useSDRPlay)
+        self.cbxSDRPlayAnt.set_can_focus(useSDRPlay)
 
     def img_to_pixbuf(self,img):
         """convert PIL.Image to GdkPixbuf.Pixbuf"""
@@ -601,9 +601,9 @@ class NRSC5_DUI(object):
                 self.nrsc5Args.append(self.txtSDRPlaySer.get_text())
             
             # set SDRPlay antenna if not blank
-            if (self.cbSDRPlay.get_active()) and (self.txtSDRPlayAnt.get_text() != ""):
+            if (self.cbSDRPlay.get_active()) and (self.cbxSDRPlayAnt.get_active_text() != ""):
                 self.nrsc5Args.append("-A")
-                self.nrsc5Args.append("\"Antenna "+self.txtSDRPlayAnt.get_text()+"\"")
+                self.nrsc5Args.append("\"Antenna "+self.cbxSDRPlayAnt.get_active_text()+"\"")
             
             # set frequency and stream
             self.nrsc5Args.append(str(self.spinFreq.get_value()))
@@ -1534,7 +1534,7 @@ class NRSC5_DUI(object):
         self.txtSDRPlaySer = builder.get_object("txtSDRPlaySer")
         self.cbSDRPlay     = builder.get_object("cbSDRPlay")
         self.lblSDRPlayAnt = builder.get_object("lblSDRPlayAnt")
-        self.txtSDRPlayAnt = builder.get_object("txtSDRPlayAnt")
+        self.cbxSDRPlayAnt = builder.get_object("cbxSDRPlayAnt")
         self.cbAutoGain    = builder.get_object("cbAutoGain")
         self.cbDevIP       = builder.get_object("cbDevIP")
         self.cbLog         = builder.get_object("cbLog")
@@ -1759,7 +1759,7 @@ class NRSC5_DUI(object):
                 if ("SDRPlaySer" in config):
                     self.txtSDRPlaySer.set_text(config["SDRPlaySer"])
                 if ("SDRPlayAnt" in config):
-                    self.txtSDRPlayAnt.set_text(config["SDRPlayAnt"])
+                    self.cbxSDRPlayAnt.set_active_id("ant"+config["SDRPlayAnt"])
                 self.cbLog.set_active(config["LogToFile"])
                 if ("DLoadArt" in config):
                     self.cbCovers.set_active(config["DLoadArt"])
@@ -1850,7 +1850,7 @@ class NRSC5_DUI(object):
                     "DevIP"     : self.txtDevIP.get_text(),
                     "SDRPlay"   : self.cbSDRPlay.get_active(),
                     "SDRPlaySer" : self.txtSDRPlaySer.get_text(),
-                    "SDRPlayAnt" : self.txtSDRPlayAnt.get_text(),
+                    "SDRPlayAnt" : self.cbxSDRPlayAnt.get_active_text(),
                     "LogToFile" : self.cbLog.get_active(),
                     "DLoadArt"  : self.cbCovers.get_active(),
                     "StationArt" : self.cbCoverIncl.get_active(),
