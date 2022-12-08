@@ -1108,7 +1108,7 @@
                       <object class="GtkTable" id="tableSettings">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="n_rows">10</property>
+                        <property name="n_rows">11</property>
                         <property name="n_columns">3</property>
                         <property name="column_spacing">10</property>
                         <property name="row_spacing">3</property>
@@ -1122,6 +1122,56 @@
                           <placeholder/>
                         </child>
                         <child>
+                          <object class="GtkLabel" id="lblSDRRadio">
+                            <property name="visible">True</property>
+                            <property name="sensitive">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xpad">10</property>
+                            <property name="label" translatable="yes">SDR Radio:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
+                            <property name="xalign">1</property>
+                          </object>
+                          <packing>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkComboBoxText" id="cbxSDRRadio">
+                            <property name="visible">True</property>
+                            <property name="sensitive">True</property>
+    			    <property name="can_focus">True</property>
+    			    <property name="tooltip_text" translatable="yes">Choose SDR device</property>
+     			    <property name="has_entry">False</property>
+                            <property name="active">0</property>
+                            <signal name="changed" handler="on_cbxSDRRadio_changed" swapped="no"/>
+                            <items>
+      			      <item translatable="yes" id="rcvrRTL-SDR">RTL-SDR</item>
+                              <item translatable="yes" id="rcvrSDRPlay">SDRPlay</item>
+                            </items>
+                          </object>                          
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label14c">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="single_line_mode">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">2</property>
+                            <property name="right_attach">3</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                          </packing>
+                        </child>
+                        <child>
                           <object class="GtkLabel" id="lblGain5">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -1132,6 +1182,8 @@
                             <property name="xalign">1</property>
                           </object>
                           <packing>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1153,6 +1205,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1172,6 +1226,8 @@
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1187,8 +1243,8 @@
                             <property name="xalign">1</property>
                           </object>
                           <packing>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
+                            <property name="top_attach">2</property>
+                            <property name="bottom_attach">3</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1209,8 +1265,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
+                            <property name="top_attach">2</property>
+                            <property name="bottom_attach">3</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1227,8 +1283,8 @@
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
+                            <property name="top_attach">2</property>
+                            <property name="bottom_attach">3</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1245,8 +1301,8 @@
                             <property name="xalign">1</property>
                           </object>
                           <packing>
-                            <property name="top_attach">2</property>
-                            <property name="bottom_attach">3</property>
+                            <property name="top_attach">3</property>
+                            <property name="bottom_attach">4</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1268,8 +1324,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">2</property>
-                            <property name="bottom_attach">3</property>
+                            <property name="top_attach">3</property>
+                            <property name="bottom_attach">4</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1283,8 +1339,8 @@
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">2</property>
-                            <property name="bottom_attach">3</property>
+                            <property name="top_attach">3</property>
+                            <property name="bottom_attach">4</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1301,8 +1357,8 @@
                             <property name="xalign">1</property>
                           </object>
                           <packing>
-                            <property name="top_attach">3</property>
-                            <property name="bottom_attach">4</property>
+                            <property name="top_attach">4</property>
+                            <property name="bottom_attach">5</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1319,8 +1375,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">3</property>
-                            <property name="bottom_attach">4</property>
+                            <property name="top_attach">4</property>
+                            <property name="bottom_attach">5</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1339,75 +1395,19 @@
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">3</property>
-                            <property name="bottom_attach">4</property>
+                            <property name="top_attach">4</property>
+                            <property name="bottom_attach">5</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblSdrPlay">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
+                          <object class="GtkLabel" id="lblSdrPlaySer">
+                            <property name="visible">False</property>
+                            <property name="sensitive">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">SDRPlay Ser#:</property>
-                            <property name="justify">right</property>
-                            <property name="single_line_mode">True</property>
-                            <property name="xalign">1</property>
-                          </object>
-                          <packing>
-                            <property name="top_attach">4</property>
-                            <property name="bottom_attach">5</property>
-                            <property name="x_options">GTK_FILL</property>
-                            <property name="y_options">GTK_FILL</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkEntry" id="txtSDRPlaySer">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">SDRPlay Serial Number</property>
-                            <property name="max_length">10</property>
-                            <property name="max_width_chars">10</property>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="right_attach">2</property>
-                            <property name="top_attach">4</property>
-                            <property name="bottom_attach">5</property>
-                            <property name="x_options">GTK_FILL</property>
-                            <property name="y_options">GTK_FILL</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkCheckButton" id="cbSDRPlay">
-                            <property name="label" translatable="yes">Enable</property>
-                            <property name="use_action_appearance">False</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="tooltip_text" translatable="yes">Use SDRPlay</property>
-                            <property name="draw_indicator">True</property>
-                            <signal name="clicked" handler="on_cbSDRPlay_clicked" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="left_attach">2</property>
-                            <property name="right_attach">3</property>
-                            <property name="top_attach">4</property>
-                            <property name="bottom_attach">5</property>
-                            <property name="x_options">GTK_FILL</property>
-                            <property name="y_options">GTK_FILL</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblSDRPlayAnt">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="can_focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="label" translatable="yes">SDRPlay Ant:</property>
                             <property name="justify">right</property>
                             <property name="single_line_mode">True</property>
                             <property name="xalign">1</property>
@@ -1420,19 +1420,60 @@
                           </packing>
                         </child>
                         <child>
-<!--
-                          <object class="GtkEntry" id="txtSDRPlayAnt">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
+                          <object class="GtkEntry" id="txtSDRPlaySer">
+                            <property name="visible">False</property>
+                            <property name="sensitive">True</property>
                             <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">SDRPlay antenna</property>
-                            <property name="max_length">1</property>
-                            <property name="max_width_chars">1</property>
+                            <property name="tooltip_text" translatable="yes">SDRPlay Serial Number</property>
+                            <property name="max_length">10</property>
+                            <property name="max_width_chars">10</property>
                           </object>
--->                          
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="top_attach">5</property>
+                            <property name="bottom_attach">6</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label14d">
+                            <property name="visible">False</property>
+                            <property name="can_focus">False</property>
+                            <property name="single_line_mode">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">2</property>
+                            <property name="right_attach">3</property>
+                            <property name="top_attach">5</property>
+                            <property name="bottom_attach">6</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="lblSDRPlayAnt">
+                            <property name="visible">False</property>
+                            <property name="sensitive">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="xpad">10</property>
+                            <property name="label" translatable="yes">SDRPlay Ant:</property>
+                            <property name="justify">right</property>
+                            <property name="single_line_mode">True</property>
+                            <property name="xalign">1</property>
+                          </object>
+                          <packing>
+                            <property name="top_attach">6</property>
+                            <property name="bottom_attach">7</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                          </packing>
+                        </child>
+                        <child>
                           <object class="GtkComboBoxText" id="cbxSDRPlayAnt">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
+                            <property name="visible">False</property>
+                            <property name="sensitive">True</property>
     			    <property name="can_focus">False</property>
     			    <property name="tooltip_text" translatable="yes">Choose SDRPlay antenna</property>
      			    <property name="has_entry">False</property>
@@ -1446,23 +1487,23 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">5</property>
-                            <property name="bottom_attach">6</property>
+                            <property name="top_attach">6</property>
+                            <property name="bottom_attach">7</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label14a">
-                            <property name="visible">True</property>
+                            <property name="visible">False</property>
                             <property name="can_focus">False</property>
                             <property name="single_line_mode">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">5</property>
-                            <property name="bottom_attach">6</property>
+                            <property name="top_attach">6</property>
+                            <property name="bottom_attach">7</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1478,8 +1519,8 @@
                             <property name="xalign">1</property>
                           </object>
                           <packing>
-                            <property name="top_attach">6</property>
-                            <property name="bottom_attach">7</property>
+                            <property name="top_attach">7</property>
+                            <property name="bottom_attach">8</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1497,8 +1538,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">6</property>
-                            <property name="bottom_attach">7</property>
+                            <property name="top_attach">7</property>
+                            <property name="bottom_attach">8</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
@@ -1511,8 +1552,8 @@
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">6</property>
-                            <property name="bottom_attach">7</property>
+                            <property name="top_attach">7</property>
+                            <property name="bottom_attach">8</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1528,8 +1569,8 @@
                             <property name="xalign">1</property>
                           </object>
                           <packing>
-                            <property name="top_attach">7</property>
-                            <property name="bottom_attach">8</property>
+                            <property name="top_attach">8</property>
+                            <property name="bottom_attach">9</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1548,8 +1589,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">7</property>
-                            <property name="bottom_attach">8</property>
+                            <property name="top_attach">8</property>
+                            <property name="bottom_attach">9</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
@@ -1562,8 +1603,8 @@
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">7</property>
-                            <property name="bottom_attach">8</property>
+                            <property name="top_attach">8</property>
+                            <property name="bottom_attach">9</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1580,8 +1621,8 @@
                             <property name="xalign">1</property>
                           </object>
                           <packing>
-                            <property name="top_attach">8</property>
-                            <property name="bottom_attach">9</property>
+                            <property name="top_attach">9</property>
+                            <property name="bottom_attach">10</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1600,8 +1641,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">8</property>
-                            <property name="bottom_attach">9</property>
+                            <property name="top_attach">9</property>
+                            <property name="bottom_attach">10</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
@@ -1614,8 +1655,8 @@
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">8</property>
-                            <property name="bottom_attach">9</property>
+                            <property name="top_attach">9</property>
+                            <property name="bottom_attach">10</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1632,8 +1673,8 @@
                             <property name="xalign">1</property>
                           </object>
                           <packing>
-                            <property name="top_attach">9</property>
-                            <property name="bottom_attach">10</property>
+                            <property name="top_attach">10</property>
+                            <property name="bottom_attach">11</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -1652,8 +1693,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">9</property>
-                            <property name="bottom_attach">10</property>
+                            <property name="top_attach">10</property>
+                            <property name="bottom_attach">11</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
                         </child>
@@ -1666,8 +1707,8 @@
                           <packing>
                             <property name="left_attach">2</property>
                             <property name="right_attach">3</property>
-                            <property name="top_attach">9</property>
-                            <property name="bottom_attach">10</property>
+                            <property name="top_attach">10</property>
+                            <property name="bottom_attach">11</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>

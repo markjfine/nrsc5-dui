@@ -290,21 +290,24 @@ class NRSC5_DUI(object):
         self.lblExtend.set_sensitive(dlCoversSet)
         self.cbExtend.set_sensitive(dlCoversSet)
 
-    def on_cbSDRPlay_clicked(self, btn):
-        useSDRPlay = self.cbSDRPlay.get_active()
-        self.lblSdrPlay.set_sensitive(useSDRPlay)
-        self.txtSDRPlaySer.set_sensitive(useSDRPlay)
+    def on_cbxSDRRadio_changed(self, btn):
+        useSDRPlay = (self.cbxSDRRadio.get_active_text() == "SDRPlay")
+        self.lblSdrPlaySer.set_visible(useSDRPlay)
+        self.txtSDRPlaySer.set_visible(useSDRPlay)
         self.txtSDRPlaySer.set_can_focus(useSDRPlay)
-        self.lblSDRPlayAnt.set_sensitive(useSDRPlay)
-        self.cbxSDRPlayAnt.set_sensitive(useSDRPlay)
+        self.label14d.set_visible(useSDRPlay)
+        self.lblSDRPlayAnt.set_visible(useSDRPlay)
+        self.cbxSDRPlayAnt.set_visible(useSDRPlay)
         self.cbxSDRPlayAnt.set_can_focus(useSDRPlay)
-        self.lblRTL.set_sensitive(not(useSDRPlay))
-        self.spinRTL.set_sensitive(not(useSDRPlay))
+        self.label14a.set_visible(useSDRPlay)
+        self.lblRTL.set_visible(not(useSDRPlay))
+        self.spinRTL.set_visible(not(useSDRPlay))
         self.spinRTL.set_can_focus(not(useSDRPlay))
-        self.lblDevIP.set_sensitive(not(useSDRPlay))
-        self.txtDevIP.set_sensitive(not(useSDRPlay))
+        self.label14b.set_visible(useSDRPlay)
+        self.lblDevIP.set_visible(not(useSDRPlay))
+        self.txtDevIP.set_visible(not(useSDRPlay))
         self.txtDevIP.set_can_focus(not(useSDRPlay))
-        self.cbDevIP.set_sensitive(not(useSDRPlay))
+        self.cbDevIP.set_visible(not(useSDRPlay))
         self.cbDevIP.set_can_focus(not(useSDRPlay))
 
     def img_to_pixbuf(self,img):
@@ -573,6 +576,8 @@ class NRSC5_DUI(object):
             self.spinPPM.update()
             self.spinRTL.update()
             
+            useSDRPlay = (self.cbxSDRRadio.get_active_text() == "SDRPlay")
+            
             # enable aas output if temp dir was created
             if (aasDir is not None):
                 self.nrsc5Args.append("--dump-aas-files")
@@ -600,16 +605,19 @@ class NRSC5_DUI(object):
                 self.nrsc5Args.append(str(int(self.spinRTL.get_value())))
 
             # set log level to 2 if SDRPLay enabled
-            if (self.cbSDRPlay.get_active()):
+            #if (self.cbSDRPlay.get_active()):
+            if (useSDRPlay):
                 self.nrsc5Args.append("-l2")
             
             # set SDRPlay serial number if not blank
-            if (self.cbSDRPlay.get_active()) and (self.txtSDRPlaySer.get_text() != ""):
+            #if (self.cbSDRPlay.get_active()) and (self.txtSDRPlaySer.get_text() != ""):
+            if (useSDRPlay) and (self.txtSDRPlaySer.get_text() != ""):
                 self.nrsc5Args.append("-d")
                 self.nrsc5Args.append(self.txtSDRPlaySer.get_text())
             
             # set SDRPlay antenna if not blank
-            if (self.cbSDRPlay.get_active()) and (self.cbxSDRPlayAnt.get_active_text() != ""):
+            #if (self.cbSDRPlay.get_active()) and (self.cbxSDRPlayAnt.get_active_text() != ""):
+            if (useSDRPlay) and (self.cbxSDRPlayAnt.get_active_text() != ""):
                 self.nrsc5Args.append("-A")
                 self.nrsc5Args.append("\"Antenna "+self.cbxSDRPlayAnt.get_active_text()+"\"")
             
@@ -625,13 +633,13 @@ class NRSC5_DUI(object):
             
             # disable the controls
             self.spinFreq.set_sensitive(False)
+            self.cbxSDRRadio.set_sensitive(False)
             self.spinGain.set_sensitive(False)
             self.spinPPM.set_sensitive(False)
             self.spinRTL.set_sensitive(False)
             self.txtDevIP.set_sensitive(False)
             self.cbDevIP.set_sensitive(False)
             self.txtSDRPlaySer.set_sensitive(False)
-            self.cbSDRPlay.set_sensitive(False)
             self.cbxSDRPlayAnt.set_sensitive(False)
             self.btnPlay.set_sensitive(False)
             self.btnStop.set_sensitive(True)
@@ -688,15 +696,14 @@ class NRSC5_DUI(object):
             # enable controls
             if (not self.cbAutoGain.get_active()):
                 self.spinGain.set_sensitive(True)
-            useSDRPlay = self.cbSDRPlay.get_active()
             self.spinFreq.set_sensitive(True)
+            self.cbxSDRRadio.set_sensitive(True)
             self.spinPPM.set_sensitive(True)
-            self.spinRTL.set_sensitive(not(useSDRPlay))
-            self.txtDevIP.set_sensitive(not(useSDRPlay))
-            self.cbDevIP.set_sensitive(not(useSDRPlay))
-            self.txtSDRPlaySer.set_sensitive(useSDRPlay)
-            self.cbSDRPlay.set_sensitive(True)
-            self.cbxSDRPlayAnt.set_sensitive(useSDRPlay)
+            self.spinRTL.set_sensitive(True)
+            self.txtDevIP.set_sensitive(True)
+            self.cbDevIP.set_sensitive(True)
+            self.txtSDRPlaySer.set_sensitive(True)
+            self.cbxSDRPlayAnt.set_sensitive(True)
             self.btnPlay.set_sensitive(True)
             self.btnStop.set_sensitive(False)
             self.btnBookmark.set_sensitive(False)
@@ -1545,19 +1552,22 @@ class NRSC5_DUI(object):
         self.alignmentMap  = builder.get_object("alignment_map")
         self.imgMap        = builder.get_object("imgMap")
         self.spinFreq      = builder.get_object("spinFreq")
+        self.cbxSDRRadio   = builder.get_object("cbxSDRRadio")
         self.spinGain      = builder.get_object("spinGain")
+        self.cbAutoGain    = builder.get_object("cbAutoGain")
         self.spinPPM       = builder.get_object("spinPPM")
         self.lblRTL        = builder.get_object("lblRTL")
         self.spinRTL       = builder.get_object("spinRTL")
+        self.label14b      = builder.get_object("label14b")
         self.lblDevIP      = builder.get_object("lblDevIP")
         self.txtDevIP      = builder.get_object("txtDevIP")
-        self.lblSdrPlay    = builder.get_object("lblSdrPlay")
+        self.cbDevIP       = builder.get_object("cbDevIP")
+        self.lblSdrPlaySer = builder.get_object("lblSdrPlaySer")
         self.txtSDRPlaySer = builder.get_object("txtSDRPlaySer")
-        self.cbSDRPlay     = builder.get_object("cbSDRPlay")
+        self.label14d      = builder.get_object("label14d")
         self.lblSDRPlayAnt = builder.get_object("lblSDRPlayAnt")
         self.cbxSDRPlayAnt = builder.get_object("cbxSDRPlayAnt")
-        self.cbAutoGain    = builder.get_object("cbAutoGain")
-        self.cbDevIP       = builder.get_object("cbDevIP")
+        self.label14a      = builder.get_object("label14a")
         self.cbLog         = builder.get_object("cbLog")
         self.cbCovers      = builder.get_object("cbCovers")
         self.lblCoverIncl  = builder.get_object("lblCoverIncl")
@@ -1775,8 +1785,8 @@ class NRSC5_DUI(object):
                 self.cbAutoGain.set_active(config["AutoGain"])
                 self.spinPPM.set_value(config["PPMError"])
                 self.spinRTL.set_value(config["RTL"])
-                if ("SDRPlay" in config):
-                    self.cbSDRPlay.set_active(config["SDRPlay"])
+                if ("SDRRadio" in config):
+                    self.cbxSDRRadio.set_active_id("rcvr"+config["SDRRadio"])
                 if ("SDRPlaySer" in config):
                     self.txtSDRPlaySer.set_text(config["SDRPlaySer"])
                 if ("SDRPlayAnt" in config):
@@ -1869,7 +1879,7 @@ class NRSC5_DUI(object):
                     "PPMError"  : int(self.spinPPM.get_value()),
                     "RTL"       : int(self.spinRTL.get_value()),
                     "DevIP"     : self.txtDevIP.get_text(),
-                    "SDRPlay"   : self.cbSDRPlay.get_active(),
+                    "SDRRadio"   : self.cbxSDRRadio.get_active_text(),
                     "SDRPlaySer" : self.txtSDRPlaySer.get_text(),
                     "SDRPlayAnt" : self.cbxSDRPlayAnt.get_active_text(),
                     "LogToFile" : self.cbLog.get_active(),
