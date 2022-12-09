@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #    NRSC5 DUI - A graphical interface for nrsc5
-#    Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine
+#    Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-2022 Mark J. Fine
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #    Updated by zefie for modern nrsc5 ~ 2019
-#    Updated and enhanced by markjfine ~ 2021
+#    Updated and enhanced by markjfine ~ 2021/2022
 
 import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform, io
 from subprocess import Popen, PIPE
@@ -76,9 +76,9 @@ class NRSC5_DUI(object):
         self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
 
         self.app_name       = "NRSC5-DUI"
-        self.version        = "2.1.1"
+        self.version        = "2.2.0"
         self.web_addr       = "https://github.com/markjfine/nrsc5-dui"
-        self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine"
+        self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021-2022 Mark J. Fine"
         musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
 
         self.width          = 0         # window width
@@ -106,7 +106,7 @@ class NRSC5_DUI(object):
         self.update_btns    = True      # whether to update the stream buttons
         self.set_program_btns()         # whether to set the stream buttons
         self.bookmarks      = []        # station bookmarks
-        self.booknames      = ["","","",""] # station bookmark names
+        self.booknames      = ["","","","","","","",""] # station bookmark names
         self.stationLogos   = {}        # station logos
         self.coverMetas     = {}        # cover metadata
         self.bookmarked     = False     # is current station bookmarked
@@ -208,16 +208,28 @@ class NRSC5_DUI(object):
         self.set_tuning_actions(self.btnAudioPrgs1, "btn_prg1", False, False)
         self.set_tuning_actions(self.btnAudioPrgs2, "btn_prg2", False, False)
         self.set_tuning_actions(self.btnAudioPrgs3, "btn_prg3", False, False)
+        self.set_tuning_actions(self.btnAudioPrgs4, "btn_prg4", False, False)
+        self.set_tuning_actions(self.btnAudioPrgs5, "btn_prg5", False, False)
+        self.set_tuning_actions(self.btnAudioPrgs6, "btn_prg6", False, False)
+        self.set_tuning_actions(self.btnAudioPrgs7, "btn_prg7", False, False)
 
         self.set_tuning_actions(self.lblAudioPrgs0, "prg0", True, True)
         self.set_tuning_actions(self.lblAudioPrgs1, "prg1", True, True)
         self.set_tuning_actions(self.lblAudioPrgs2, "prg2", True, True)
         self.set_tuning_actions(self.lblAudioPrgs3, "prg3", True, True)
+        self.set_tuning_actions(self.lblAudioPrgs4, "prg4", True, True)
+        self.set_tuning_actions(self.lblAudioPrgs5, "prg5", True, True)
+        self.set_tuning_actions(self.lblAudioPrgs6, "prg6", True, True)
+        self.set_tuning_actions(self.lblAudioPrgs7, "prg7", True, True)
 
         self.set_tuning_actions(self.lblAudioSvcs0, "svc0", True, True)
         self.set_tuning_actions(self.lblAudioSvcs1, "svc1", True, True)
         self.set_tuning_actions(self.lblAudioSvcs2, "svc2", True, True)
         self.set_tuning_actions(self.lblAudioSvcs3, "svc3", True, True)
+        self.set_tuning_actions(self.lblAudioSvcs4, "svc4", True, True)
+        self.set_tuning_actions(self.lblAudioSvcs5, "svc5", True, True)
+        self.set_tuning_actions(self.lblAudioSvcs6, "svc6", True, True)
+        self.set_tuning_actions(self.lblAudioSvcs7, "svc7", True, True)
 
         # setup bookmarks listview
         nameRenderer = Gtk.CellRendererText()
@@ -542,7 +554,7 @@ class NRSC5_DUI(object):
                 self.showArtwork(logo)
         else:
             # add entry in database for the station if it doesn't exist
-            self.stationLogos[self.stationStr] = ["", "", "", ""]
+            self.stationLogos[self.stationStr] = ["", "", "", "", "", "", "", ""]
 
     def service_data_type_name(self, type):
         for key, value in self.ServiceDataType.items():
@@ -670,7 +682,7 @@ class NRSC5_DUI(object):
                 self.btnDelete.set_sensitive(self.bookmarked)
     
     def get_bookmark_names(self):
-        self.booknames = ["","","",""]
+        self.booknames = ["","","","","","","",""]
         freq = str(int((self.spinFreq.get_value()+0.005)*10))
         for b in self.bookmarks:
             test = str(b[2])
@@ -780,7 +792,7 @@ class NRSC5_DUI(object):
 
         license = """
         NRSC5 DUI - A second-generation graphical interface for nrsc5
-        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021 Mark J. Fine
+        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021/2022 Mark J. Fine
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -840,6 +852,10 @@ class NRSC5_DUI(object):
         self.btnAudioPrgs1.set_active(self.update_btns and self.streamNum == 1)
         self.btnAudioPrgs2.set_active(self.update_btns and self.streamNum == 2)
         self.btnAudioPrgs3.set_active(self.update_btns and self.streamNum == 3)
+        self.btnAudioPrgs4.set_active(self.update_btns and self.streamNum == 4)
+        self.btnAudioPrgs5.set_active(self.update_btns and self.streamNum == 5)
+        self.btnAudioPrgs6.set_active(self.update_btns and self.streamNum == 6)
+        self.btnAudioPrgs7.set_active(self.update_btns and self.streamNum == 7)
         self.update_btns = True
 
     def on_program_select(self, _label, evt):
@@ -1057,14 +1073,26 @@ class NRSC5_DUI(object):
                 self.set_button_name(self.btnAudioPrgs1,self.btnAudioLbl1,1)
                 self.set_button_name(self.btnAudioPrgs2,self.btnAudioLbl2,2)
                 self.set_button_name(self.btnAudioPrgs3,self.btnAudioLbl3,3)
+                self.set_button_name(self.btnAudioPrgs4,self.btnAudioLbl4,4)
+                self.set_button_name(self.btnAudioPrgs5,self.btnAudioLbl5,5)
+                self.set_button_name(self.btnAudioPrgs6,self.btnAudioLbl6,6)
+                self.set_button_name(self.btnAudioPrgs7,self.btnAudioLbl7,7)
                 self.set_label_name(self.lblAudioPrgs0, self.streamInfo["Streams"][0], True)
                 self.set_label_name(self.lblAudioPrgs1, self.streamInfo["Streams"][1], True)
                 self.set_label_name(self.lblAudioPrgs2, self.streamInfo["Streams"][2], True)
                 self.set_label_name(self.lblAudioPrgs3, self.streamInfo["Streams"][3], True)
+                self.set_label_name(self.lblAudioPrgs4, self.streamInfo["Streams"][4], True)
+                self.set_label_name(self.lblAudioPrgs5, self.streamInfo["Streams"][5], True)
+                self.set_label_name(self.lblAudioPrgs6, self.streamInfo["Streams"][6], True)
+                self.set_label_name(self.lblAudioPrgs7, self.streamInfo["Streams"][7], True)
                 self.set_label_name(self.lblAudioSvcs0, self.streamInfo["Programs"][0], True)
                 self.set_label_name(self.lblAudioSvcs1, self.streamInfo["Programs"][1], True)
                 self.set_label_name(self.lblAudioSvcs2, self.streamInfo["Programs"][2], True)
                 self.set_label_name(self.lblAudioSvcs3, self.streamInfo["Programs"][3], True)
+                self.set_label_name(self.lblAudioSvcs4, self.streamInfo["Programs"][4], True)
+                self.set_label_name(self.lblAudioSvcs5, self.streamInfo["Programs"][5], True)
+                self.set_label_name(self.lblAudioSvcs6, self.streamInfo["Programs"][6], True)
+                self.set_label_name(self.lblAudioSvcs7, self.streamInfo["Programs"][7], True)
                 self.set_label_name(self.lblDataSvcs0, self.streamInfo["Services"][0], False)
                 self.set_label_name(self.lblDataSvcs1, self.streamInfo["Services"][1], False)
                 self.set_label_name(self.lblDataSvcs2, self.streamInfo["Services"][2], False)
@@ -1372,7 +1400,7 @@ class NRSC5_DUI(object):
 
     def checkPorts(self, port, type):
         result = -1
-        for i in range(0,3):
+        for i in range(0,7):
             if (len(self.streams[i]) > type):
                 if (port == self.streams[i][type]):
                     result = i
@@ -1488,7 +1516,7 @@ class NRSC5_DUI(object):
 
             self.debugLog("Found Stream: Type {:s}, Number {:02X}". format(t, s))
             self.lastType = t
-            if (t == "audio" and s >= 1 and s <= 4):
+            if (t == "audio" and s >= 1 and s <= 8):
                 self.numStreams = s
                 self.streamInfo["Streams"][s-1] = n
             if (t == "data"):
@@ -1593,18 +1621,34 @@ class NRSC5_DUI(object):
         self.btnAudioPrgs1 = builder.get_object("btn_audio_prgs1")
         self.btnAudioPrgs2 = builder.get_object("btn_audio_prgs2")
         self.btnAudioPrgs3 = builder.get_object("btn_audio_prgs3")
+        self.btnAudioPrgs4 = builder.get_object("btn_audio_prgs4")
+        self.btnAudioPrgs5 = builder.get_object("btn_audio_prgs5")
+        self.btnAudioPrgs6 = builder.get_object("btn_audio_prgs6")
+        self.btnAudioPrgs7 = builder.get_object("btn_audio_prgs7")
         self.btnAudioLbl0  = builder.get_object("btn_audio_lbl0")
         self.btnAudioLbl1  = builder.get_object("btn_audio_lbl1")
         self.btnAudioLbl2  = builder.get_object("btn_audio_lbl2")
         self.btnAudioLbl3  = builder.get_object("btn_audio_lbl3")
+        self.btnAudioLbl4  = builder.get_object("btn_audio_lbl4")
+        self.btnAudioLbl5  = builder.get_object("btn_audio_lbl5")
+        self.btnAudioLbl6  = builder.get_object("btn_audio_lbl6")
+        self.btnAudioLbl7  = builder.get_object("btn_audio_lbl7")
         self.lblAudioPrgs0 = builder.get_object("lbl_audio_prgs0")
         self.lblAudioPrgs1 = builder.get_object("lbl_audio_prgs1")
         self.lblAudioPrgs2 = builder.get_object("lbl_audio_prgs2")
         self.lblAudioPrgs3 = builder.get_object("lbl_audio_prgs3")
+        self.lblAudioPrgs4 = builder.get_object("lbl_audio_prgs4")
+        self.lblAudioPrgs5 = builder.get_object("lbl_audio_prgs5")
+        self.lblAudioPrgs6 = builder.get_object("lbl_audio_prgs6")
+        self.lblAudioPrgs7 = builder.get_object("lbl_audio_prgs7")
         self.lblAudioSvcs0 = builder.get_object("lbl_audio_svcs0")
         self.lblAudioSvcs1 = builder.get_object("lbl_audio_svcs1")
         self.lblAudioSvcs2 = builder.get_object("lbl_audio_svcs2")
         self.lblAudioSvcs3 = builder.get_object("lbl_audio_svcs3")
+        self.lblAudioSvcs4 = builder.get_object("lbl_audio_svcs4")
+        self.lblAudioSvcs5 = builder.get_object("lbl_audio_svcs5")
+        self.lblAudioSvcs6 = builder.get_object("lbl_audio_svcs6")
+        self.lblAudioSvcs7 = builder.get_object("lbl_audio_svcs7")
         self.lblDataSvcs0  = builder.get_object("lbl_data_svcs0")
         self.lblDataSvcs1  = builder.get_object("lbl_data_svcs1")
         self.lblDataSvcs2  = builder.get_object("lbl_data_svcs2")
@@ -1659,8 +1703,8 @@ class NRSC5_DUI(object):
             "Artist": "",           # track artist
             "Cover": "",            # filename of track cover
             "Logo": "",             # station logo
-            "Streams": ["","","",""],  # audio stream names
-            "Programs": ["","","",""], # audio stream types
+            "Streams": ["","","","","","","",""], # audio stream names
+            "Programs": ["","","","","","","",""], # audio stream types
             "Services": ["","","",""], # data service names
             "SvcTypes": ["","","",""], # data service types
             "Bitrate": 0,           # current stream bit rate
@@ -1669,7 +1713,7 @@ class NRSC5_DUI(object):
             "Gain": 0               # automatic gain
         }
         
-        self.streams      = [[],[],[],[]]
+        self.streams      = [[],[],[],[],[],[],[],[]]
         self.numStreams   = 0
         self.numServices  = 0
         self.lastType     = 0
@@ -1680,6 +1724,10 @@ class NRSC5_DUI(object):
         self.btnAudioLbl1.set_label("")
         self.btnAudioLbl2.set_label("")
         self.btnAudioLbl3.set_label("")
+        self.btnAudioLbl4.set_label("")
+        self.btnAudioLbl5.set_label("")
+        self.btnAudioLbl6.set_label("")
+        self.btnAudioLbl7.set_label("")
         self.lblBitRate.set_label("")
         self.lblBitRate2.set_label("")
         self.lblError.set_label("")
@@ -1699,6 +1747,10 @@ class NRSC5_DUI(object):
         self.btnAudioPrgs1.set_sensitive(False)
         self.btnAudioPrgs2.set_sensitive(False)
         self.btnAudioPrgs3.set_sensitive(False)
+        self.btnAudioPrgs4.set_sensitive(False)
+        self.btnAudioPrgs5.set_sensitive(False)
+        self.btnAudioPrgs6.set_sensitive(False)
+        self.btnAudioPrgs7.set_sensitive(False)
         self.lblAudioPrgs0.set_label("")
         self.lblAudioPrgs0.set_sensitive(False)
         self.lblAudioPrgs1.set_label("")
@@ -1707,6 +1759,14 @@ class NRSC5_DUI(object):
         self.lblAudioPrgs2.set_sensitive(False)
         self.lblAudioPrgs3.set_label("")
         self.lblAudioPrgs3.set_sensitive(False)
+        self.lblAudioPrgs4.set_label("")
+        self.lblAudioPrgs4.set_sensitive(False)
+        self.lblAudioPrgs5.set_label("")
+        self.lblAudioPrgs5.set_sensitive(False)
+        self.lblAudioPrgs6.set_label("")
+        self.lblAudioPrgs6.set_sensitive(False)
+        self.lblAudioPrgs7.set_label("")
+        self.lblAudioPrgs7.set_sensitive(False)
         self.lblAudioSvcs0.set_label("")
         self.lblAudioSvcs0.set_sensitive(False)
         self.lblAudioSvcs1.set_label("")
@@ -1715,6 +1775,14 @@ class NRSC5_DUI(object):
         self.lblAudioSvcs2.set_sensitive(False)
         self.lblAudioSvcs3.set_label("")
         self.lblAudioSvcs3.set_sensitive(False)
+        self.lblAudioSvcs4.set_label("")
+        self.lblAudioSvcs4.set_sensitive(False)
+        self.lblAudioSvcs5.set_label("")
+        self.lblAudioSvcs5.set_sensitive(False)
+        self.lblAudioSvcs6.set_label("")
+        self.lblAudioSvcs6.set_sensitive(False)
+        self.lblAudioSvcs7.set_label("")
+        self.lblAudioSvcs7.set_sensitive(False)
         self.lblDataSvcs0.set_label("")
         self.lblDataSvcs1.set_label("")
         self.lblDataSvcs2.set_label("")
@@ -1740,6 +1808,9 @@ class NRSC5_DUI(object):
             if (os.path.isfile(stationLogos)):
                 with open(stationLogos, mode='r') as f:
                     self.stationLogos = json.load(f)
+                for station in self.stationLogos:
+                    while (len(self.stationLogos[station]) < 8):
+                        self.stationLogos[station].append("")
         except:
             self.debugLog("Error: Unable to load station logo database", True)
 
