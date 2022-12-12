@@ -24,7 +24,14 @@ import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, plat
 from subprocess import Popen, PIPE
 from threading import Timer, Thread
 from dateutil import tz
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageFont, ImageDraw, __version__
+
+print('Using Pillow v'+__version__)
+
+if (int(__version__[0]) < 9):
+    imgLANCZOS = Image.LANCZOS
+else:
+    imgLANCZOS = Image.Resampling.LANCZOS
 
 import gi
 gi.require_version("Gtk", "3.0")
@@ -51,7 +58,8 @@ cfgDir = os.path.join(runtimeDir, "cfg")  # config file directory
 
 class NRSC5_DUI(object):
     def __init__(self):
-        global runtimeDir, resDir
+        global runtimeDir, resDir, imgLANCZOS
+
         self.windowsOS = False          # save our determination as a var in case we change how we determine.
 
         self.getControls()              # get controls and windows
@@ -76,7 +84,7 @@ class NRSC5_DUI(object):
         self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
 
         self.app_name       = "NRSC5-DUI"
-        self.version        = "2.2.0"
+        self.version        = "2.2.1"
         self.web_addr       = "https://github.com/markjfine/nrsc5-dui"
         self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021-2022 Mark J. Fine"
         musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
@@ -337,7 +345,7 @@ class NRSC5_DUI(object):
         return result
 
     def on_cover_resize(self, container):
-        global mapDir
+        global mapDir, imgLANCZOS
         if (self.did_resize()):
             self.showArtwork(self.coverImage)
 
@@ -345,13 +353,13 @@ class NRSC5_DUI(object):
             if (self.mapData["mapMode"] == 0):
                 map_file = os.path.join(mapDir, "TrafficMap.png")
                 if os.path.isfile(map_file):
-                    map_img = Image.open(map_file).resize((img_size, img_size), Image.Resampling.LANCZOS)
+                    map_img = Image.open(map_file).resize((img_size, img_size), imgLANCZOS)
                     self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
             elif (self.mapData["mapMode"] == 1):
                 if os.path.isfile(self.mapData["weatherNow"]):
-                    map_img = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), Image.Resampling.LANCZOS)
+                    map_img = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), imgLANCZOS)
                     self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
@@ -596,7 +604,7 @@ class NRSC5_DUI(object):
                 self.nrsc5Args.append(aasDir)
             
             # set IP address if rtl_tcp is used
-            if (self.cbDevIP.get_active()):
+            if (not(useSDRPlay)) and (self.cbDevIP.get_active()):
                 self.nrsc5Args.append("-H")
                 self.nrsc5Args.append(self.txtDevIP.get_text())
             
@@ -612,7 +620,7 @@ class NRSC5_DUI(object):
                 self.nrsc5Args.append(str(int(self.spinPPM.get_value())))
             
             # set rtl device number if not zero
-            if (self.spinRTL.get_value() != 0):
+            if (not(useSDRPlay)) and (self.spinRTL.get_value() != 0):
                 self.nrsc5Args.append("-d")
                 self.nrsc5Args.append(str(int(self.spinRTL.get_value())))
 
@@ -916,7 +924,7 @@ class NRSC5_DUI(object):
             self.btnDelete.set_sensitive(iter is not None)
     
     def on_radMap_toggled(self, btn):
-        global mapDir
+        global mapDir, imgLANCZOS
         if (btn.get_active()):
             img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
             if (img_size < 200):
@@ -925,7 +933,7 @@ class NRSC5_DUI(object):
                 self.mapData["mapMode"] = 0
                 mapFile = os.path.join(mapDir, "TrafficMap.png")
                 if (os.path.isfile(mapFile)):                                                           # check if map exists
-                    mapImg = Image.open(mapFile).resize((img_size, img_size), Image.Resampling.LANCZOS)                       # scale map to fit window
+                    mapImg = Image.open(mapFile).resize((img_size, img_size), imgLANCZOS)                       # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)                # display missing image if file is not found
@@ -933,7 +941,7 @@ class NRSC5_DUI(object):
             elif (btn == self.radMapWeather):
                 self.mapData["mapMode"] = 1
                 if (os.path.isfile(self.mapData["weatherNow"])):
-                    mapImg = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), Image.Resampling.LANCZOS)    # scale map to fit window
+                    mapImg = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), imgLANCZOS)    # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display 
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)                # display missing image if file is not found
@@ -1148,7 +1156,7 @@ class NRSC5_DUI(object):
             self.statusTimer.start()
     
     def processTrafficMap(self, fileName):
-        global aasDir, mapDir
+        global aasDir, mapDir, imgLANCZOS
         r = re.compile("^[\d]+_TMT_.*_([1-3])_([1-3])_([\d]{4})([\d]{2})([\d]{2})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})_([0-9A-Fa-f]{4})\..*$")     # match file name
         m = r.match(fileName)
         
@@ -1201,7 +1209,7 @@ class NRSC5_DUI(object):
                 imgBig   = (981,981)                                                                     # size of a weather map
                 posTS    = (imgBig[0]-235, imgBig[1]-29)                                                 # calculate position to put timestamp (bottom right)
                 imgTS    = self.mkTimestamp(t, imgBig, posTS)                                            # create timestamp for a weather map
-                imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), Image.Resampling.LANCZOS)                 # resize it so it's proportional to the size of a traffic map (981 -> 600)
+                imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                 # resize it so it's proportional to the size of a traffic map (981 -> 600)
                 imgMap   = Image.alpha_composite(imgMap, imgTS)                                          # overlay timestamp on traffic map
 
                 imgMap.save(os.path.join(mapDir, "TrafficMap.png"))                                      # save traffic map
@@ -1209,13 +1217,13 @@ class NRSC5_DUI(object):
                 # display on map page
                 if (self.radMapTraffic.get_active()):
                     img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
-                    imgMap = imgMap.resize((img_size, img_size), Image.Resampling.LANCZOS)                         # scale map to fit window
+                    imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                         # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
                 
                 if (self.mapViewer is not None): self.mapViewer.updated(0)                              # notify map viwerer if it's open
     
     def processWeatherOverlay(self, fileName):
-        global aasDir, mapDir
+        global aasDir, mapDir, imgLANCZOS
         r = re.compile("^[\d]+_DWRO_(.*)_.*_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2})_([0-9A-Fa-f]+)\..*$")                    # match file name
         m = r.match(fileName)
         
@@ -1264,7 +1272,7 @@ class NRSC5_DUI(object):
                 posTS    = (imgMap.size[0]-235, imgMap.size[1]-29)                                      # calculate position to put timestamp (bottom right)
                 imgTS    = self.mkTimestamp(t, imgMap.size, posTS)                                      # create timestamp
                 imgRadar = Image.open(wxOlPath).convert("RGBA")                                         # open radar overlay
-                imgRadar = imgRadar.resize(imgMap.size, Image.Resampling.LANCZOS)                                  # resize radar overlay to fit the map
+                imgRadar = imgRadar.resize(imgMap.size, imgLANCZOS)                                  # resize radar overlay to fit the map
                 imgMap   = Image.alpha_composite(imgMap, imgRadar)                                      # overlay radar image on map
                 imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
                 imgMap.save(wxMapPath)                                                                  # save weather map
@@ -1274,7 +1282,7 @@ class NRSC5_DUI(object):
                 # display on map page
                 if (self.radMapWeather.get_active()):
                     img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
-                    imgMap = imgMap.resize((img_size, img_size), Image.Resampling.LANCZOS)                         # scale map to fit window
+                    imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                         # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
                 
                 self.proccessWeatherMaps()                                                              # get rid of old maps and add new ones to the list
@@ -2122,12 +2130,13 @@ class NRSC5_Map(object):
         self.callback()                                                                                 # run the callback
     
     def animate(self):
+        global imgLANCZOS
         fileName = self.weatherMaps[self.mapIndex] if len(self.weatherMaps) else ""
         if (os.path.isfile(fileName)):
             self.animateBusy = True                                                                     # set busy to true
             
             if (self.config["scale"]):
-                mapImg = imgToPixbuf(Image.open(fileName).resize((600,600), Image.Resampling.LANCZOS))             # open weather map, resize to 600x600, and convert to pixbuf
+                mapImg = imgToPixbuf(Image.open(fileName).resize((600,600), imgLANCZOS))             # open weather map, resize to 600x600, and convert to pixbuf
             else:
                 mapImg = imgToPixbuf(Image.open(fileName))                                              # open weather map and convert to pixbuf
          
@@ -2150,9 +2159,11 @@ class NRSC5_Map(object):
             self.mapIndex = 0
     
     def showImage(self, fileName, scale):
+        global imgLANCZOS
+        
         if (os.path.isfile(fileName)):
             if (scale):
-                mapImg = Image.open(fileName).resize((600,600), Image.Resampling.LANCZOS)                          # open and scale map to fit window
+                mapImg = Image.open(fileName).resize((600,600), imgLANCZOS)                          # open and scale map to fit window
             else:
                 mapImg = Image.open(fileName)                                                           # open map
             
