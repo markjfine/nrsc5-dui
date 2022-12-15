@@ -1601,8 +1601,8 @@
                             <property name="sensitive">True</property>
                             <property name="can_focus">True</property>
                             <property name="tooltip_text" translatable="yes">RTL-TCP listening address</property>
-                            <property name="max_length">16</property>
-                            <property name="max_width_chars">16</property>
+                            <property name="max_length">21</property>
+                            <property name="max_width_chars">21</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
