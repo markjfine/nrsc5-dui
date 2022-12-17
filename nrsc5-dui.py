@@ -638,8 +638,9 @@ class NRSC5_DUI(object):
             # set SDRPlay antenna if not blank
             #if (self.cbSDRPlay.get_active()) and (self.cbxSDRPlayAnt.get_active_text() != ""):
             if (useSDRPlay) and (self.cbxSDRPlayAnt.get_active_text() != ""):
-                self.nrsc5Args.append("-A")
-                self.nrsc5Args.append("\"Antenna "+self.cbxSDRPlayAnt.get_active_text()+"\"")
+                if self.cbxSDRPlayAnt.get_active_text() != "Auto":
+                    self.nrsc5Args.append("-A")
+                    self.nrsc5Args.append("Antenna "+self.cbxSDRPlayAnt.get_active_text())
             
             # set frequency and stream
             self.nrsc5Args.append(str(self.spinFreq.get_value()))

@@ -1711,6 +1711,7 @@
      			    <property name="has_entry">False</property>
                             <property name="active">0</property>
                             <items>
+      			      <item translatable="yes" id="antAuto">Auto</item>
       			      <item translatable="yes" id="antA">A</item>
                               <item translatable="yes" id="antB">B</item>
                               <item translatable="yes" id="antC">C</item>
