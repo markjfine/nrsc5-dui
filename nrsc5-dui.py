@@ -610,7 +610,7 @@ class NRSC5_DUI(object):
             
             # set gain if auto gain is not selected
             if (not self.cbAutoGain.get_active()):
-                self.streamInfo["Gain"] = self.spinGain.get_value()
+                self.streamInfo["Gain"] = round(self.spinGain.get_value(),2)
                 self.nrsc5Args.append("-g")
                 self.nrsc5Args.append(str(self.streamInfo["Gain"]))
             
@@ -1119,7 +1119,7 @@ class NRSC5_DUI(object):
 
                 if (self.cbAutoGain.get_active()):
                     self.spinGain.set_value(self.streamInfo["Gain"])
-                    self.lblGain.set_label("{:2.1f}dB".format(self.streamInfo["Gain"]))
+                    self.lblGain.set_label("{:2.2f}dB".format(self.streamInfo["Gain"]))
                 
                 # second param is lot id, if -1, show cover, otherwise show cover
                 # technically we should show the file with the matching lot id
