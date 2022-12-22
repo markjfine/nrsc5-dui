@@ -35,7 +35,8 @@ else:
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib
+gi.require_version("Notify", "0.7")
+from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib, Notify
 
 import urllib3
 from OpenSSL import SSL
@@ -310,6 +311,19 @@ class NRSC5_DUI(object):
         self.lblExtend.set_sensitive(dlCoversSet)
         self.cbExtend.set_sensitive(dlCoversSet)
 
+    def restart_program(self):
+        python = sys.executable
+        os.execl(python, python, * sys.argv)
+
+    def on_cbxAspect_changed(self, btn):
+        screenAspect = self.cbxAspect.get_active_text()
+        if (screenAspect == "narrow") or (screenAspect == "wide"):
+            mainFile = os.path.join(resDir, "mainForm.glade")
+            gladeFile = os.path.join(resDir, "mainForm-"+screenAspect+".glade")
+            if (os.path.isfile(gladeFile)):
+                shutil.copy(gladeFile,mainFile)
+                self.restart_program()
+                    
     def on_cbxSDRRadio_changed(self, btn):
         useSDRPlay = (self.cbxSDRRadio.get_active_text() == "SDRPlay")
         self.lblSdrPlaySer.set_visible(useSDRPlay)
@@ -654,6 +668,7 @@ class NRSC5_DUI(object):
             
             # disable the controls
             self.spinFreq.set_sensitive(False)
+            self.cbxAspect.ser_sensitive(False)
             self.cbxSDRRadio.set_sensitive(False)
             self.spinGain.set_sensitive(False)
             self.spinPPM.set_sensitive(False)
@@ -718,6 +733,7 @@ class NRSC5_DUI(object):
             if (not self.cbAutoGain.get_active()):
                 self.spinGain.set_sensitive(True)
             self.spinFreq.set_sensitive(True)
+            self.cbxAspect.set_sensitive(True)
             self.cbxSDRRadio.set_sensitive(True)
             self.spinPPM.set_sensitive(True)
             self.spinRTL.set_sensitive(True)
@@ -795,7 +811,7 @@ class NRSC5_DUI(object):
         authors = [
             "Cody Nybo <cmnybo@gmail.com>",
             "Clayton Smith <argilo@gmail.com>",
-            "nefie <zefie@zefie.net>",
+            "zefie <zefie@zefie.net>",
             "Mark J. Fine <mark.fine@fineware-swl.com>"
         ]
 
@@ -1565,7 +1581,7 @@ class NRSC5_DUI(object):
             # match Open device failed
             self.on_btnStop_clicked(None)
             self.set_synchronization(-1)
-
+            
     def getControls(self):
         global resDir
         # setup gui
@@ -1589,6 +1605,7 @@ class NRSC5_DUI(object):
         self.alignmentMap  = builder.get_object("alignment_map")
         self.imgMap        = builder.get_object("imgMap")
         self.spinFreq      = builder.get_object("spinFreq")
+        self.cbxAspect     = builder.get_object("cbxAspect")
         self.cbxSDRRadio   = builder.get_object("cbxSDRRadio")
         self.spinGain      = builder.get_object("spinGain")
         self.cbAutoGain    = builder.get_object("cbAutoGain")
