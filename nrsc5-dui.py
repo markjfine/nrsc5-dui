@@ -1102,8 +1102,14 @@ class NRSC5_DUI(object):
                 self.lblSlogan.set_tooltip_text(self.streamInfo["Slogan"])
                 self.lblMessage.set_label(self.streamInfo["Message"])
                 self.lblMessage.set_tooltip_text(self.streamInfo["Message"])
+                if (self.txtMessage2):
+                    self.txtMessage2.set_label(self.streamInfo["Message"])
+                    self.txtMessage2.set_tooltip_text(self.streamInfo["Message"])
                 self.lblAlert.set_label(self.streamInfo["Alert"])
                 self.lblAlert.set_tooltip_text(self.streamInfo["Alert"])
+                if (self.txtAlert2):
+                    self.txtAlert2.set_label(self.streamInfo["Alert"])
+                    self.txtAlert2.set_tooltip_text(self.streamInfo["Alert"])
                 self.set_button_name(self.btnAudioPrgs0,self.btnAudioLbl0,0)
                 self.set_button_name(self.btnAudioPrgs1,self.btnAudioLbl1,1)
                 self.set_button_name(self.btnAudioPrgs2,self.btnAudioLbl2,2)
@@ -1653,6 +1659,8 @@ class NRSC5_DUI(object):
         self.lblSlogan     = builder.get_object("lblSlogan")
         self.lblMessage    = builder.get_object("lblMessage")
         self.lblAlert      = builder.get_object("lblAlert")
+        self.txtMessage2   = builder.get_object("txtMessage2")
+        self.txtAlert2     = builder.get_object("txtAlert2")
         self.btnAudioPrgs0 = builder.get_object("btn_audio_prgs0")
         self.btnAudioPrgs1 = builder.get_object("btn_audio_prgs1")
         self.btnAudioPrgs2 = builder.get_object("btn_audio_prgs2")
@@ -1779,6 +1787,14 @@ class NRSC5_DUI(object):
         self.lblSlogan.set_tooltip_text("")
         self.lblMessage.set_label("")
         self.lblMessage.set_tooltip_text("")
+        if (self.txtMessage2):
+            self.txtMessage2.set_label("")
+            self.txtMessage2.set_tooltip_text("")
+        self.lblAlert.set_label("")
+        self.lblAlert.set_tooltip_text("")
+        if (self.txtAlert2):
+            self.txtAlert2.set_label("")
+            self.txtAlert2.set_tooltip_text("")
         self.btnAudioPrgs0.set_sensitive(False)
         self.btnAudioPrgs1.set_sensitive(False)
         self.btnAudioPrgs2.set_sensitive(False)
