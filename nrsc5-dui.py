@@ -35,8 +35,7 @@ else:
 
 import gi
 gi.require_version("Gtk", "3.0")
-gi.require_version("Notify", "0.7")
-from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib, Notify
+from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib
 
 import urllib3
 from OpenSSL import SSL
@@ -315,6 +314,14 @@ class NRSC5_DUI(object):
         python = sys.executable
         os.execl(python, python, * sys.argv)
 
+    def confirm_dialog(self, title, message):
+        dialog = Gtk.MessageDialog(parent=self.mainWindow, flags=0, message_type=Gtk.MessageType.WARNING, buttons=Gtk.ButtonsType.YES_NO, text=title)
+        dialog.format_secondary_text(message)
+        dialog.set_default_response(Gtk.ResponseType.YES)
+        response = dialog.run()
+        dialog.destroy()
+        return (response == Gtk.ResponseType.YES)
+
     def on_cbxAspect_changed(self, btn):
         screenAspect = self.cbxAspect.get_active_text()
         if (screenAspect == "narrow") or (screenAspect == "wide"):
@@ -322,7 +329,10 @@ class NRSC5_DUI(object):
             gladeFile = os.path.join(resDir, "mainForm-"+screenAspect+".glade")
             if (os.path.isfile(gladeFile)):
                 shutil.copy(gladeFile,mainFile)
-                self.restart_program()
+                title = "Aspect Changed"
+                message = "You have change the display layout to "+screenAspect+". This change will not happen until the application is restarted. Would you like to restart it now?"
+                if (self.confirm_dialog(title,message)):
+                    self.restart_program()
                     
     def on_cbxSDRRadio_changed(self, btn):
         useSDRPlay = (self.cbxSDRRadio.get_active_text() == "SDRPlay")
