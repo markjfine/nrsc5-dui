@@ -312,7 +312,7 @@ class NRSC5_DUI(object):
 
     def restart_program(self):
         python = sys.executable
-        os.execl(python, python, * sys.argv)
+        os.execl(python, python, *sys.argv)
 
     def confirm_dialog(self, title, message):
         dialog = Gtk.MessageDialog(parent=self.mainWindow, flags=0, message_type=Gtk.MessageType.WARNING, buttons=Gtk.ButtonsType.YES_NO, text=title)
@@ -678,7 +678,7 @@ class NRSC5_DUI(object):
             
             # disable the controls
             self.spinFreq.set_sensitive(False)
-            self.cbxAspect.ser_sensitive(False)
+            self.cbxAspect.set_sensitive(False)
             self.cbxSDRRadio.set_sensitive(False)
             self.spinGain.set_sensitive(False)
             self.spinPPM.set_sensitive(False)
