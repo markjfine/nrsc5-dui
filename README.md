@@ -21,7 +21,7 @@ The following programs are required to run NRSC5-DUI
 It is also assumed you have a fully operational Gtk3 environment installed from [Homebrew](https://brew.sh/), if running on macOS.
 
 # Setup
-1. Install the latest version of Python 3.9, PyGObject, Pillow, and other python dependencies.  
+1. Install the latest version of Python 3.9, PyGObject, Pillow, and other python dependencies. Once Python is installed, you may install the dependencies by giving the command `pip install -r <path_to requirements.txt>`  
 2. Compile and install nrsc5. If using an SDRPlay, you must compile and install the version provided by [fventuri](https://github.com/fventuri/nrsc5).  
 3. Install nrsc5-dui files in a directory where you have write permissions.
 
