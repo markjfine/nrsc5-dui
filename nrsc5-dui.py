@@ -170,7 +170,7 @@ class NRSC5_DUI(object):
             263 : "Service Maintenance",      
             264 : "HD Radio System Services", 
             265 : "Audio-Related Objects",       
-            511 : "Test_Str_E"               
+            511 : "Reserved for Special Tests"               
         }
 
         self.ProgramType = {
@@ -206,6 +206,25 @@ class NRSC5_DUI(object):
             31 : "Emergency",
             65 : "Traffic",
             76 : "Special Reading Services"
+        }
+
+        self.MIMETypes = {
+            0x1E653E9C : "JPEG",
+            0x2D42AC3E : "NavTeq",
+            0x4F328CA0 : "PNG",
+            0x4DC66C5A : "HDC",
+            0x4EB03469 : "TTN TPEG 2",
+            0x52103469 : "TTN TPEG 3",
+            0x82F03DFC : "HERE TPEG",
+            0xB39EBEB2 : "TTN TPEG 1",
+            0xB7F03DFC : "HERE Image",
+            0xB81FFAA8 : "Unknown Test",
+            0xBB492AAC : "Text",
+            0xBE4B7536 : "Primary Image",
+            0xD9C72536 : "Station Logo",
+            0xEECB55B6 : "HD TMC",
+            0xEF042E96 : "TTN STM Weather",
+            0xFF8422D7 : "TTN STM Traffic"
         }
 
         self.pointer_cursor = Gdk.Cursor(Gdk.CursorType.LEFT_PTR)
@@ -264,7 +283,7 @@ class NRSC5_DUI(object):
             re.compile("^[0-9\:]{8,8} Title: (.*)$"),                                                           #  4 match title
             re.compile("^[0-9\:]{8,8} Artist: (.*)$"),                                                          #  5 match artist
             re.compile("^[0-9\:]{8,8} Album: (.*)$"),                                                           #  6 match album
-            re.compile("^[0-9\:]{8,8} LOT file: port=([\d]+) lot=([\d]+) name=(.*\.(?:jpg|jpeg|png|txt)) size=([\d]+) mime=([\w]+)$"), #  7 match file (album art, maps, weather info)
+            re.compile("^[0-9\:]{8,8} LOT file: port=([\d]+) lot=([\d]+) name=(.*\.(?:jpg|jpeg|png|txt)) size=([\d]+) mime=([\w]+) .*$"), #  7 match file (album art, maps, weather info)
             re.compile("^[0-9\:]{8,8} MER: (-?[\d]+\.[\d]+) dB \(lower\), (-?[\d]+\.[\d]+) dB \(upper\)$"),     #  8 match MER
             re.compile("^[0-9\:]{8,8} BER: (0\.[\d]+), avg: (0\.[\d]+), min: (0\.[\d]+), max: (0\.[\d]+)$"),    #  9 match BER
             re.compile("^[0-9\:]{8,8} Best gain: (.*) dB,.*$"),                                                 # 10 match gain
@@ -279,7 +298,9 @@ class NRSC5_DUI(object):
             re.compile("^[0-9\:]{8,8} Synchronized$"),                                                          # 19 synchronized
             re.compile("^[0-9\:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
             re.compile("^[0-9\:]{8,8} Lost device$"),                                                           # 21 lost device
-            re.compile("^[0-9\:]{8,8} Open device failed.$")                                                    # 22 No device
+            re.compile("^[0-9\:]{8,8} Open device failed.$"),                                                   # 22 No device
+            re.compile("^[0-9\:]{8,8} Stream data: port=([\d]+).* mime=([\w]+) size=([\d]+)$"),                 # 23 Navteq/HERE stream info
+            re.compile("^[0-9\:]{8,8} Packet data: port=([\d]+).* mime=([\w]+) size=([\d]+)$")                  # 24 Navteq/HERE packet info
         ]
         
         self.loadSettings()
@@ -1489,6 +1510,16 @@ class NRSC5_DUI(object):
                 self.lastLOT = lot
                 self.xhdrChanged = True
                 self.debugLog("XHDR Changed: {:s} (lot {:s})".format(xhdr,lot))
+        elif (self.regex[23].match(line)):
+            # match HERE Images
+            m = self.regex[23].match(line)
+            if (m):
+                p = int(m.group(1),16)
+                mime = m.group(2)
+                fileSize = int(m.group(3))
+                fileName = "HERE_Image.jpg"
+                # if (mime == "B7F03DFC"):
+                #    print (line)
         elif (self.regex[7].match(line)):
             # match album art
             m = self.regex[7].match(line)
