@@ -520,6 +520,13 @@ class NRSC5_DUI(object):
                         result = musicbrainzngs.search_recordings(strict=setStrict, artist=searchArtist, recording=newTitle, type=setType, status=setStatus)
                     except:
                         print("MusicBrainz recording search error")
+                        print("iteration =",i,".")
+                        print("imgSaved =",imgSaved,".")
+                        print("strict =",setStrict,".")
+                        print("artist =",searchArtist,".")
+                        print("recording =",newTitle,".")
+                        print("type =",setType,".")
+                        print("status =",setStatus,".")
     
                     if (result is not None) and ('recording-list' in result) and (len(result['recording-list']) != 0):    
                         # loop through the list until you get a match
