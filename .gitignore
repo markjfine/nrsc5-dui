@@ -3,6 +3,7 @@
 *.txt
 *.log
 aas/**
-cfg/*.txt
-cfg/*.json
+cfg/**
+cfg/config.json
+cfg/stationLogos.json
 map/**
