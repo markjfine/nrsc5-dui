@@ -53,12 +53,13 @@ else:
 
 if "NRSC5DUI_DATA" in os.environ:
     userDataDir = os.environ["NRSC5DUI_DATA"]
+    os.makedirs(userDataDir, exist_ok=True)
 else:
     userDataDir = runtimeDir
 
 aasDir = os.path.join(userDataDir, "aas")  # aas (data from nrsc5) file directory
 mapDir = os.path.join(userDataDir, "map")  # map (data we process) file directory
-resDir = os.path.join(userDataDir, "res")  # resource (application dependencies) file directory
+resDir = os.path.join(runtimeDir, "res")  # resource (application dependencies) file directory
 cfgDir = os.path.join(userDataDir, "cfg")  # config file directory
 
 class NRSC5_DUI(object):
