@@ -1976,6 +1976,15 @@ class NRSC5_DUI(object):
         except:
             self.debugLog("Error: Unable to load config", True)
         
+        # create cfg directory
+        if (not os.path.isdir(cfgDir)):
+            try:
+                os.mkdir(cfgDir)
+                self.debugLog("Needed to create config directory!")
+            except:
+                self.debugLog("Error: Unable to create AAS directory", True)
+                cfgDir = None
+
         # create aas directory
         if (not os.path.isdir(aasDir)):
             try:
