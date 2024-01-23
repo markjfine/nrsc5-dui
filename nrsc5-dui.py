@@ -51,14 +51,19 @@ if hasattr(sys, 'frozen'):
 else:
     runtimeDir = sys.path[0]
 
-aasDir = os.path.join(runtimeDir, "aas")  # aas (data from nrsc5) file directory
-mapDir = os.path.join(runtimeDir, "map")  # map (data we process) file directory
-resDir = os.path.join(runtimeDir, "res")  # resource (application dependencies) file directory
-cfgDir = os.path.join(runtimeDir, "cfg")  # config file directory
+if "NRSC5DUI_DATA" in os.environ:
+    userDataDir = os.environ["NRSC5DUI_DATA"]
+else:
+    userDataDir = runtimeDir
+
+aasDir = os.path.join(userDataDir, "aas")  # aas (data from nrsc5) file directory
+mapDir = os.path.join(userDataDir, "map")  # map (data we process) file directory
+resDir = os.path.join(userDataDir, "res")  # resource (application dependencies) file directory
+cfgDir = os.path.join(userDataDir, "cfg")  # config file directory
 
 class NRSC5_DUI(object):
     def __init__(self):
-        global runtimeDir, resDir, imgLANCZOS
+        global runtimeDir, userDataDir, resDir, imgLANCZOS
 
         self.windowsOS = False          # save our determination as a var in case we change how we determine.
 
@@ -67,6 +72,7 @@ class NRSC5_DUI(object):
         self.http = urllib3.PoolManager()
 
         self.debugLog("Local path determined as " + runtimeDir)
+        self.debugLog("User data base directory: " + userDataDir)
 
         if (platform.system() == 'Windows'):
             # Windows release layout
