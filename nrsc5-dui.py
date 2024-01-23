@@ -1982,7 +1982,7 @@ class NRSC5_DUI(object):
                 os.mkdir(cfgDir)
                 self.debugLog("Needed to create config directory!")
             except:
-                self.debugLog("Error: Unable to create AAS directory", True)
+                self.debugLog("Error: Unable to create config directory", True)
                 cfgDir = None
 
         # create aas directory
