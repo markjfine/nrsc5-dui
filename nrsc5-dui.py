@@ -2069,7 +2069,7 @@ class NRSC5_DUI(object):
             with open(os.path.join(cfgDir,"coverMetas.json"), mode='w') as f:
                 json.dump(self.coverMetas, f, indent=2)
         except Exception as e:
-            print e.message, e.args
+            print(e.message, e.args)
             self.debugLog("Error: Unable to save config", True)
     
     def debugLog(self, message, force=False):
