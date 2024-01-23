@@ -25,7 +25,7 @@ It is also assumed you have a fully operational Gtk3 environment installed from 
 2. Compile and install nrsc5. If using an SDRPlay, you must compile and install the version provided by [fventuri](https://github.com/fventuri/nrsc5).  
 3. Install nrsc5-dui files in a directory where you have write permissions.
 
-The configuration and resource directories will be created in a new `cfg` and `res` directory under where nrsc5-dui.py resides. Similarly, an `aas` directory will be created for downloaded files and a `map` directory will be created to store weather & traffic maps.
+The configuration and resource directories will be created in a new `cfg` and `res` directory under where nrsc5-dui.py resides. Similarly, an `aas` directory will be created for downloaded files and a `map` directory will be created to store weather & traffic maps. The `aas`, `cfg`, and `map` directories may optionally be created in a separate user-defined path as specified within a `NRSC5DUI_DATA` environment variable.
 
 nrsc5 should be installed in a directory that is in your `$PATH` environment variable. Otherwise the full path to nrsc5 (e.g., `/usr/local/bin/`) may be entered at runtime (see Usage for details, below).
 
