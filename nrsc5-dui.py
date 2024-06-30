@@ -1186,7 +1186,7 @@ class NRSC5_DUI(object):
 
                 if (self.cbAutoGain.get_active()):
                     self.spinGain.set_value(self.streamInfo["Gain"])
-                    self.lblGain.set_label("{:2.2f}dB".format(self.streamInfo["Gain"]))
+                    self.lblGain.set_label("{:2.1f} dB".format(self.streamInfo["Gain"]))
                 
                 # second param is lot id, if -1, show cover, otherwise show cover
                 # technically we should show the file with the matching lot id
@@ -1592,7 +1592,7 @@ class NRSC5_DUI(object):
         elif (self.regex[10].match(line)):
             # match gain
             m = self.regex[10].match(line)
-            self.streamInfo["Gain"] = float(m.group(1))/10
+            self.streamInfo["Gain"] = float(m.group(1))
         elif (self.regex[11].match(line)):
             # match stream
             m = self.regex[11].match(line)
