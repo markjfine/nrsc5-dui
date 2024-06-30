@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #    NRSC5 DUI - A graphical interface for nrsc5
-#    Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-23 Mark J. Fine
+#    Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-24 Mark J. Fine
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #    Updated by zefie for modern nrsc5 ~ 2019
-#    Updated and enhanced by markjfine ~ 2021-23
+#    Updated and enhanced by markjfine ~ 2021-24
 
 import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform, io
 from subprocess import Popen, PIPE
@@ -91,9 +91,9 @@ class NRSC5_DUI(object):
         self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
 
         self.app_name       = "NRSC5-DUI"
-        self.version        = "2.2.3"
+        self.version        = "2.2.4"
         self.web_addr       = "https://github.com/markjfine/nrsc5-dui"
-        self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021-23 Mark J. Fine"
+        self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021-24 Mark J. Fine"
         musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
 
         self.width          = 0         # window width
@@ -283,31 +283,31 @@ class NRSC5_DUI(object):
         
         # regex for getting nrsc5 output
         self.regex = [
-            re.compile("^[0-9\:]{8,8} Station name: (.*)$"),                                                    #  0 match station name
-            re.compile("^[0-9\:]{8,8} Station location: (-?[\d]+\.[\d]+) (-?[\d]+\.[\d]+), ([\d]+)m$"),         #  1 match station location
-            re.compile("^[0-9\:]{8,8} Slogan: (.*)$"),                                                          #  2 match station slogan
-            re.compile("^[0-9\:]{8,8} Audio bit rate: (.*) kbps$"),                                             #  3 match audio bit rate
-            re.compile("^[0-9\:]{8,8} Title: (.*)$"),                                                           #  4 match title
-            re.compile("^[0-9\:]{8,8} Artist: (.*)$"),                                                          #  5 match artist
-            re.compile("^[0-9\:]{8,8} Album: (.*)$"),                                                           #  6 match album
-            re.compile("^[0-9\:]{8,8} LOT file: port=([\d]+) lot=([\d]+) name=(.*\.(?:jpg|jpeg|png|txt)) size=([\d]+) mime=([\w]+) .*$"), #  7 match file (album art, maps, weather info)
-            re.compile("^[0-9\:]{8,8} MER: (-?[\d]+\.[\d]+) dB \(lower\), (-?[\d]+\.[\d]+) dB \(upper\)$"),     #  8 match MER
-            re.compile("^[0-9\:]{8,8} BER: (0\.[\d]+), avg: (0\.[\d]+), min: (0\.[\d]+), max: (0\.[\d]+)$"),    #  9 match BER
-            re.compile("^[0-9\:]{8,8} Best gain: (.*) dB,.*$"),                                                 # 10 match gain
-            re.compile("^[0-9\:]{8,8} SIG Service: type=(.*) number=(.*) name=(.*)$"),                          # 11 match stream
-            re.compile("^[0-9\:]{8,8} .*Data component:.* id=([\d]+).* port=([\d]+).* service_data_type=([\d]+) .*$"), # 12 match port (and data_service_type)
-            re.compile("^[0-9\:]{8,8} XHDR: (.*) ([0-9A-Fa-f]{8}) (.*)$"),                                      # 13 match xhdr tag
-            re.compile("^[0-9\:]{8,8} Unique file identifier: PPC;07; ([\S]+).*$"),                             # 14 match unique file id
-            re.compile("^[0-9\:]{8,8} Genre: (.*)$"),                                                           # 15 match genre
-            re.compile("^[0-9\:]{8,8} Message: (.*)$"),                                                         # 16 match message
-            re.compile("^[0-9\:]{8,8} Alert: (.*)$"),                                                           # 17 match alert
-            re.compile("^[0-9\:]{8,8} .*Audio component:.* id=([\d]+).* port=([\d]+).* type=([\d]+) .*$"),      # 18 match port (and type)
-            re.compile("^[0-9\:]{8,8} Synchronized$"),                                                          # 19 synchronized
-            re.compile("^[0-9\:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
-            re.compile("^[0-9\:]{8,8} Lost device$"),                                                           # 21 lost device
-            re.compile("^[0-9\:]{8,8} Open device failed.$"),                                                   # 22 No device
-            re.compile("^[0-9\:]{8,8} Stream data: port=([\d]+).* mime=([\w]+) size=([\d]+)$"),                 # 23 Navteq/HERE stream info
-            re.compile("^[0-9\:]{8,8} Packet data: port=([\d]+).* mime=([\w]+) size=([\d]+)$")                  # 24 Navteq/HERE packet info
+            re.compile("^[0-9:]{8,8} Station name: (.*)$"),                                                    #  0 match station name
+            re.compile("^[0-9:]{8,8} Station location: (-?[0-9.]+) (-?[0-9.]+), ([0-9]+)m$"),                  #  1 match station location
+            re.compile("^[0-9:]{8,8} Slogan: (.*)$"),                                                          #  2 match station slogan
+            re.compile("^[0-9:]{8,8} Audio bit rate: (.*) kbps$"),                                             #  3 match audio bit rate
+            re.compile("^[0-9:]{8,8} Title: (.*)$"),                                                           #  4 match title
+            re.compile("^[0-9:]{8,8} Artist: (.*)$"),                                                          #  5 match artist
+            re.compile("^[0-9:]{8,8} Album: (.*)$"),                                                           #  6 match album
+            re.compile("^[0-9:]{8,8} LOT file: port=([0-9]+) lot=([0-9]+) name=(.*[.](?:jpg|jpeg|png|txt)) size=([0-9]+) mime=([a-zA-Z0-9_]+) .*$"), #  7 match file (album art, maps, weather info)
+            re.compile("^[0-9:]{8,8} MER: (-?[0-9]+[.][0-9]+) dB [(]lower[)], (-?[0-9]+[.][0-9]+) dB [(]upper[)]$"), #  8 match MER
+            re.compile("^[0-9:]{8,8} BER: (0[.][0-9]+), avg: (0[.][0-9]+), min: (0[.][0-9]+), max: (0[.][0-9]+)$"), #  9 match BER
+            re.compile("^Best gain: (.*) dB,.*$"),                                                             # 10 match gain
+            re.compile("^[0-9:]{8,8} SIG Service: type=(.*) number=(.*) name=(.*)$"),                          # 11 match stream
+            re.compile("^[0-9:]{8,8} .*Data component:.* id=([0-9]+).* port=([0-9]+).* service_data_type=([0-9]+) .*$"), # 12 match port (and data_service_type)
+            re.compile("^[0-9:]{8,8} XHDR: (.*) ([0-9A-Fa-f]{8}) (.*)$"),                                      # 13 match xhdr tag
+            re.compile("^[0-9:]{8,8} Unique file identifier: PPC;07; ([a-zA-Z0-9_.]+).*$"),                    # 14 match unique file id
+            re.compile("^[0-9:]{8,8} Genre: (.*)$"),                                                           # 15 match genre
+            re.compile("^[0-9:]{8,8} Message: (.*)$"),                                                         # 16 match message
+            re.compile("^[0-9:]{8,8} Alert: (.*)$"),                                                           # 17 match alert
+            re.compile("^[0-9:]{8,8} .*Audio component:.* id=([0-9]+).* port=([0-9]+).* type=([0-9]+) .*$"),   # 18 match port (and type)
+            re.compile("^[0-9:]{8,8} Synchronized$"),                                                          # 19 synchronized
+            re.compile("^[0-9:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
+            re.compile("^[0-9:]{8,8} Lost device$"),                                                           # 21 lost device
+            re.compile("^[0-9:]{8,8} Open device failed.$"),                                                   # 22 No device
+            re.compile("^[0-9:]{8,8} Stream data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$"),       # 23 Navteq/HERE stream info
+            re.compile("^[0-9:]{8,8} Packet data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$")        # 24 Navteq/HERE packet info
         ]
         
         self.loadSettings()
@@ -862,7 +862,7 @@ class NRSC5_DUI(object):
 
         license = """
         NRSC5 DUI - A second-generation graphical interface for nrsc5
-        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-23 Mark J. Fine
+        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-24 Mark J. Fine
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -1107,7 +1107,7 @@ class NRSC5_DUI(object):
             lblWidget.set_sensitive(inString != "")
 
     def getImageLot(self,imgStr):
-        r = re.compile("^([\d]+)_.*$")
+        r = re.compile("^([0-9]+)_.*$")
         m = r.match(imgStr)
         return m.group(1)
 
@@ -1225,7 +1225,7 @@ class NRSC5_DUI(object):
     
     def processTrafficMap(self, fileName):
         global aasDir, mapDir, imgLANCZOS
-        r = re.compile("^[\d]+_TMT_.*_([1-3])_([1-3])_([\d]{4})([\d]{2})([\d]{2})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})_([0-9A-Fa-f]{4})\..*$")     # match file name
+        r = re.compile("^[0-9]+_TMT_.*_([1-3])_([1-3])_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})_([0-9A-Fa-f]{4})[.].*$")     # match file name
         m = r.match(fileName)
         
         if (m):
@@ -1292,7 +1292,7 @@ class NRSC5_DUI(object):
     
     def processWeatherOverlay(self, fileName):
         global aasDir, mapDir, imgLANCZOS
-        r = re.compile("^[\d]+_DWRO_(.*)_.*_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2})_([0-9A-Fa-f]+)\..*$")                    # match file name
+        r = re.compile("^[0-9]+_DWRO_(.*)_.*_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9]{2})([0-9]{2})_([0-9A-Fa-f]+)[.].*$")                    # match file name
         m = r.match(fileName)
         
         if (m):
@@ -1376,7 +1376,7 @@ class NRSC5_DUI(object):
 
                     elif ("Coordinates=" in line):                                                      # look for line with "Coordinates=" in it
                         # get coordinates from line
-                        r = re.compile("^Coordinates=.*\((-?[\d]+\.[\d]+),(-?[\d]+\.[\d]+)\).*\((-?[\d]+\.[\d]+),(-?[\d]+\.[\d]+)\).*$")
+                        r = re.compile("^Coordinates=.*[(](-?[0-9]+[.][0-9]+),(-?[0-9]+[.][0-9]+)[)].*[(](-?[0-9]+[.][0-9]+),(-?[0-9]+[.][0-9]+)[)].*$")
                         m = r.match(line)
                         weatherPos = [float(m.group(1)),float(m.group(2)), float(m.group(3)), float(m.group(4))]
         except:
