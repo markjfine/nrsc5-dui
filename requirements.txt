@@ -1,7 +1,7 @@
-pygobject==3.44.1
+pygobject==3.50.0
 musicbrainzngs==0.7.1
-numpy==1.25.1
-Pillow==10.0.0
-pyOpenSSL==23.0.0
-python-dateutil==2.8.2
+numpy==2.1.2
+Pillow==11.0.0
+pyOpenSSL==24.0.0
+python-dateutil==2.9.0
 urllib3==1.26.14
