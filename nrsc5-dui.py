@@ -284,7 +284,7 @@ class NRSC5_DUI(object):
         # regex for getting nrsc5 output
         self.regex = [
             re.compile("^[0-9:]{8,8} Station name: (.*)$"),                                                    #  0 match station name
-            re.compile("^[0-9:]{8,8} Station location: (-?[0-9.]+) (-?[0-9.]+), ([0-9]+)m$"),                  #  1 match station location
+            re.compile("^[0-9:]{8,8} Station location: (-?[0-9.]+), (-?[0-9.]+), ([0-9]+)m$"),                  #  1 match station location
             re.compile("^[0-9:]{8,8} Slogan: (.*)$"),                                                          #  2 match station slogan
             re.compile("^[0-9:]{8,8} Audio bit rate: (.*) kbps$"),                                             #  3 match audio bit rate
             re.compile("^[0-9:]{8,8} Title: (.*)$"),                                                           #  4 match title
