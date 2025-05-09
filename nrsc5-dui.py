@@ -750,7 +750,7 @@ class NRSC5_DUI(object):
         self.get_bookmark_names()
 
         self.btnBookmark.set_sensitive(not self.bookmarked)
-        if (self.notebookMain.get_current_page() != 3):
+        if (self.notebookMain.get_current_page() == 3):
             self.btnDelete.set_sensitive(self.bookmarked)
         else:
             self.btnDelete.set_sensitive(False)
