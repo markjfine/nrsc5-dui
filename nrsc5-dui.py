@@ -735,20 +735,23 @@ class NRSC5_DUI(object):
             
             self.stationStr = str(self.spinFreq.get_value())
             self.displayLogo()         
-            
-            # check if station is bookmarked
-            self.bookmarked = False
-            freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum + 1)
-            for b in self.bookmarks:
-                if (b[2] == freq):
-                    self.bookmarked = True
-                    break
 
-            self.get_bookmark_names()
+            self.update_bookmark_buttons()
+    
+    def update_bookmark_buttons(self):
+        # check if station is bookmarked
+        self.bookmarked = False
+        freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.streamNum + 1)
+        for b in self.bookmarks:
+            if (b[2] == freq):
+                self.bookmarked = True
+                break
 
-            self.btnBookmark.set_sensitive(not self.bookmarked)
-            if (self.notebookMain.get_current_page() != 3):
-                self.btnDelete.set_sensitive(self.bookmarked)
+        self.get_bookmark_names()
+
+        self.btnBookmark.set_sensitive(not self.bookmarked)
+        if (self.notebookMain.get_current_page() != 3):
+            self.btnDelete.set_sensitive(self.bookmarked)
     
     def get_bookmark_names(self):
         self.booknames = ["","","","","","","",""]
@@ -916,6 +919,7 @@ class NRSC5_DUI(object):
         if self.playing:
             self.nrsc5msg = str(self.streamNum)
             self.displayLogo()
+        self.update_bookmark_buttons()
 
     def set_program_btns(self):
         self.btnAudioPrgs0.set_active(self.update_btns and self.streamNum == 0)
