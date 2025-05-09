@@ -752,7 +752,9 @@ class NRSC5_DUI(object):
         self.btnBookmark.set_sensitive(not self.bookmarked)
         if (self.notebookMain.get_current_page() != 3):
             self.btnDelete.set_sensitive(self.bookmarked)
-    
+        else:
+            self.btnDelete.set_sensitive(False)
+            
     def get_bookmark_names(self):
         self.booknames = ["","","","","","","",""]
         freq = str(int((self.spinFreq.get_value()+0.005)*10))
