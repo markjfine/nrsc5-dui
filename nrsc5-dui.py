@@ -981,11 +981,11 @@ class NRSC5_DUI(object):
 
     def on_notebookMain_switch_page(self, notebook, page, page_num):
         # disable delete button if not on bookmarks page and station is not bookmarked
-        if (page_num != 3 and (not self.bookmarked or not self.playing)):
+        if (page_num != 3): #and (not self.bookmarked or not self.playing)):
             self.btnDelete.set_sensitive(False)
         # enable delete button if not on bookmarks page and station is bookmarked
-        elif (page_num != 3 and self.bookmarked):
-            self.btnDelete.set_sensitive(True)
+        #elif (page_num != 3 and self.bookmarked):
+        #    self.btnDelete.set_sensitive(True)
         # enable delete button if on bookmarks page and a bookmark is selected
         else:
             (model, iter) = self.lvBookmarks.get_selection().get_selected()
