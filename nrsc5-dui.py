@@ -1230,9 +1230,6 @@ class NRSC5_DUI(object):
             self.statusTimer = Timer(1, self.checkStatus)
             self.statusTimer.start()
     
-    def processHEREWeatherOverlay(self, fileName):
-        print("TBD")
-    
     def processHERETrafficMap(self, fileName, timeStr):
         global aasDir, mapDir, imgLANCZOS
         r = re.compile("^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$")
@@ -1270,6 +1267,7 @@ class NRSC5_DUI(object):
             self.finishTrafficMap(fileName, ts, t, x, y)                                                                             # unix timestamp (utc)
             
     def finishTrafficMap(self, fileName, ts, t, x, y):
+        global aasDir, mapDir, imgLANCZOS
         # check if the tile has already been loaded
         if (self.mapData["mapTiles"][x][y] == ts):
             try:
@@ -1309,7 +1307,7 @@ class NRSC5_DUI(object):
             imgMap   = imgMap.convert("RGBA")
             imgBig   = (981,981)                                                                     # size of a weather map
             posTS    = (imgBig[0]-235, imgBig[1]-29)                                                 # calculate position to put timestamp (bottom right)
-            imgTS    = self.mkTimestamp(t, imgBig, posTS)                                            # create timestamp for a weather map
+            imgTS    = self.mkTimestamp(t, imgBig, posTS, False)                                            # create timestamp for a weather map
             imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                    # resize it so it's proportional to the size of a traffic map (981 -> 600)
             imgMap   = Image.alpha_composite(imgMap, imgTS)                                          # overlay timestamp on traffic map
 
@@ -1322,6 +1320,26 @@ class NRSC5_DUI(object):
                 self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
                 
             if (self.mapViewer is not None): self.mapViewer.updated(0)                              # notify map viwerer if it's open
+    
+    def processHEREWeatherOverlay(self, fileName, timeStr):
+        global aasDir, mapDir, imgLANCZOS
+        r = re.compile("^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$")
+        m = r.match(timeStr)
+
+        if (m):
+            # get time from map tile and convert to local time
+            dt = datetime.datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), tzinfo=tz.tzutc())
+            t  = dt.astimezone(tz.tzlocal())                                                            # local time
+            ts = dtToTs(dt)                                                                             # unix timestamp (etc)
+
+            r = re.compile("^WeatherImage_([0-9])_([0-9])_(.*).png$")
+            n = r.match(fileName)
+            if (n):
+                id = n.group(3)
+
+            # prepend filename with timestamp
+            fileName = "{0}_{1}".format(ts,fileName)
+            self.finishWeatherOverlay(fileName, ts, t, id, True)
     
     def processWeatherOverlay(self, fileName):
         global aasDir, mapDir, imgLANCZOS
@@ -1341,57 +1359,67 @@ class NRSC5_DUI(object):
                 else:
                     self.debugLog("Received weather overlay with the wrong ID: " + m.group(1) + " (wanted " + id +")")
                 return
+                
+            self.finishWeatherOverlay(fileName, ts, t, id, False)
             
-            if (self.mapData["weatherTime"] == ts):
-                try:
-                    os.remove(os.path.join(aasDir, fileName))                                           # delete this tile, it's not needed
-                except:
-                    pass
-                return                                                                                  # no need to recreate the map if it hasn't changed
-            
-            self.debugLog("Got Weather Overlay")
-            
-            self.mapData["weatherTime"] = ts                                                            # store time for current overlay
-            wxOlPath  = os.path.join(mapDir,"WeatherOverlay_{:s}_{:}.png".format(id, ts))
-            wxMapPath = os.path.join(mapDir,"WeatherMap_{:s}_{:}.png".format(id, ts))
-            
-            # move new overlay to map directory
+    def finishWeatherOverlay(self, fileName, ts, t, id, isHERE):
+        global aasDir, mapDir, imgLANCZOS
+
+        if (self.mapData["weatherTime"] == ts):
             try:
-                if(os.path.exists(wxOlPath)): os.remove(wxOlPath)                                       # delete old image if it exists (only necessary on windows)
-                shutil.move(os.path.join(aasDir, fileName), wxOlPath)                                   # move and rename map tile
+                os.remove(os.path.join(aasDir, fileName))                                           # delete this tile, it's not needed
             except:
-                self.debugLog("Error moving weather overlay", True)
-                self.mapData["weatherTime"] = 0
+                pass
+            return                                                                                  # no need to recreate the map if it hasn't changed
+            
+        self.debugLog("Got Weather Overlay")
+            
+        self.mapData["weatherTime"] = ts                                                            # store time for current overlay
+        wxOlPath  = os.path.join(mapDir,"WeatherOverlay_{:s}_{:}.png".format(id, ts))
+        wxMapPath = os.path.join(mapDir,"WeatherMap_{:s}_{:}.png".format(id, ts))
+            
+        # move new overlay to map directory
+        try:
+            if(os.path.exists(wxOlPath)): os.remove(wxOlPath)                                       # delete old image if it exists (only necessary on windows)
+            shutil.move(os.path.join(aasDir, fileName), wxOlPath)                                   # move and rename map tile
+        except:
+            self.debugLog("Error moving weather overlay", True)
+            self.mapData["weatherTime"] = 0
                 
-            # create weather map
-            try:
-                mapPath = os.path.join(mapDir, "BaseMap_" + id + ".png")                                # get path to base map
-                if (os.path.isfile(mapPath) == False):                                                  # make sure base map exists
-                    self.makeBaseMap(self.mapData["weatherID"], self.mapData["weatherPos"])             # create base map if it doesn't exist
+        # create weather map
+        try:
+            mapPath = os.path.join(mapDir, "BaseMap_" + id + ".png")                                # get path to base map
+            if (os.path.isfile(mapPath) == False):                                                  # make sure base map exists
+                self.makeBaseMap(self.mapData["weatherID"], self.mapData["weatherPos"])             # create base map if it doesn't exist
                 
-                imgMap   = Image.open(mapPath).convert("RGBA")                                          # open map image
-                posTS    = (imgMap.size[0]-235, imgMap.size[1]-29)                                      # calculate position to put timestamp (bottom right)
-                imgTS    = self.mkTimestamp(t, imgMap.size, posTS)                                      # create timestamp
-                imgRadar = Image.open(wxOlPath).convert("RGBA")                                         # open radar overlay
-                imgRadar = imgRadar.resize(imgMap.size, imgLANCZOS)                                  # resize radar overlay to fit the map
-                imgMap   = Image.alpha_composite(imgMap, imgRadar)                                      # overlay radar image on map
-                imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
-                imgMap.save(wxMapPath)                                                                  # save weather map
-                os.remove(wxOlPath)                                                                     # remove overlay image
-                self.mapData["weatherNow"] = wxMapPath
+            imgMap   = Image.open(mapPath).convert("RGBA")                                          # open map image
+            scaleFactor = 1
+            if (isHERE):
+                scaleFactor = 3
+            xOffset = 235/scaleFactor
+            yOffset = 29/scaleFactor
+            posTS    = (imgMap.size[0]-xOffset, imgMap.size[1]-yOffset)
+            imgTS    = self.mkTimestamp(t, imgMap.size, posTS, isHERE)                              # create timestamp
+            imgRadar = Image.open(wxOlPath).convert("RGBA")                                         # open radar overlay
+            imgRadar = imgRadar.resize(imgMap.size, imgLANCZOS)                                     # resize radar overlay to fit the map
+            imgMap   = Image.alpha_composite(imgMap, imgRadar)                                      # overlay radar image on map
+            imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
+            imgMap.save(wxMapPath)                                                                  # save weather map
+            os.remove(wxOlPath)                                                                     # remove overlay image
+            self.mapData["weatherNow"] = wxMapPath
                 
-                # display on map page
-                if (self.radMapWeather.get_active()):
-                    img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
-                    imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                         # scale map to fit window
-                    self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
+            # display on map page
+            if (self.radMapWeather.get_active()):
+                img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
+                imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                         # scale map to fit window
+                self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
                 
-                self.proccessWeatherMaps()                                                              # get rid of old maps and add new ones to the list
-                if (self.mapViewer is not None): self.mapViewer.updated(1)                              # notify map viwerer if it's open
+            self.proccessWeatherMaps()                                                              # get rid of old maps and add new ones to the list
+            if (self.mapViewer is not None): self.mapViewer.updated(1)                              # notify map viwerer if it's open
                     
-            except:
-                self.debugLog("Error creating weather map", True)
-                self.mapData["weatherTime"] = 0
+        except:
+            self.debugLog("Error creating weather map", True)
+            self.mapData["weatherTime"] = 0
             
     def proccessWeatherInfo(self, fileName):
         global aasDir
@@ -1414,6 +1442,27 @@ class NRSC5_DUI(object):
                         weatherPos = [float(m.group(1)),float(m.group(2)), float(m.group(3)), float(m.group(4))]
         except:
             self.debugLog("Error opening weather info", True)
+        
+        if (weatherID is not None and weatherPos is not None):                                          # check if ID and position were found
+            if (self.mapData["weatherID"] != weatherID or self.mapData["weatherPos"] != weatherPos):    # check if ID or position has changed
+                self.debugLog("Got position: ({:n}, {:n}) ({:n}, {:n})".format(*weatherPos))
+                self.mapData["weatherID"]  = weatherID                                                  # set weather ID
+                self.mapData["weatherPos"] = weatherPos                                                 # set weather map position
+                
+                self.makeBaseMap(weatherID, weatherPos)
+                self.weatherMaps = []
+                self.proccessWeatherMaps()
+    
+    def proccessHEREWeatherInfo(self, fileName, lat1, lon1, lat2, lon2):
+        global aasDir
+        weatherID = None
+        weatherPos = None
+
+        r = re.compile("^.*WeatherImage_([0-9])_([0-9])_(.*).png$")
+        m = r.match(fileName)
+        if (m):
+          weatherID = m.group(3)
+          weatherPos = [lat1, lon1, lat2, lon2]
         
         if (weatherID is not None and weatherPos is not None):                                          # check if ID and position were found
             if (self.mapData["weatherID"] != weatherID or self.mapData["weatherPos"] != weatherPos):    # check if ID or position has changed
@@ -1495,16 +1544,23 @@ class NRSC5_DUI(object):
                     return False
         return True
     
-    def mkTimestamp(self, t, size, pos):
+    def mkTimestamp(self, t, size, pos, isHERE):
         global resDir
         # create a timestamp image to overlay on the weathermap
         x,y   = pos
         text  = "{:04g}-{:02g}-{:02g} {:02g}:{:02g}".format(t.year, t.month, t.day, t.hour, t.minute)   # format timestamp
         imgTS = Image.new("RGBA", size, (0,0,0,0))                                                      # create a blank image
         draw  = ImageDraw.Draw(imgTS)                                                                   # the drawing object
-        font  = ImageFont.truetype(os.path.join(resDir,"DejaVuSansMono.ttf"), 24)                       # DejaVu Sans Mono 24pt font
-        draw.rectangle((x,y, x+231,y+25), outline="black", fill=(128,128,128,96))                       # draw a box around the text
-        draw.text((x+3,y), text, fill="black", font=font)                                               # draw the text
+        scaleFactor = 1
+        if (isHERE):
+            scaleFactor = 3
+        fontSize = 24/scaleFactor
+        xOffset = 231/scaleFactor+1
+        yOffset = 25/scaleFactor+1
+        xOffset2 = 3/scaleFactor
+        font  = ImageFont.truetype(os.path.join(resDir,"DejaVuSansMono.ttf"), fontSize)                 # DejaVu Sans Mono 24pt font
+        draw.rectangle((x,y, x+xOffset,y+yOffset), outline="black", fill=(128,128,128,96))                       # draw a box around the text
+        draw.text((x+xOffset2,y), text, fill="black", font=font)                                               # draw the text
         return imgTS                                                                                    # return the image
 
     def checkPorts(self, port, type):
@@ -1586,7 +1642,8 @@ class NRSC5_DUI(object):
                 #        self.debugLog("Corrupt file: " + fileName + " (expected: "+str(fileSize)+" bytes, got "+str(actualFileSize)+" bytes)")
 
                 if(type == "WEATHER" and mapDir is not None):
-                    self.processHEREWeatherOverlay(fileName)
+                    self.proccessHEREWeatherInfo(fileName,lat1,lon1,lat2,lon2)
+                    self.processHEREWeatherOverlay(fileName,timeStr)
                 elif(type == "TRAFFIC" and mapDir is not None):
                     self.processHERETrafficMap(fileName,timeStr)
                     
