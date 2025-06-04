@@ -306,7 +306,8 @@ class NRSC5_DUI(object):
             re.compile("^[0-9:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
             re.compile("^[0-9:]{8,8} Lost device$"),                                                           # 21 lost device
             re.compile("^[0-9:]{8,8} Open device failed.$"),                                                   # 22 No device
-            re.compile("^[0-9:]{8,8} Stream data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$"),       # 23 Navteq/HERE stream info
+            # re.compile("^[0-9:]{8,8} Stream data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$"),       # 23 Navteq/HERE stream info
+            re.compile("^[0-9:]{8,8} HERE Image: type=([A-Z]{7,7}), seq=([0-9]+), n1=([0-9]+), n2=([0-9]+), time=(.*), lat1=(-?[0-9.]+), lon1=(-?[0-9.]+), lat2=(-?[0-9.]+), lon2=(-?[0-9.]+), name=(.*[.](?:jpg|jpeg|png)), size=([0-9]+)$"),  # 23 Navteq/HERE image info
             re.compile("^[0-9:]{8,8} Packet data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$")        # 24 Navteq/HERE packet info
         ]
         
@@ -1229,6 +1230,30 @@ class NRSC5_DUI(object):
             self.statusTimer = Timer(1, self.checkStatus)
             self.statusTimer.start()
     
+    def processHEREWeatherOverlay(self, fileName):
+        print("TBD")
+    
+    def processHERETrafficMap(self, fileName, timeStr):
+        global aasDir, mapDir, imgLANCZOS
+        r = re.compile("^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$")
+        m = r.match(timeStr)
+
+        if (m):
+            # get time from map tile and convert to local time
+            dt = datetime.datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), tzinfo=tz.tzutc())
+            t  = dt.astimezone(tz.tzlocal())                                                            # local time
+            ts = dtToTs(dt)                                                                             # unix timestamp (etc)
+
+            r = re.compile("^trafficMap_([0-9])_([0-9])_(.*).png$")
+            n = r.match(fileName)
+            if (n):
+                x = int(n.group(1))
+                y = int(n.group(2))
+
+                # prepend filename with timestamp
+                fileName = "{0}_{1}".format(ts,fileName)
+                self.finishTrafficMap(fileName, ts, t, x, y)
+            
     def processTrafficMap(self, fileName):
         global aasDir, mapDir, imgLANCZOS
         r = re.compile("^[0-9]+_TMT_.*_([1-3])_([1-3])_([0-9]{4})([0-9]{2})([0-9]{2})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})_([0-9A-Fa-f]{4})[.].*$")     # match file name
@@ -1241,60 +1266,62 @@ class NRSC5_DUI(object):
             # get time from map tile and convert to local time
             dt = datetime.datetime(int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), int(m.group(7)), tzinfo=tz.tzutc())
             t  = dt.astimezone(tz.tzlocal())                                                            # local time
-            ts = dtToTs(dt)                                                                             # unix timestamp (utc)
+            ts = dtToTs(dt)
+            self.finishTrafficMap(fileName, ts, t, x, y)                                                                             # unix timestamp (utc)
             
-            # check if the tile has already been loaded
-            if (self.mapData["mapTiles"][x][y] == ts):
-                try:
-                    os.remove(os.path.join(aasDir, fileName))                                           # delete this tile, it's not needed
-                except:
-                    pass
-                return                                                                                  # no need to recreate the map if it hasn't changed
-            
-            self.debugLog("Got Traffic Map Tile: {:g},{:g}".format(x,y))
-                
-            self.mapData["mapComplete"]    = False                                                      # new tiles are coming in, the map is nolonger complete
-            self.mapData["mapTiles"][x][y] = ts                                                         # store time for current tile
-            
+    def finishTrafficMap(self, fileName, ts, t, x, y):
+        # check if the tile has already been loaded
+        if (self.mapData["mapTiles"][x][y] == ts):
             try:
-                currentPath = os.path.join(aasDir,fileName)
-                newPath = os.path.join(mapDir, "TrafficMap_{:g}_{:g}.png".format(x,y))                  # create path to new tile location
-                if(os.path.exists(newPath)): os.remove(newPath)                                         # delete old image if it exists (only necessary on windows)
-                shutil.move(currentPath, newPath)                                                       # move and rename map tile
+                os.remove(os.path.join(aasDir, fileName))                                           # delete this tile, it's not needed
             except:
-                self.debugLog("Error moving map tile (src: "+currentPath+", dest: "+newPath+")", True)
-                self.mapData["mapTiles"][x][y] = 0
+                pass
+            return                                                                                  # no need to recreate the map if it hasn't changed
+            
+        self.debugLog("Got Traffic Map Tile: {:g},{:g}".format(x,y))
                 
-            # check if all of the tiles are loaded
-            if (self.checkTiles(ts)):
-                self.debugLog("Got complete traffic map")
-                self.mapData["mapComplete"] = True                                                      # map is complete
+        self.mapData["mapComplete"]    = False                                                      # new tiles are coming in, the map is nolonger complete
+        self.mapData["mapTiles"][x][y] = ts                                                         # store time for current tile
+            
+        try:
+            currentPath = os.path.join(aasDir,fileName)
+            newPath = os.path.join(mapDir, "TrafficMap_{:g}_{:g}.png".format(x,y))                  # create path to new tile location
+            if(os.path.exists(newPath)): os.remove(newPath)                                         # delete old image if it exists (only necessary on windows)
+            shutil.move(currentPath, newPath)                                                       # move and rename map tile
+        except:
+            self.debugLog("Error moving map tile (src: "+currentPath+", dest: "+newPath+")", True)
+            self.mapData["mapTiles"][x][y] = 0
                 
-                # stitch the map tiles into one image
-                imgMap = Image.new("RGB", (600, 600), "white")                                          # create blank image for traffic map
-                for i in range(0,3):
-                    for j in range(0,3):
-                        tileFile = os.path.join(mapDir, "TrafficMap_{:g}_{:g}.png".format(i,j))         # get path to tile
-                        imgMap.paste(Image.open(tileFile), (j*200, i*200))                              # paste tile into map
-                        os.remove(tileFile)                                                             # delete tile image
+        # check if all of the tiles are loaded
+        if (self.checkTiles(ts)):
+            self.debugLog("Got complete traffic map")
+            self.mapData["mapComplete"] = True                                                      # map is complete
+                
+            # stitch the map tiles into one image
+            imgMap = Image.new("RGB", (600, 600), "white")                                          # create blank image for traffic map
+            for i in range(0,3):
+                for j in range(0,3):
+                    tileFile = os.path.join(mapDir, "TrafficMap_{:g}_{:g}.png".format(i,j))         # get path to tile
+                    imgMap.paste(Image.open(tileFile), (j*200, i*200))                              # paste tile into map
+                    os.remove(tileFile)                                                             # delete tile image
 
-                # now put a timestamp on it. 
-                imgMap   = imgMap.convert("RGBA")
-                imgBig   = (981,981)                                                                     # size of a weather map
-                posTS    = (imgBig[0]-235, imgBig[1]-29)                                                 # calculate position to put timestamp (bottom right)
-                imgTS    = self.mkTimestamp(t, imgBig, posTS)                                            # create timestamp for a weather map
-                imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                 # resize it so it's proportional to the size of a traffic map (981 -> 600)
-                imgMap   = Image.alpha_composite(imgMap, imgTS)                                          # overlay timestamp on traffic map
+            # now put a timestamp on it.
+            imgMap   = imgMap.convert("RGBA")
+            imgBig   = (981,981)                                                                     # size of a weather map
+            posTS    = (imgBig[0]-235, imgBig[1]-29)                                                 # calculate position to put timestamp (bottom right)
+            imgTS    = self.mkTimestamp(t, imgBig, posTS)                                            # create timestamp for a weather map
+            imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                    # resize it so it's proportional to the size of a traffic map (981 -> 600)
+            imgMap   = Image.alpha_composite(imgMap, imgTS)                                          # overlay timestamp on traffic map
 
-                imgMap.save(os.path.join(mapDir, "TrafficMap.png"))                                      # save traffic map
+            imgMap.save(os.path.join(mapDir, "TrafficMap.png"))                                      # save traffic map
                 
-                # display on map page
-                if (self.radMapTraffic.get_active()):
-                    img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
-                    imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                         # scale map to fit window
-                    self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
+            # display on map page
+            if (self.radMapTraffic.get_active()):
+                img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
+                imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                            # scale map to fit window
+                self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
                 
-                if (self.mapViewer is not None): self.mapViewer.updated(0)                              # notify map viwerer if it's open
+            if (self.mapViewer is not None): self.mapViewer.updated(0)                              # notify map viwerer if it's open
     
     def processWeatherOverlay(self, fileName):
         global aasDir, mapDir, imgLANCZOS
@@ -1534,12 +1561,35 @@ class NRSC5_DUI(object):
             # match HERE Images
             m = self.regex[23].match(line)
             if (m):
-                p = int(m.group(1),16)
-                mime = m.group(2)
-                fileSize = int(m.group(3))
-                fileName = "HERE_Image.jpg"
-                # if (mime == "B7F03DFC"):
-                #    print (line)
+                type = m.group(1)
+                seq = int(m.group(2))
+                n1 = int(m.group(3))
+                n2 = int(m.group(4))
+                timeStr = m.group(5)
+                lat1 = float(m.group(6))
+                lon1 = float(m.group(7))
+                lat2 = float(m.group(8))
+                lon2 = float(m.group(9))
+                fileName = m.group(10)
+                fileSize = m.group(11)
+                print("got HERE image: {} {} of {} {} {} {} {} {} {} {}".format(type,n1,n2,timeStr,lat1,lon1,lat2,lon2,fileName,fileSize))
+
+                # need to convert timeStr to integer and prefix fileName right now let's just ignore that
+                #fileName = {}_{}.fileName
+
+                # check file existance and size .. right now we just debug log
+                #if (not os.path.isfile(os.path.join(aasDir,fileName))):
+                #    self.debugLog("Missing file: " + fileName)
+                #else:
+                #    actualFileSize = os.path.getsize(os.path.join(aasDir,fileName))
+                #    if (fileSize != actualFileSize):
+                #        self.debugLog("Corrupt file: " + fileName + " (expected: "+str(fileSize)+" bytes, got "+str(actualFileSize)+" bytes)")
+
+                if(type == "WEATHER" and mapDir is not None):
+                    self.processHEREWeatherOverlay(fileName)
+                elif(type == "TRAFFIC" and mapDir is not None):
+                    self.processHERETrafficMap(fileName,timeStr)
+                    
         elif (self.regex[7].match(line)):
             # match album art
             m = self.regex[7].match(line)
