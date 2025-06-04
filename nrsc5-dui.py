@@ -1307,7 +1307,7 @@ class NRSC5_DUI(object):
             imgMap   = imgMap.convert("RGBA")
             imgBig   = (981,981)                                                                     # size of a weather map
             posTS    = (imgBig[0]-235, imgBig[1]-29)                                                 # calculate position to put timestamp (bottom right)
-            imgTS    = self.mkTimestamp(t, imgBig, posTS, False)                                            # create timestamp for a weather map
+            imgTS    = self.mkTimestamp(t, imgBig, posTS)                                            # create timestamp for a weather map
             imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                    # resize it so it's proportional to the size of a traffic map (981 -> 600)
             imgMap   = Image.alpha_composite(imgMap, imgTS)                                          # overlay timestamp on traffic map
 
@@ -1388,22 +1388,22 @@ class NRSC5_DUI(object):
                 
         # create weather map
         try:
-            mapPath = os.path.join(mapDir, "BaseMap_" + id + ".png")                                # get path to base map
+            if (isHERE):
+                mapPath = os.path.join(mapDir, "TrafficMap.png")
+            else:
+                mapPath = os.path.join(mapDir, "BaseMap_" + id + ".png")                                # get path to base map
             if (os.path.isfile(mapPath) == False):                                                  # make sure base map exists
                 self.makeBaseMap(self.mapData["weatherID"], self.mapData["weatherPos"])             # create base map if it doesn't exist
                 
             imgMap   = Image.open(mapPath).convert("RGBA")                                          # open map image
-            scaleFactor = 1
-            if (isHERE):
-                scaleFactor = 3
-            xOffset = 235/scaleFactor
-            yOffset = 29/scaleFactor
-            posTS    = (imgMap.size[0]-xOffset, imgMap.size[1]-yOffset)
-            imgTS    = self.mkTimestamp(t, imgMap.size, posTS, isHERE)                              # create timestamp
+            if (not isHERE):
+                posTS    = (imgMap.size[0]-235, imgMap.size[1]-29)
+                imgTS    = self.mkTimestamp(t, imgMap.size, posTS)                                  # create timestamp
             imgRadar = Image.open(wxOlPath).convert("RGBA")                                         # open radar overlay
             imgRadar = imgRadar.resize(imgMap.size, imgLANCZOS)                                     # resize radar overlay to fit the map
             imgMap   = Image.alpha_composite(imgMap, imgRadar)                                      # overlay radar image on map
-            imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
+            if (not isHERE):
+                imgMap   = Image.alpha_composite(imgMap, imgTS)                                     # overlay timestamp
             imgMap.save(wxMapPath)                                                                  # save weather map
             os.remove(wxOlPath)                                                                     # remove overlay image
             self.mapData["weatherNow"] = wxMapPath
@@ -1544,23 +1544,16 @@ class NRSC5_DUI(object):
                     return False
         return True
     
-    def mkTimestamp(self, t, size, pos, isHERE):
+    def mkTimestamp(self, t, size, pos):
         global resDir
         # create a timestamp image to overlay on the weathermap
         x,y   = pos
         text  = "{:04g}-{:02g}-{:02g} {:02g}:{:02g}".format(t.year, t.month, t.day, t.hour, t.minute)   # format timestamp
         imgTS = Image.new("RGBA", size, (0,0,0,0))                                                      # create a blank image
         draw  = ImageDraw.Draw(imgTS)                                                                   # the drawing object
-        scaleFactor = 1
-        if (isHERE):
-            scaleFactor = 3
-        fontSize = 24/scaleFactor
-        xOffset = 231/scaleFactor+1
-        yOffset = 25/scaleFactor+1
-        xOffset2 = 3/scaleFactor
-        font  = ImageFont.truetype(os.path.join(resDir,"DejaVuSansMono.ttf"), fontSize)                 # DejaVu Sans Mono 24pt font
-        draw.rectangle((x,y, x+xOffset,y+yOffset), outline="black", fill=(128,128,128,96))                       # draw a box around the text
-        draw.text((x+xOffset2,y), text, fill="black", font=font)                                               # draw the text
+        font  = ImageFont.truetype(os.path.join(resDir,"DejaVuSansMono.ttf"), 24)                       # DejaVu Sans Mono 24pt font
+        draw.rectangle((x,y, x+231,y+25), outline="black", fill=(128,128,128,96))                       # draw a box around the text
+        draw.text((x+3,y), text, fill="black", font=font)                                               # draw the text
         return imgTS                                                                                    # return the image
 
     def checkPorts(self, port, type):
