@@ -59,7 +59,7 @@ else:
 
 aasDir = os.path.join(userDataDir, "aas")  # aas (data from nrsc5) file directory
 mapDir = os.path.join(userDataDir, "map")  # map (data we process) file directory
-resDir = os.path.join(runtimeDir, "res")  # resource (application dependencies) file directory
+resDir = os.path.join(runtimeDir, "res")   # resource (application dependencies) file directory
 cfgDir = os.path.join(userDataDir, "cfg")  # config file directory
 
 class NRSC5_DUI(object):
@@ -130,6 +130,8 @@ class NRSC5_DUI(object):
         self.waittime       = 10        # time in seconds to wait for file to exist
         self.waitdivider    = 4         # check this many times per second for file
         self.pixbuf         = None      # store image buffer for rescaling on resize
+        self.tLat1          = 0.0       # store upper left lat of HERE traffic image
+        self.tLat2          = 0.0       # store lower right lat of HERE traffic image
         self.mimeTypes      = {         # as defined by iHeartRadio anyway, defined here for possible future use
             "4F328CA0":["image/png","png"],
             "1E653E9C":["image/jpg","jpg"],
@@ -306,8 +308,7 @@ class NRSC5_DUI(object):
             re.compile("^[0-9:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
             re.compile("^[0-9:]{8,8} Lost device$"),                                                           # 21 lost device
             re.compile("^[0-9:]{8,8} Open device failed.$"),                                                   # 22 No device
-            # re.compile("^[0-9:]{8,8} Stream data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$"),       # 23 Navteq/HERE stream info
-            re.compile("^[0-9:]{8,8} HERE Image: type=([A-Z]{7,7}), seq=([0-9]+), n1=([0-9]+), n2=([0-9]+), time=(.*), lat1=(-?[0-9.]+), lon1=(-?[0-9.]+), lat2=(-?[0-9.]+), lon2=(-?[0-9.]+), name=(.*[.](?:jpg|jpeg|png)), size=([0-9]+)$"),  # 23 Navteq/HERE image info
+            re.compile("^[0-9:]{8,8} HERE Image: type=([A-Z]{7,7}), seq=([0-9]+), n1=([0-9]+), n2=([0-9]+), time=(.*), lat1=(-?[0-9.]+), lon1=(-?[0-9.]+), lat2=(-?[0-9.]+), lon2=(-?[0-9.]+), name=(.*[.](?:jpg|jpeg|png)), size=([0-9]+)$"),            # 23 Navteq/HERE image info
             re.compile("^[0-9:]{8,8} Packet data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$")        # 24 Navteq/HERE packet info
         ]
         
@@ -685,18 +686,15 @@ class NRSC5_DUI(object):
                 self.nrsc5Args.append(str(int(self.spinRTL.get_value())))
 
             # set log level to 2 if SDRPLay enabled
-            #if (self.cbSDRPlay.get_active()):
             if (useSDRPlay):
                 self.nrsc5Args.append("-l2")
             
             # set SDRPlay serial number if not blank
-            #if (self.cbSDRPlay.get_active()) and (self.txtSDRPlaySer.get_text() != ""):
             if (useSDRPlay) and (self.txtSDRPlaySer.get_text() != ""):
                 self.nrsc5Args.append("-d")
                 self.nrsc5Args.append(self.txtSDRPlaySer.get_text())
             
             # set SDRPlay antenna if not blank
-            #if (self.cbSDRPlay.get_active()) and (self.cbxSDRPlayAnt.get_active_text() != ""):
             if (useSDRPlay) and (self.cbxSDRPlayAnt.get_active_text() != ""):
                 if self.cbxSDRPlayAnt.get_active_text() != "Auto":
                     self.nrsc5Args.append("-A")
@@ -705,7 +703,15 @@ class NRSC5_DUI(object):
             # set frequency and stream
             self.nrsc5Args.append(str(self.spinFreq.get_value()))
             self.nrsc5Args.append(str(int(self.streamNum)))
-            
+
+            # to emulate reading an IQ file use two lines below, instead of the above:
+            # (make sure to set the frequency spinner to the station's frequency before hitting play)
+            # FIXME - Create interface and option so these things don't have to be hardcoded
+            #self.nrsc5Args.append("-r")
+            #self.nrsc5Args.append("/Users/mark/downloads/detroit-1043-HERE.cu8")
+            #self.nrsc5Args.append("0")
+            #self.spinFreq.set_value(104.3)
+
             print(self.nrsc5Args)
 
             # start the timer
@@ -984,9 +990,6 @@ class NRSC5_DUI(object):
         # disable delete button if not on bookmarks page and station is not bookmarked
         if (page_num != 3): #and (not self.bookmarked or not self.playing)):
             self.btnDelete.set_sensitive(False)
-        # enable delete button if not on bookmarks page and station is bookmarked
-        #elif (page_num != 3 and self.bookmarked):
-        #    self.btnDelete.set_sensitive(True)
         # enable delete button if on bookmarks page and a bookmark is selected
         else:
             (model, iter) = self.lvBookmarks.get_selection().get_selected()
@@ -1002,7 +1005,7 @@ class NRSC5_DUI(object):
                 self.mapData["mapMode"] = 0
                 mapFile = os.path.join(mapDir, "TrafficMap.png")
                 if (os.path.isfile(mapFile)):                                                           # check if map exists
-                    mapImg = Image.open(mapFile).resize((img_size, img_size), imgLANCZOS)                       # scale map to fit window
+                    mapImg = Image.open(mapFile).resize((img_size, img_size), imgLANCZOS)               # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)                # display missing image if file is not found
@@ -1262,9 +1265,9 @@ class NRSC5_DUI(object):
             
             # get time from map tile and convert to local time
             dt = datetime.datetime(int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), int(m.group(7)), tzinfo=tz.tzutc())
-            t  = dt.astimezone(tz.tzlocal())                                                            # local time
+            t  = dt.astimezone(tz.tzlocal())                                                        # local time
             ts = dtToTs(dt)
-            self.finishTrafficMap(fileName, ts, t, x, y)                                                                             # unix timestamp (utc)
+            self.finishTrafficMap(fileName, ts, t, x, y)                                            # unix timestamp (utc)
             
     def finishTrafficMap(self, fileName, ts, t, x, y):
         global aasDir, mapDir, imgLANCZOS
@@ -1305,13 +1308,13 @@ class NRSC5_DUI(object):
 
             # now put a timestamp on it.
             imgMap   = imgMap.convert("RGBA")
-            imgBig   = (981,981)                                                                     # size of a weather map
-            posTS    = (imgBig[0]-235, imgBig[1]-29)                                                 # calculate position to put timestamp (bottom right)
-            imgTS    = self.mkTimestamp(t, imgBig, posTS)                                            # create timestamp for a weather map
-            imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                    # resize it so it's proportional to the size of a traffic map (981 -> 600)
-            imgMap   = Image.alpha_composite(imgMap, imgTS)                                          # overlay timestamp on traffic map
+            imgBig   = (981,981)                                                                    # size of a weather map
+            posTS    = (imgBig[0]-235, imgBig[1]-29)                                                # calculate position to put timestamp (bottom right)
+            imgTS    = self.mkTimestamp(t, imgBig, posTS)                                           # create timestamp for a weather map
+            imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                   # resize it so it's proportional to the size of a traffic map (981 -> 600)
+            imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp on traffic map
 
-            imgMap.save(os.path.join(mapDir, "TrafficMap.png"))                                      # save traffic map
+            imgMap.save(os.path.join(mapDir, "TrafficMap.png"))                                     # save traffic map
                 
             # display on map page
             if (self.radMapTraffic.get_active()):
@@ -1329,8 +1332,8 @@ class NRSC5_DUI(object):
         if (m):
             # get time from map tile and convert to local time
             dt = datetime.datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), tzinfo=tz.tzutc())
-            t  = dt.astimezone(tz.tzlocal())                                                            # local time
-            ts = dtToTs(dt)                                                                             # unix timestamp (etc)
+            t  = dt.astimezone(tz.tzlocal())                                                        # local time
+            ts = dtToTs(dt)                                                                         # unix timestamp (etc)
 
             r = re.compile("^WeatherImage_([0-9])_([0-9])_(.*).png$")
             n = r.match(fileName)
@@ -1339,7 +1342,7 @@ class NRSC5_DUI(object):
 
             # prepend filename with timestamp
             fileName = "{0}_{1}".format(ts,fileName)
-            self.finishWeatherOverlay(fileName, ts, t, id, True)
+            self.finishWeatherOverlay(fileName, ts, t, id)
     
     def processWeatherOverlay(self, fileName):
         global aasDir, mapDir, imgLANCZOS
@@ -1349,8 +1352,8 @@ class NRSC5_DUI(object):
         if (m):
             # get time from map tile and convert to local time
             dt = datetime.datetime(int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), tzinfo=tz.tzutc())
-            t  = dt.astimezone(tz.tzlocal())                                                            # local time
-            ts = dtToTs(dt)                                                                             # unix timestamp (utc)
+            t  = dt.astimezone(tz.tzlocal())                                                        # local time
+            ts = dtToTs(dt)                                                                         # unix timestamp (utc)
             id = self.mapData["weatherID"]
             
             if (m.group(1) != id):
@@ -1360,9 +1363,9 @@ class NRSC5_DUI(object):
                     self.debugLog("Received weather overlay with the wrong ID: " + m.group(1) + " (wanted " + id +")")
                 return
                 
-            self.finishWeatherOverlay(fileName, ts, t, id, False)
+            self.finishWeatherOverlay(fileName, ts, t, id)
             
-    def finishWeatherOverlay(self, fileName, ts, t, id, isHERE):
+    def finishWeatherOverlay(self, fileName, ts, t, id):
         global aasDir, mapDir, imgLANCZOS
 
         if (self.mapData["weatherTime"] == ts):
@@ -1388,22 +1391,21 @@ class NRSC5_DUI(object):
                 
         # create weather map
         try:
-            if (isHERE):
-                mapPath = os.path.join(mapDir, "TrafficMap.png")
-            else:
-                mapPath = os.path.join(mapDir, "BaseMap_" + id + ".png")                                # get path to base map
+            mapPath = os.path.join(mapDir, "BaseMap_" + id + ".png")                                # get path to base map
             if (os.path.isfile(mapPath) == False):                                                  # make sure base map exists
                 self.makeBaseMap(self.mapData["weatherID"], self.mapData["weatherPos"])             # create base map if it doesn't exist
                 
             imgMap   = Image.open(mapPath).convert("RGBA")                                          # open map image
-            if (not isHERE):
-                posTS    = (imgMap.size[0]-235, imgMap.size[1]-29)
-                imgTS    = self.mkTimestamp(t, imgMap.size, posTS)                                  # create timestamp
+            imgBig   = (981,981)                                                                    # size of a weather map
+            imgMap   = imgMap.resize(imgBig, imgLANCZOS)                                            # resize if tiny
+            posTS    = (imgBig[0]-235, imgBig[1]-29)
+            imgTS    = self.mkTimestamp(t, imgBig, posTS)                                           # create timestamp
+            imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                   # resize it so it's proportional to the size of a traffic map (981 -> 600)
             imgRadar = Image.open(wxOlPath).convert("RGBA")                                         # open radar overlay
             imgRadar = imgRadar.resize(imgMap.size, imgLANCZOS)                                     # resize radar overlay to fit the map
+            imgRadar.putalpha(96)
             imgMap   = Image.alpha_composite(imgMap, imgRadar)                                      # overlay radar image on map
-            if (not isHERE):
-                imgMap   = Image.alpha_composite(imgMap, imgTS)                                     # overlay timestamp
+            imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
             imgMap.save(wxMapPath)                                                                  # save weather map
             os.remove(wxOlPath)                                                                     # remove overlay image
             self.mapData["weatherNow"] = wxMapPath
@@ -1411,7 +1413,7 @@ class NRSC5_DUI(object):
             # display on map page
             if (self.radMapWeather.get_active()):
                 img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
-                imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                         # scale map to fit window
+                imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                            # scale map to fit window
                 self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
                 
             self.proccessWeatherMaps()                                                              # get rid of old maps and add new ones to the list
@@ -1461,8 +1463,13 @@ class NRSC5_DUI(object):
         r = re.compile("^.*WeatherImage_([0-9])_([0-9])_(.*).png$")
         m = r.match(fileName)
         if (m):
-          weatherID = m.group(3)
-          weatherPos = [lat1, lon1, lat2, lon2]
+            weatherID = m.group(3)
+            # make weather image the same size/aspect ratio as Traffic image
+            if ((self.tLat1 != 0.0) and (self.tLat2 != 0.0)):
+                lat1 = (self.tLat1 - self.tLat2) + lat2
+            else:
+                return
+            weatherPos = [lat1, lon1, lat2, lon2]
         
         if (weatherID is not None and weatherPos is not None):                                          # check if ID and position were found
             if (self.mapData["weatherID"] != weatherID or self.mapData["weatherPos"] != weatherPos):    # check if ID or position has changed
@@ -1621,10 +1628,8 @@ class NRSC5_DUI(object):
                 lon2 = float(m.group(9))
                 fileName = m.group(10)
                 fileSize = m.group(11)
+                #temporary print statement until HERE testing done
                 print("got HERE image: {} {} of {} {} {} {} {} {} {} {}".format(type,n1,n2,timeStr,lat1,lon1,lat2,lon2,fileName,fileSize))
-
-                # need to convert timeStr to integer and prefix fileName right now let's just ignore that
-                #fileName = {}_{}.fileName
 
                 # check file existance and size .. right now we just debug log
                 #if (not os.path.isfile(os.path.join(aasDir,fileName))):
@@ -1638,6 +1643,11 @@ class NRSC5_DUI(object):
                     self.proccessHEREWeatherInfo(fileName,lat1,lon1,lat2,lon2)
                     self.processHEREWeatherOverlay(fileName,timeStr)
                 elif(type == "TRAFFIC" and mapDir is not None):
+                    #save lat at corners of resulting traffic image for later.
+                    if (n1 == 1):
+                        self.tLat1 = lat1
+                    if (n1 == n2):
+                        self.tLat2 = lat2
                     self.processHERETrafficMap(fileName,timeStr)
                     
         elif (self.regex[7].match(line)):
