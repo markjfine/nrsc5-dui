@@ -286,7 +286,7 @@ class NRSC5_DUI(object):
         # regex for getting nrsc5 output
         self.regex = [
             re.compile("^[0-9:]{8,8} Station name: (.*)$"),                                                    #  0 match station name
-            re.compile("^[0-9:]{8,8} Station location: (-?[0-9.]+), (-?[0-9.]+), ([0-9]+)m$"),                  #  1 match station location
+            re.compile("^[0-9:]{8,8} Station location: (-?[0-9.]+), (-?[0-9.]+), ([0-9]+)m$"),                 #  1 match station location
             re.compile("^[0-9:]{8,8} Slogan: (.*)$"),                                                          #  2 match station slogan
             re.compile("^[0-9:]{8,8} Audio bit rate: (.*) kbps$"),                                             #  3 match audio bit rate
             re.compile("^[0-9:]{8,8} Title: (.*)$"),                                                           #  4 match title
@@ -295,7 +295,7 @@ class NRSC5_DUI(object):
             re.compile("^[0-9:]{8,8} LOT file: port=([0-9]+) lot=([0-9]+) name=(.*[.](?:jpg|jpeg|png|txt)) size=([0-9]+) mime=([a-zA-Z0-9_]+) .*$"), #  7 match file (album art, maps, weather info)
             re.compile("^[0-9:]{8,8} MER: (-?[0-9]+[.][0-9]+) dB [(]lower[)], (-?[0-9]+[.][0-9]+) dB [(]upper[)]$"), #  8 match MER
             re.compile("^[0-9:]{8,8} BER: (0[.][0-9]+), avg: (0[.][0-9]+), min: (0[.][0-9]+), max: (0[.][0-9]+)$"), #  9 match BER
-            re.compile("^Best gain: (.*) dB,.*$"),                                                             # 10 match gain
+            re.compile("^[0-9:]{8,8} Best gain: (.*) dB,.*$"),                                                 # 10 match gain
             re.compile("^[0-9:]{8,8} SIG Service: type=(.*) number=(.*) name=(.*)$"),                          # 11 match stream
             re.compile("^[0-9:]{8,8} .*Data component:.* id=([0-9]+).* port=([0-9]+).* service_data_type=([0-9]+) .*$"), # 12 match port (and data_service_type)
             re.compile("^[0-9:]{8,8} XHDR: (.*) ([0-9A-Fa-f]{8}) (.*)$"),                                      # 13 match xhdr tag
@@ -308,7 +308,7 @@ class NRSC5_DUI(object):
             re.compile("^[0-9:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
             re.compile("^[0-9:]{8,8} Lost device$"),                                                           # 21 lost device
             re.compile("^[0-9:]{8,8} Open device failed.$"),                                                   # 22 No device
-            re.compile("^[0-9:]{8,8} HERE Image: type=([A-Z]{7,7}), seq=([0-9]+), n1=([0-9]+), n2=([0-9]+), time=(.*), lat1=(-?[0-9.]+), lon1=(-?[0-9.]+), lat2=(-?[0-9.]+), lon2=(-?[0-9.]+), name=(.*[.](?:jpg|jpeg|png)), size=([0-9]+)$"),            # 23 Navteq/HERE image info
+            re.compile("^[0-9:]{8,8} HERE Image: type=([A-Z]{7,7}), seq=([0-9]+), n1=([0-9]+), n2=([0-9]+), time=(.*), lat1=(-?[0-9.]+), lon1=(-?[0-9.]+), lat2=(-?[0-9.]+), lon2=(-?[0-9.]+), name=(.*[.](?:jpg|jpeg|png)), size=([0-9]+)$"), # 23 Navteq/HERE image info
             re.compile("^[0-9:]{8,8} Packet data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$")        # 24 Navteq/HERE packet info
         ]
         
