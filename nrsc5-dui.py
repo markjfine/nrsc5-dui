@@ -1403,7 +1403,11 @@ class NRSC5_DUI(object):
             imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                   # resize it so it's proportional to the size of a traffic map (981 -> 600)
             imgRadar = Image.open(wxOlPath).convert("RGBA")                                         # open radar overlay
             imgRadar = imgRadar.resize(imgMap.size, imgLANCZOS)                                     # resize radar overlay to fit the map
-            imgRadar.putalpha(96)
+
+            imgAlpha = Image.open(wxOlPath).convert("L")                                            # reopen overlay in grayscale
+            imgAlpha = imgAlpha.resize(imgMap.size, imgLANCZOS)                                     # resize radar overlay to fit the map
+            imgRadar.putalpha(imgAlpha)                                                             # use grayscale overlay to create variable alpha channel.
+
             imgMap   = Image.alpha_composite(imgMap, imgRadar)                                      # overlay radar image on map
             imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
             imgMap.save(wxMapPath)                                                                  # save weather map
