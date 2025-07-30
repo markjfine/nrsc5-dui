@@ -1232,7 +1232,7 @@ class NRSC5_DUI(object):
             GLib.idle_add(update)
             self.statusTimer = Timer(1, self.checkStatus)
             self.statusTimer.start()
-    
+
     def processHERETrafficMap(self, fileName, timeStr):
         global aasDir, mapDir, imgLANCZOS
         r = re.compile("^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$")
@@ -1249,6 +1249,7 @@ class NRSC5_DUI(object):
             if (n):
                 x = int(n.group(1))
                 y = int(n.group(2))
+                self.map_progress.set_fraction((x*3+y)/8)
 
                 # prepend filename with timestamp
                 fileName = "{0}_{1}".format(ts,fileName)
@@ -1262,7 +1263,8 @@ class NRSC5_DUI(object):
         if (m):
             x       = int(m.group(1))-1 # X position
             y       = int(m.group(2))-1 # Y position
-            
+            self.map_progress.set_fraction((x*3+y)/8)
+
             # get time from map tile and convert to local time
             dt = datetime.datetime(int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), int(m.group(7)), tzinfo=tz.tzutc())
             t  = dt.astimezone(tz.tzlocal())                                                        # local time
@@ -1816,6 +1818,7 @@ class NRSC5_DUI(object):
         self.btnMap        = builder.get_object("btnMap")
         self.radMapTraffic = builder.get_object("radMapTraffic")
         self.radMapWeather = builder.get_object("radMapWeather")
+        self.map_progress  = builder.get_object("map_progress")
         self.txtTitle      = builder.get_object("txtTitle")
         self.txtArtist     = builder.get_object("txtArtist")
         self.txtAlbum      = builder.get_object("txtAlbum")
