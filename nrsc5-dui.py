@@ -292,7 +292,7 @@ class NRSC5_DUI(object):
             re.compile("^[0-9:]{8,8} Title: (.*)$"),                                                           #  4 match title
             re.compile("^[0-9:]{8,8} Artist: (.*)$"),                                                          #  5 match artist
             re.compile("^[0-9:]{8,8} Album: (.*)$"),                                                           #  6 match album
-            re.compile("^[0-9:]{8,8} LOT file: port=([0-9]+) lot=([0-9]+) name=(.*[.](?:jpg|jpeg|png|txt)) size=([0-9]+) mime=([a-zA-Z0-9_]+) .*$"), #  7 match file (album art, maps, weather info)
+            re.compile("^[0-9:]{8,8} LOT file: port=([0-9]+) lot=([0-9]+) name=(.*[.](?:jpg|jpeg|png|txt)) size=([0-9]+) mime=([a-zA-Z0-9_]+).*$"), #  7 match file (album art, maps, weather info)
             re.compile("^[0-9:]{8,8} MER: (-?[0-9]+[.][0-9]+) dB [(]lower[)], (-?[0-9]+[.][0-9]+) dB [(]upper[)]$"), #  8 match MER
             re.compile("^[0-9:]{8,8} BER: (0[.][0-9]+), avg: (0[.][0-9]+), min: (0[.][0-9]+), max: (0[.][0-9]+)$"), #  9 match BER
             re.compile("^[0-9:]{8,8} Best gain: (.*) dB,.*$"),                                                 # 10 match gain
