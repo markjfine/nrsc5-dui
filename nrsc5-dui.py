@@ -25,6 +25,7 @@ from subprocess import Popen, PIPE
 from threading import Timer, Thread
 from dateutil import tz
 from PIL import Image, ImageFont, ImageDraw, __version__
+import gc
 
 print('Using Pillow v'+__version__)
 
@@ -67,10 +68,6 @@ class NRSC5_DUI(object):
         global runtimeDir, userDataDir, resDir, imgLANCZOS
 
         self.windowsOS = False          # save our determination as a var in case we change how we determine.
-
-        self.getControls()              # get controls and windows
-        self.initStreamInfo()           # initilize stream info and clear status widgets
-        self.http = urllib3.PoolManager()
 
         self.debugLog("Local path determined as " + runtimeDir)
         self.debugLog("User data base directory: " + userDataDir)
@@ -119,7 +116,6 @@ class NRSC5_DUI(object):
         self.streamNum      = 0         # current station stream number
         self.nrsc5msg       = ""        # send key command to nrsc5 (streamNum)
         self.update_btns    = True      # whether to update the stream buttons
-        self.set_program_btns()         # whether to set the stream buttons
         self.bookmarks      = []        # station bookmarks
         self.booknames      = ["","","","","","","",""] # station bookmark names
         self.stationLogos   = {}        # station logos
@@ -154,90 +150,115 @@ class NRSC5_DUI(object):
                 "animationSpeed" : 0.5
             }
         }
+        self.maxWeatherMaps = 50  # Limit weather map history to prevent unbounded growth
 
+        # Now initialize components in correct order
+        self.getControls()              # get controls and windows
+        self.set_program_btns()         # set the stream buttons (needs GUI widgets)
+        self.initStreamInfo()           # initilize stream info and clear status widgets
+        self.initializeData()           # initialize regex patterns and data structures
+        self.http = urllib3.PoolManager()
+        
+        # Now that GUI is set up, load settings and process maps
+        self.loadSettings()
+        self.proccessWeatherMaps()
+
+    def __del__(self):
+        """Destructor to clean up resources and prevent memory leaks"""
+        try:
+            if hasattr(self, 'http') and self.http is not None:
+                self.http.clear()
+            if hasattr(self, 'statusTimer') and self.statusTimer is not None:
+                self.statusTimer.cancel()
+                self.statusTimer = None
+        except:
+            pass
+
+    def initializeData(self):
+        """Initialize regex patterns and data structures"""
         self.slPopup        = None      # entry for external station logo URL
         self.slData = {
-            "externalURL"   : ""
+        "externalURL"   : ""
         }
 
         self.ServiceDataType = {
-            0 : "Non_Specific",            
-            1 : "News",                     
-            3 : "Sports",                   
-            29 : "Weather",                  
-            31 : "Emergency",                
-            65 : "Traffic",                  
-            66 : "Image Maps",               
-            80 : "Text",                     
-            256 : "Advertising",              
-            257 : "Financial",                
-            258 : "Stock Ticker",             
-            259 : "Navigation",               
-            260 : "Electronic Program Guide", 
-            261 : "Audio",                    
-            262 : "Private Data Network",     
-            263 : "Service Maintenance",      
-            264 : "HD Radio System Services", 
-            265 : "Audio-Related Objects",       
-            511 : "Reserved for Special Tests"               
+        0 : "Non_Specific",            
+        1 : "News",                     
+        3 : "Sports",                   
+        29 : "Weather",                  
+        31 : "Emergency",                
+        65 : "Traffic",                  
+        66 : "Image Maps",               
+        80 : "Text",                     
+        256 : "Advertising",              
+        257 : "Financial",                
+        258 : "Stock Ticker",             
+        259 : "Navigation",               
+        260 : "Electronic Program Guide", 
+        261 : "Audio",                    
+        262 : "Private Data Network",     
+        263 : "Service Maintenance",      
+        264 : "HD Radio System Services", 
+        265 : "Audio-Related Objects",       
+        511 : "Reserved for Special Tests"               
         }
 
         self.ProgramType = {
-            0 : "None",
-            1 : "News",
-            2 : "Information",
-            3 : "Sports",
-            4 : "Talk",
-            5 : "Rock",
-            6 : "Classic Rock",
-            7 : "Adult Hits",
-            8 : "Soft Rock",
-            9 : "Top 40",
-            10 : "Country",
-            11 : "Oldies",
-            12 : "Soft",
-            13 : "Nostalgia",
-            14 : "Jazz",
-            15 : "Classical",
-            16 : "Rhythm and Blues",
-            17 : "Soft Rhythm and Blues",
-            18 : "Foreign Language",
-            19 : "Religious Music",
-            20 : "Religious Talk",
-            21 : "Personality",
-            22 : "Public",
-            23 : "College",
-            24 : "Spanish Talk",
-            25 : "Spanish Music",
-            26 : "Hip-Hop",
-            29 : "Weather",
-            30 : "Emergency Test",
-            31 : "Emergency",
-            65 : "Traffic",
-            76 : "Special Reading Services"
+        0 : "None",
+        1 : "News",
+        2 : "Information",
+        3 : "Sports",
+        4 : "Talk",
+        5 : "Rock",
+        6 : "Classic Rock",
+        7 : "Adult Hits",
+        8 : "Soft Rock",
+        9 : "Top 40",
+        10 : "Country",
+        11 : "Oldies",
+        12 : "Soft",
+        13 : "Nostalgia",
+        14 : "Jazz",
+        15 : "Classical",
+        16 : "Rhythm and Blues",
+        17 : "Soft Rhythm and Blues",
+        18 : "Foreign Language",
+        19 : "Religious Music",
+        20 : "Religious Talk",
+        21 : "Personality",
+        22 : "Public",
+        23 : "College",
+        24 : "Spanish Talk",
+        25 : "Spanish Music",
+        26 : "Hip-Hop",
+        29 : "Weather",
+        30 : "Emergency Test",
+        31 : "Emergency",
+        65 : "Traffic",
+        76 : "Special Reading Services"
         }
 
         self.MIMETypes = {
-            0x1E653E9C : "JPEG",
-            0x2D42AC3E : "NavTeq",
-            0x4F328CA0 : "PNG",
-            0x4DC66C5A : "HDC",
-            0x4EB03469 : "TTN TPEG 2",
-            0x52103469 : "TTN TPEG 3",
-            0x82F03DFC : "HERE TPEG",
-            0xB39EBEB2 : "TTN TPEG 1",
-            0xB7F03DFC : "HERE Image",
-            0xB81FFAA8 : "Unknown Test",
-            0xBB492AAC : "Text",
-            0xBE4B7536 : "Primary Image",
-            0xD9C72536 : "Station Logo",
-            0xEECB55B6 : "HD TMC",
-            0xEF042E96 : "TTN STM Weather",
-            0xFF8422D7 : "TTN STM Traffic"
+        0x1E653E9C : "JPEG",
+        0x2D42AC3E : "NavTeq",
+        0x4F328CA0 : "PNG",
+        0x4DC66C5A : "HDC",
+        0x4EB03469 : "TTN TPEG 2",
+        0x52103469 : "TTN TPEG 3",
+        0x82F03DFC : "HERE TPEG",
+        0xB39EBEB2 : "TTN TPEG 1",
+        0xB7F03DFC : "HERE Image",
+        0xB81FFAA8 : "Unknown Test",
+        0xBB492AAC : "Text",
+        0xBE4B7536 : "Primary Image",
+        0xD9C72536 : "Station Logo",
+        0xEECB55B6 : "HD TMC",
+        0xEF042E96 : "TTN STM Weather",
+        0xFF8422D7 : "TTN STM Traffic"
         }
 
         self.pointer_cursor = Gdk.Cursor(Gdk.CursorType.LEFT_PTR)
-        self.hand_cursor = Gdk.Cursor(Gdk.CursorType.HAND2)
+        #       self.hand_cursor = Gdk.Cursor(Gdk.CursorType.HAND2)
 
         # set events on info labels
         self.set_tuning_actions(self.btnAudioPrgs0, "btn_prg0", False, False)
@@ -285,38 +306,36 @@ class NRSC5_DUI(object):
         
         # regex for getting nrsc5 output
         self.regex = [
-            re.compile("^[0-9:]{8,8} Station name: (.*)$"),                                                    #  0 match station name
-            re.compile("^[0-9:]{8,8} Station location: (-?[0-9.]+), (-?[0-9.]+), ([0-9]+)m$"),                 #  1 match station location
-            re.compile("^[0-9:]{8,8} Slogan: (.*)$"),                                                          #  2 match station slogan
-            re.compile("^[0-9:]{8,8} Audio bit rate: (.*) kbps$"),                                             #  3 match audio bit rate
-            re.compile("^[0-9:]{8,8} Title: (.*)$"),                                                           #  4 match title
-            re.compile("^[0-9:]{8,8} Artist: (.*)$"),                                                          #  5 match artist
-            re.compile("^[0-9:]{8,8} Album: (.*)$"),                                                           #  6 match album
-            re.compile("^[0-9:]{8,8} LOT file: port=([0-9]+) lot=([0-9]+) name=(.*[.](?:jpg|jpeg|png|txt)) size=([0-9]+) mime=([a-zA-Z0-9_]+).*$"), #  7 match file (album art, maps, weather info)
-            re.compile("^[0-9:]{8,8} MER: (-?[0-9]+[.][0-9]+) dB [(]lower[)], (-?[0-9]+[.][0-9]+) dB [(]upper[)]$"), #  8 match MER
-            re.compile("^[0-9:]{8,8} BER: (0[.][0-9]+), avg: (0[.][0-9]+), min: (0[.][0-9]+), max: (0[.][0-9]+)$"), #  9 match BER
-            re.compile("^[0-9:]{8,8} Best gain: (.*) dB,.*$"),                                                 # 10 match gain
-            re.compile("^[0-9:]{8,8} SIG Service: type=(.*) number=(.*) name=(.*)$"),                          # 11 match stream
-            re.compile("^[0-9:]{8,8} .*Data component:.* id=([0-9]+).* port=([0-9]+).* service_data_type=([0-9]+) .*$"), # 12 match port (and data_service_type)
-            re.compile("^[0-9:]{8,8} XHDR: (.*) ([0-9A-Fa-f]{8}) (.*)$"),                                      # 13 match xhdr tag
-            re.compile("^[0-9:]{8,8} Unique file identifier: PPC;07; ([a-zA-Z0-9_.]+).*$"),                    # 14 match unique file id
-            re.compile("^[0-9:]{8,8} Genre: (.*)$"),                                                           # 15 match genre
-            re.compile("^[0-9:]{8,8} Message: (.*)$"),                                                         # 16 match message
-            re.compile("^[0-9:]{8,8} Alert: (.*)$"),                                                           # 17 match alert
-            re.compile("^[0-9:]{8,8} .*Audio component:.* id=([0-9]+).* port=([0-9]+).* type=([0-9]+) .*$"),   # 18 match port (and type)
-            re.compile("^[0-9:]{8,8} Synchronized$"),                                                          # 19 synchronized
-            re.compile("^[0-9:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
-            re.compile("^[0-9:]{8,8} Lost device$"),                                                           # 21 lost device
-            re.compile("^[0-9:]{8,8} Open device failed.$"),                                                   # 22 No device
-            re.compile("^[0-9:]{8,8} HERE Image: type=([A-Z]{7,7}), seq=([0-9]+), n1=([0-9]+), n2=([0-9]+), time=(.*), lat1=(-?[0-9.]+), lon1=(-?[0-9.]+), lat2=(-?[0-9.]+), lon2=(-?[0-9.]+), name=(.*[.](?:jpg|jpeg|png)), size=([0-9]+)$"), # 23 Navteq/HERE image info
-            re.compile("^[0-9:]{8,8} Packet data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$")        # 24 Navteq/HERE packet info
+        re.compile("^[0-9:]{8,8} Station name: (.*)$"),                                                    #  0 match station name
+        re.compile("^[0-9:]{8,8} Station location: (-?[0-9.]+), (-?[0-9.]+), ([0-9]+)m$"),                 #  1 match station location
+        re.compile("^[0-9:]{8,8} Slogan: (.*)$"),                                                          #  2 match station slogan
+        re.compile("^[0-9:]{8,8} Audio bit rate: (.*) kbps$"),                                             #  3 match audio bit rate
+        re.compile("^[0-9:]{8,8} Title: (.*)$"),                                                           #  4 match title
+        re.compile("^[0-9:]{8,8} Artist: (.*)$"),                                                          #  5 match artist
+        re.compile("^[0-9:]{8,8} Album: (.*)$"),                                                           #  6 match album
+        re.compile("^[0-9:]{8,8} LOT file: port=([0-9]+) lot=([0-9]+) name=(.*[.](?:jpg|jpeg|png|txt)) size=([0-9]+) mime=([a-zA-Z0-9_]+).*$"), #  7 match file (album art, maps, weather info)
+        re.compile("^[0-9:]{8,8} MER: (-?[0-9]+[.][0-9]+) dB [(]lower[)], (-?[0-9]+[.][0-9]+) dB [(]upper[)]$"), #  8 match MER
+        re.compile("^[0-9:]{8,8} BER: (0[.][0-9]+), avg: (0[.][0-9]+), min: (0[.][0-9]+), max: (0[.][0-9]+)$"), #  9 match BER
+        re.compile("^[0-9:]{8,8} Best gain: (.*) dB,.*$"),                                                 # 10 match gain
+        re.compile("^[0-9:]{8,8} SIG Service: type=(.*) number=(.*) name=(.*)$"),                          # 11 match stream
+        re.compile("^[0-9:]{8,8} .*Data component:.* id=([0-9]+).* port=([0-9]+).* service_data_type=([0-9]+) .*$"), # 12 match port (and data_service_type)
+        re.compile("^[0-9:]{8,8} XHDR: (.*) ([0-9A-Fa-f]{8}) (.*)$"),                                      # 13 match xhdr tag
+        re.compile("^[0-9:]{8,8} Unique file identifier: PPC;07; ([a-zA-Z0-9_.]+).*$"),                    # 14 match unique file id
+        re.compile("^[0-9:]{8,8} Genre: (.*)$"),                                                           # 15 match genre
+        re.compile("^[0-9:]{8,8} Message: (.*)$"),                                                         # 16 match message
+        re.compile("^[0-9:]{8,8} Alert: (.*)$"),                                                           # 17 match alert
+        re.compile("^[0-9:]{8,8} .*Audio component:.* id=([0-9]+).* port=([0-9]+).* type=([0-9]+) .*$"),   # 18 match port (and type)
+        re.compile("^[0-9:]{8,8} Synchronized$"),                                                          # 19 synchronized
+        re.compile("^[0-9:]{8,8} Lost synchronization$"),                                                  # 20 lost synch
+        re.compile("^[0-9:]{8,8} Lost device$"),                                                           # 21 lost device
+        re.compile("^[0-9:]{8,8} Open device failed.$"),                                                   # 22 No device
+        re.compile("^[0-9:]{8,8} HERE Image: type=([A-Z]{7,7}), seq=([0-9]+), n1=([0-9]+), n2=([0-9]+), time=(.*), lat1=(-?[0-9.]+), lon1=(-?[0-9.]+), lat2=(-?[0-9.]+), lon2=(-?[0-9.]+), name=(.*[.](?:jpg|jpeg|png)), size=([0-9]+)$"), # 23 Navteq/HERE image info
+        re.compile("^[0-9:]{8,8} Packet data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$")        # 24 Navteq/HERE packet info
         ]
-        
-        self.loadSettings()
-        self.proccessWeatherMaps()
         
         # set up pty
         self.nrsc5master,self.nrsc5slave = pty.openpty()
+
 
     def set_tuning_actions(self, widget, name, has_win, set_curs):
         widget.set_property("name",name)
@@ -407,13 +426,15 @@ class NRSC5_DUI(object):
             if (self.mapData["mapMode"] == 0):
                 map_file = os.path.join(mapDir, "TrafficMap.png")
                 if os.path.isfile(map_file):
-                    map_img = Image.open(map_file).resize((img_size, img_size), imgLANCZOS)
+                    with Image.open(map_file) as img:
+                        map_img = img.resize((img_size, img_size), imgLANCZOS)
                     self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
             elif (self.mapData["mapMode"] == 1):
                 if os.path.isfile(self.mapData["weatherNow"]):
-                    map_img = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), imgLANCZOS)
+                    with Image.open(self.mapData["weatherNow"]) as img:
+                        map_img = img.resize((img_size, img_size), imgLANCZOS)
                     self.imgMap.set_from_pixbuf(self.img_to_pixbuf(map_img))
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
@@ -476,7 +497,8 @@ class NRSC5_DUI(object):
 
         if (imgData is not None) and (len(imgData) > 0):
             dataBytes = io.BytesIO(imgData)
-            imgCvr = Image.open(dataBytes)
+            with Image.open(dataBytes) as img_temp:
+                imgCvr = img_temp.copy()  # Make a copy to persist after close
             imgCvr.save(saveStr)
             result = True
         return result
@@ -603,7 +625,8 @@ class NRSC5_DUI(object):
                 print("general error in the musicbrainz routine")
 
         # now display it by simulating a window resize
-        self.showArtwork(self.coverImage)
+        # Use GLib.idle_add because this might be called from a background thread
+        GLib.idle_add(self.showArtwork, self.coverImage)
 
     def showArtwork(self, art):
         if (art != "") and (art[-5:] != "/aas/"):
@@ -1005,16 +1028,18 @@ class NRSC5_DUI(object):
                 self.mapData["mapMode"] = 0
                 mapFile = os.path.join(mapDir, "TrafficMap.png")
                 if (os.path.isfile(mapFile)):                                                           # check if map exists
-                    mapImg = Image.open(mapFile).resize((img_size, img_size), imgLANCZOS)               # scale map to fit window
-                    self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
+                    with Image.open(mapFile) as img:
+                        mapImg = img.resize((img_size, img_size), imgLANCZOS)               # scale map to fit window
+                        self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)                # display missing image if file is not found
             
             elif (btn == self.radMapWeather):
                 self.mapData["mapMode"] = 1
                 if (os.path.isfile(self.mapData["weatherNow"])):
-                    mapImg = Image.open(self.mapData["weatherNow"]).resize((img_size, img_size), imgLANCZOS)    # scale map to fit window
-                    self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display 
+                    with Image.open(self.mapData["weatherNow"]) as img:
+                        mapImg = img.resize((img_size, img_size), imgLANCZOS)    # scale map to fit window
+                        self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display 
                 else:
                     self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)                # display missing image if file is not found
     
@@ -1066,36 +1091,42 @@ class NRSC5_DUI(object):
         FNULL = open(os.devnull, 'w')
         FTMP = open('tmp.log','w')
 
-        # run nrsc5 and output stdout & stderr to pipes
-        self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        # run nrsc5 and output stderr to pipe, stdout to /dev/null
+        # CRITICAL: stdout must not use PIPE or it will fill up and block nrsc5
+        self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
         
-        while True:
-            # send input to nrsc5 if needed
-            if (self.nrsc5msg != ""):
-                select.select([],[self.nrsc5master],[])
-                os.write(self.nrsc5master,str.encode(self.nrsc5msg))
-                self.nrsc5msg = ""
-            # read output from nrsc5
-            output = self.nrsc5.stderr.readline()
-            # parse the output
-            self.parseFeedback(output)
-            
-            # write output to log file if enabled
-            if (self.cbLog.get_active() and self.logFile is not None):
-                self.logFile.write(output)
-                self.logFile.flush()
-            
-            # check if nrsc5 has exited
-            if (self.nrsc5.poll() and not self.playing):
-                # cleanup if shutdown
-                self.debugLog("Process Terminated")
-                self.nrsc5 = None
-                break
-            elif (self.nrsc5.poll() and self.playing):
-                # restart nrsc5 if it crashes
-                self.debugLog("Restarting NRSC5")
-                time.sleep(1)
-                self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        try:
+            while True:
+                # send input to nrsc5 if needed
+                if (self.nrsc5msg != ""):
+                    select.select([],[self.nrsc5master],[])
+                    os.write(self.nrsc5master,str.encode(self.nrsc5msg))
+                    self.nrsc5msg = ""
+                # read output from nrsc5
+                output = self.nrsc5.stderr.readline()
+                # parse the output
+                self.parseFeedback(output)
+                
+                # write output to log file if enabled
+                if (self.cbLog.get_active() and self.logFile is not None):
+                    self.logFile.write(output)
+                    self.logFile.flush()
+                
+                # check if nrsc5 has exited
+                if (self.nrsc5.poll() and not self.playing):
+                    # cleanup if shutdown
+                    self.debugLog("Process Terminated")
+                    self.nrsc5 = None
+                    break
+                elif (self.nrsc5.poll() and self.playing):
+                    # restart nrsc5 if it crashes
+                    self.debugLog("Restarting NRSC5")
+                    time.sleep(1)
+                    self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
+        finally:
+            # Clean up file handles
+            FNULL.close()
+            FTMP.close()
 
     def set_synchronization(self, state):
         self.imgNoSynch.set_visible(state == 0)
@@ -1222,8 +1253,9 @@ class NRSC5_DUI(object):
                     self.debugLog("Image Changed")
 
                 # Disable downloaded cover images until fixed with MusicBrainz
+                # CRITICAL: Run in separate thread to avoid blocking GTK main thread with network I/O
                 if (self.cbCovers.get_active() and self.id3Changed):
-                    self.get_cover_image_online()
+                    Thread(target=self.get_cover_image_online, daemon=True).start()
 
             finally:
                 pass        
@@ -1305,7 +1337,8 @@ class NRSC5_DUI(object):
             for i in range(0,3):
                 for j in range(0,3):
                     tileFile = os.path.join(mapDir, "TrafficMap_{:g}_{:g}.png".format(i,j))         # get path to tile
-                    imgMap.paste(Image.open(tileFile), (j*200, i*200))                              # paste tile into map
+                    with Image.open(tileFile) as tile:
+                        imgMap.paste(tile, (j*200, i*200))                              # paste tile into map
                     os.remove(tileFile)                                                             # delete tile image
 
             # now put a timestamp on it.
@@ -1397,21 +1430,44 @@ class NRSC5_DUI(object):
             if (os.path.isfile(mapPath) == False):                                                  # make sure base map exists
                 self.makeBaseMap(self.mapData["weatherID"], self.mapData["weatherPos"])             # create base map if it doesn't exist
                 
-            imgMap   = Image.open(mapPath).convert("RGBA")                                          # open map image
-            imgBig   = (981,981)                                                                    # size of a weather map
-            imgMap   = imgMap.resize(imgBig, imgLANCZOS)                                            # resize if tiny
+            with Image.open(mapPath) as img:
+                imgMap = img.convert("RGBA")                                          # open map image
+                imgBig   = (981,981)                                                                    # size of a weather map
+                imgMap   = imgMap.resize(imgBig, imgLANCZOS)                                            # resize if tiny
             posTS    = (imgBig[0]-235, imgBig[1]-29)
             imgTS    = self.mkTimestamp(t, imgBig, posTS)                                           # create timestamp
             imgTS    = imgTS.resize((imgMap.size[0], imgMap.size[1]), imgLANCZOS)                   # resize it so it's proportional to the size of a traffic map (981 -> 600)
-            imgRadar = Image.open(wxOlPath).convert("RGBA")                                         # open radar overlay
-            imgRadar = imgRadar.resize(imgMap.size, imgLANCZOS)                                     # resize radar overlay to fit the map
-
-            imgAlpha = Image.open(wxOlPath).convert("L")                                            # reopen overlay in grayscale
-            imgAlpha = imgAlpha.resize(imgMap.size, imgLANCZOS)                                     # resize radar overlay to fit the map
+            
+            # Open overlay image once and properly handle palette mode with transparency
+            with Image.open(wxOlPath) as img:
+                # Convert palette images to RGBA first to avoid transparency warnings
+                if img.mode == 'P':
+                    imgRadar = img.convert("RGBA")
+                else:
+                    imgRadar = img.convert("RGBA")
+                # Keep the image data by copying before the with block closes
+                imgRadar = imgRadar.copy()
+            
+            # Resize after copying to avoid issues with closed images
+            imgRadar = imgRadar.resize(imgMap.size, imgLANCZOS)
+            
+            # Create alpha channel from grayscale version
+            with Image.open(wxOlPath) as img:
+                if img.mode == 'P':
+                    # For palette images, convert to RGBA first, then to grayscale
+                    imgAlpha = img.convert("RGBA").convert("L")
+                else:
+                    imgAlpha = img.convert("L")
+                imgAlpha = imgAlpha.copy()
+            
+            imgAlpha = imgAlpha.resize(imgMap.size, imgLANCZOS)
             imgRadar.putalpha(imgAlpha)                                                             # use grayscale overlay to create variable alpha channel.
+            del imgAlpha  # Clean up alpha channel image
 
             imgMap   = Image.alpha_composite(imgMap, imgRadar)                                      # overlay radar image on map
+            del imgRadar  # Clean up radar image
             imgMap   = Image.alpha_composite(imgMap, imgTS)                                         # overlay timestamp
+            del imgTS  # Clean up timestamp image
             imgMap.save(wxMapPath)                                                                  # save weather map
             os.remove(wxOlPath)                                                                     # remove overlay image
             self.mapData["weatherNow"] = wxMapPath
@@ -1419,14 +1475,17 @@ class NRSC5_DUI(object):
             # display on map page
             if (self.radMapWeather.get_active()):
                 img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
-                imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                            # scale map to fit window
-                self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
+                imgMapResized = imgMap.resize((img_size, img_size), imgLANCZOS)                     # scale map to fit window
+                self.imgMap.set_from_pixbuf(imgToPixbuf(imgMapResized))                             # convert image to pixbuf and display
+                del imgMapResized  # Clean up resized image
+            
+            del imgMap  # Clean up main map image
                 
             self.proccessWeatherMaps()                                                              # get rid of old maps and add new ones to the list
             if (self.mapViewer is not None): self.mapViewer.updated(1)                              # notify map viwerer if it's open
                     
-        except:
-            self.debugLog("Error creating weather map", True)
+        except Exception as e:
+            self.debugLog("Error creating weather map: {}".format(str(e)), True)
             self.mapData["weatherTime"] = 0
             
     def proccessWeatherInfo(self, fileName):
@@ -1457,9 +1516,10 @@ class NRSC5_DUI(object):
                 self.mapData["weatherID"]  = weatherID                                                  # set weather ID
                 self.mapData["weatherPos"] = weatherPos                                                 # set weather map position
                 
-                self.makeBaseMap(weatherID, weatherPos)
+                # Make base map creation asynchronous to avoid blocking nrsc5 stderr reading (HEAVY OPERATION)
+                GLib.idle_add(self.makeBaseMap, weatherID, weatherPos)
                 self.weatherMaps = []
-                self.proccessWeatherMaps()
+                GLib.idle_add(self.proccessWeatherMaps)
     
     def proccessHEREWeatherInfo(self, fileName, lat1, lon1, lat2, lon2):
         global aasDir
@@ -1483,9 +1543,10 @@ class NRSC5_DUI(object):
                 self.mapData["weatherID"]  = weatherID                                                  # set weather ID
                 self.mapData["weatherPos"] = weatherPos                                                 # set weather map position
                 
-                self.makeBaseMap(weatherID, weatherPos)
+                # Make base map creation asynchronous to avoid blocking nrsc5 stderr reading (HEAVY OPERATION)
+                GLib.idle_add(self.makeBaseMap, weatherID, weatherPos)
                 self.weatherMaps = []
-                self.proccessWeatherMaps()
+                GLib.idle_add(self.proccessWeatherMaps)
     
     def proccessWeatherMaps(self):
         global mapDir
@@ -1513,7 +1574,7 @@ class NRSC5_DUI(object):
                 # skip if not the correct location
                 elif (id == self.mapData["weatherID"]):
                     if (f not in self.weatherMaps):
-                        self.weatherMaps.append(f)                                                      # add to list
+                        self.addWeatherMap(f)                                                      # add to list
                     numberOfMaps += 1
         
 
@@ -1540,9 +1601,10 @@ class NRSC5_DUI(object):
         if (os.path.isfile(self.mapFile)):
             if (os.path.isfile(mapPath) == False):                                              # check if the map has already been created for this location
                 self.debugLog("Creating new map: " + mapPath)
-                px     = self.getMapArea(*pos)                                                  # convert map locations to pixel coordinates        
-                mapImg = Image.open(self.mapFile).crop(px)                                      # open the full map and crop it to the coordinates
-                mapImg.save(mapPath)                                                            # save the cropped map to disk for later use
+                px     = self.getMapArea(*pos)                                                  # convert map locations to pixel coordinates
+                with Image.open(self.mapFile) as img:
+                    mapImg = img.crop(px)                                      # open the full map and crop it to the coordinates
+                    mapImg.save(mapPath)                                                            # save the cropped map to disk for later use
                 self.debugLog("Finished creating map")
         else:
             self.debugLog("Error map file not found: " + self.mapFile, True)
@@ -1647,14 +1709,16 @@ class NRSC5_DUI(object):
 
                 if(type == "WEATHER" and mapDir is not None):
                     self.proccessHEREWeatherInfo(fileName,lat1,lon1,lat2,lon2)
-                    self.processHEREWeatherOverlay(fileName,timeStr)
+                    # Process weather overlay asynchronously to avoid blocking nrsc5 stderr reading
+                    GLib.idle_add(self.processHEREWeatherOverlay, fileName, timeStr)
                 elif(type == "TRAFFIC" and mapDir is not None):
                     #save lat at corners of resulting traffic image for later.
                     if (n1 == 1):
                         self.tLat1 = lat1
                     if (n1 == n2):
                         self.tLat2 = lat2
-                    self.processHERETrafficMap(fileName,timeStr)
+                    # Process traffic map asynchronously to avoid blocking nrsc5 stderr reading
+                    GLib.idle_add(self.processHERETrafficMap, fileName, timeStr)
                     
         elif (self.regex[7].match(line)):
             # match album art
@@ -1689,9 +1753,11 @@ class NRSC5_DUI(object):
                     self.debugLog("Got Station Logo: "+fileName)
 
                 elif(fileName[headerOffset:(5+headerOffset)] == "DWRO_" and mapDir is not None):
-                    self.processWeatherOverlay(fileName)
+                    # Process weather overlay asynchronously to avoid blocking nrsc5 stderr reading
+                    GLib.idle_add(self.processWeatherOverlay, fileName)
                 elif(fileName[headerOffset:(4+headerOffset)] == "TMT_" and mapDir is not None):
-                    self.processTrafficMap(fileName)                                  # proccess traffic map tile
+                    # Process traffic map asynchronously to avoid blocking nrsc5 stderr reading
+                    GLib.idle_add(self.processTrafficMap, fileName)
                 elif(fileName[headerOffset:(5+headerOffset)] == "DWRI_" and mapDir is not None):
                     self.proccessWeatherInfo(fileName)
 
@@ -2126,6 +2192,9 @@ class NRSC5_DUI(object):
         
         # open log file
         try:
+            # Close existing logFile to prevent memory leak before opening new one
+            if hasattr(self, 'logFile') and self.logFile is not None and not self.logFile.closed:
+                self.logFile.close()
             self.logFile = open("nrsc5.log", mode='a')
         except:
             self.debugLog("Error: Unable to create log file", True) 
@@ -2206,6 +2275,15 @@ class NRSC5_DUI(object):
             except:
                 print(e)
             self.debugLog("Error: Unable to save config", True)
+    
+    def addWeatherMap(self, mapFile):
+        """Add a weather map file and maintain size limit"""
+        self.weatherMaps.append(mapFile)
+        
+        # Limit the size of weatherMaps list to prevent unbounded growth
+        if len(self.weatherMaps) > self.maxWeatherMaps:
+            # Remove oldest maps from the list
+            self.weatherMaps = self.weatherMaps[-self.maxWeatherMaps:]
     
     def debugLog(self, message, force=False):
         if (debugMessages or force):
@@ -2288,42 +2366,47 @@ class NRSC5_Map(object):
         if (btn.get_active()):
             if (btn == self.radMapTraffic):
                 self.config["mode"] = 0
-                self.imgKey.set_visible(False)                                      # hide the key for the weather radar
+                self.imgKey.set_visible(False)
                 
-                # stop animation if it's enabled
+                # CRITICAL FIX: Properly cancel and clear timer
                 if (self.animateTimer is not None):
                     self.animateTimer.cancel()
                     self.animateTimer = None
                 
-                self.setMap(0)                                                      # show the traffic map
+                self.setMap(0)
                 
             elif (btn == self.radMapWeather):
                 self.config["mode"] = 1
-                self.imgKey.set_visible(True)                                       # show the key for the weather radar
+                self.imgKey.set_visible(True)
+                
+                # CRITICAL FIX: Cancel any existing timer first
+                if (self.animateTimer is not None):
+                    self.animateTimer.cancel()
+                    self.animateTimer = None
                 
                 # check if animate is enabled and start animation
-                if (self.config["animate"] and self.animateTimer is None):
+                if (self.config["animate"]):
                     self.animateTimer = Timer(0.05, self.animate)
                     self.animateTimer.start()
-                    
-                # no animation, just show the current map
-                elif(not self.config["animate"]):
+                else:
                     self.setMap(1)
     
     def on_chkAnimate_toggled(self, btn):
         self.config["animate"] = self.chkAnimate.get_active()
         
+        # CRITICAL FIX: Always cancel existing timer first
+        if (self.animateTimer is not None):
+            self.animateTimer.cancel()
+            self.animateTimer = None
+        
         if (self.config["animate"] and self.config["mode"] == 1):
             # start animation
-            self.animateTimer = Timer(self.config["animationSpeed"], self.animate)                      # create the animation timer
-            self.animateTimer.start()                                                                   # start the animation timer
+            self.animateTimer = Timer(self.config["animationSpeed"], self.animate)
+            self.animateTimer.start()
         else:
-            # stop animation
-            if (self.animateTimer is not None):
-                self.animateTimer.cancel()                                                              # cancel the animation timer
-                self.animateTimer = None
-            self.mapIndex = len(self.weatherMaps)-1                                                     # reset the animation index
-            self.setMap(self.config["mode"])                                                            # show the most recent map
+            # animation already stopped above
+            self.mapIndex = len(self.weatherMaps)-1
+            self.setMap(self.config["mode"])
     
     def on_chkScale_toggled(self, btn):
         self.config["scale"] = btn.get_active()
@@ -2358,43 +2441,71 @@ class NRSC5_Map(object):
         global imgLANCZOS
         fileName = self.weatherMaps[self.mapIndex] if len(self.weatherMaps) else ""
         if (os.path.isfile(fileName)):
-            self.animateBusy = True                                                                     # set busy to true
+            self.animateBusy = True
             
-            if (self.config["scale"]):
-                mapImg = imgToPixbuf(Image.open(fileName).resize((600,600), imgLANCZOS))             # open weather map, resize to 600x600, and convert to pixbuf
-            else:
-                mapImg = imgToPixbuf(Image.open(fileName))                                              # open weather map and convert to pixbuf
-         
-            if (self.config["animate"] and self.config["mode"] == 1 and not self.animateStop):          # check if the viwer is set to animated weather map
-                self.imgMap.set_from_pixbuf(mapImg)                                                     # display image
-                self.mapIndex += 1                                                                      # incriment image index
-                if (self.mapIndex >= len(self.weatherMaps)):                                            # check if this is the last image
-                    self.mapIndex = 0                                                                   # reset the map index
-                    self.animateTimer = Timer(2, self.animate)                                          # show the last image for a longer time
+            # CRITICAL FIX: Cancel existing timer before creating new one
+            if (self.animateTimer is not None):
+                self.animateTimer.cancel()
+                self.animateTimer = None
+
+            try:
+                if (self.config["scale"]):
+                    with Image.open(fileName) as img:
+                        resized = img.resize((600,600), imgLANCZOS)
+                        mapImg = imgToPixbuf(resized)
+                        del resized  # Explicit cleanup
                 else:
-                  self.animateTimer = Timer(self.config["animationSpeed"], self.animate)                # set the timer to the normal speed
-                 
-                self.animateTimer.start()                                                               # start the timer
-            else:
-               self.animateTimer = None                                                                 # clear the timer
-               
-            self.animateBusy = False                                                                    # set busy to false
+                    with Image.open(fileName) as img:
+                        img_copy = img.copy()
+                        mapImg = imgToPixbuf(img_copy)
+                        del img_copy  # Explicit cleanup
+             
+                if (self.config["animate"] and self.config["mode"] == 1 and not self.animateStop):
+                    self.imgMap.set_from_pixbuf(mapImg)
+                    del mapImg  # Free pixbuf memory
+                    
+                    self.mapIndex += 1
+                    if (self.mapIndex >= len(self.weatherMaps)):
+                        self.mapIndex = 0
+                        self.animateTimer = Timer(2, self.animate)
+                    else:
+                        self.animateTimer = Timer(self.config["animationSpeed"], self.animate)
+                     
+                    self.animateTimer.start()
+                else:
+                    del mapImg
+                    self.animateTimer = None
+            finally:
+                # Always reset busy flag
+                self.animateBusy = False
         else:
-            self.chkAnimate.set_active(False)                                                           # stop animation if image was not found
+            self.chkAnimate.set_active(False)
             self.mapIndex = 0
     
     def showImage(self, fileName, scale):
         global imgLANCZOS
         
         if (os.path.isfile(fileName)):
-            if (scale):
-                mapImg = Image.open(fileName).resize((600,600), imgLANCZOS)                          # open and scale map to fit window
-            else:
-                mapImg = Image.open(fileName)                                                           # open map
-            
-            self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                            # convert image to pixbuf and display
+            try:
+                if (scale):
+                    with Image.open(fileName) as img:
+                        mapImg = img.resize((600,600), imgLANCZOS)
+                        pixbuf = imgToPixbuf(mapImg)
+                        self.imgMap.set_from_pixbuf(pixbuf)
+                        del mapImg
+                        del pixbuf
+                else:
+                    with Image.open(fileName) as img:
+                        img_copy = img.copy()
+                        pixbuf = imgToPixbuf(img_copy)
+                        self.imgMap.set_from_pixbuf(pixbuf)
+                        del img_copy
+                        del pixbuf
+            except Exception as e:
+                print(f"Error loading image {fileName}: {e}")
+                self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
         else:
-            self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)                        # display missing image if file is not found
+            self.imgMap.set_from_icon_name("MISSING_IMAGE", Gtk.IconSize.DIALOG)
     
     def setMap(self, map):
         global mapDir
@@ -2420,9 +2531,13 @@ def tsToDt(ts):
 
 def imgToPixbuf(img):
     # convert PIL.Image to gdk.pixbuf
-    data = GLib.Bytes.new(img.tobytes())
-    return GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, 'A' in img.getbands(),
+    img_bytes = img.tobytes()
+    data = GLib.Bytes.new(img_bytes)
+    pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, 'A' in img.getbands(),
                                            8, img.width, img.height, len(img.getbands())*img.width)
+    del img_bytes
+    del data
+    return pixbuf
 
 
 if __name__ == "__main__":
@@ -2433,3 +2548,5 @@ if __name__ == "__main__":
         nrsc5_dui.on_btnPlay_clicked(nrsc5_dui)
 
     Gtk.main()
+
+
