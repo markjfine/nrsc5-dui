@@ -799,8 +799,18 @@ class NRSC5_DUI(object):
             self.playing = False
             
             # shutdown nrsc5 
-            if (self.nrsc5 is not None and not self.nrsc5.poll()):
-                self.nrsc5.terminate()
+            if (self.nrsc5 is not None):
+                try:
+                    # Check if process is still running before trying to terminate
+                    if self.nrsc5.poll() is None:
+                        self.nrsc5.terminate()
+                        # Give it a moment to terminate gracefully
+                        time.sleep(0.1)
+                        if self.nrsc5.poll() is None:
+                            # Still running, force kill
+                            self.nrsc5.kill()
+                except:
+                    pass  # Process may have already died
             
             if (self.playerThread is not None) and (btn is not None):
                 self.playerThread.join(1)
@@ -1097,13 +1107,38 @@ class NRSC5_DUI(object):
         
         try:
             while True:
+                # Check if nrsc5 process is still valid
+                if self.nrsc5 is None:
+                    break
+                    
                 # send input to nrsc5 if needed
                 if (self.nrsc5msg != ""):
                     select.select([],[self.nrsc5master],[])
                     os.write(self.nrsc5master,str.encode(self.nrsc5msg))
                     self.nrsc5msg = ""
+                    
                 # read output from nrsc5
                 output = self.nrsc5.stderr.readline()
+                
+                # Check if we got EOF (empty string means process ended)
+                if not output:
+                    self.debugLog("nrsc5 stderr closed (process may have ended)")
+                    if self.nrsc5.poll() is not None:
+                        # Process has definitely exited
+                        if self.playing:
+                            self.debugLog("Restarting NRSC5 (unexpected termination)")
+                            time.sleep(1)
+                            self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
+                            continue
+                        else:
+                            self.debugLog("Process Terminated")
+                            self.nrsc5 = None
+                            break
+                    else:
+                        # Process still running but stderr gave us nothing, try again
+                        time.sleep(0.1)
+                        continue
+                
                 # parse the output
                 self.parseFeedback(output)
                 
@@ -1113,16 +1148,19 @@ class NRSC5_DUI(object):
                     self.logFile.flush()
                 
                 # check if nrsc5 has exited
-                if (self.nrsc5.poll() and not self.playing):
-                    # cleanup if shutdown
-                    self.debugLog("Process Terminated")
-                    self.nrsc5 = None
-                    break
-                elif (self.nrsc5.poll() and self.playing):
-                    # restart nrsc5 if it crashes
-                    self.debugLog("Restarting NRSC5")
-                    time.sleep(1)
-                    self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
+                poll_result = self.nrsc5.poll()
+                if poll_result is not None:
+                    # Process has exited
+                    if not self.playing:
+                        # User stopped it - clean shutdown
+                        self.debugLog("Process Terminated")
+                        self.nrsc5 = None
+                        break
+                    else:
+                        # Unexpected exit - restart
+                        self.debugLog("Restarting NRSC5 (exit code: {})".format(poll_result))
+                        time.sleep(1)
+                        self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
         finally:
             # Clean up file handles
             FNULL.close()
