@@ -9,7 +9,7 @@ image processing issues with PIL and PIXBUF, orphaned threads, pipe handling and
 
 All the problems I had under WSL are now resolved. 
 
-Here's a summary of just the major issue that were fixec:
+Here's a summary of just the major issue that were fixed:
 
 
 ## Original Problems
