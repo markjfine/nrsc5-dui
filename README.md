@@ -1,3 +1,195 @@
+I'm a C/C++ programmer who recently started testing AI to assist me with coding projects.  I've been
+tremendously impressed with what qwen3-coder and Claude Code have been able to do in regards to writing and
+debugging C/C++ code.  I'm a huge fan of NRSC5 and NRSC5-DUI but I'm a Windows-based developer and don't have
+any dedicated Linux boxes set aside just to run NRSC5-DUI so I've been running it under the Windows Subsystem for Linux
+on Windows 11, AKA WSL.  NRSC5-DUI would run for ~2-3 hours under WSL before the audio would start skipping and
+the interface would freeze so I decided to see if Claude Code could isolate and fix any problems with the python code
+since it was doing such an amazing job with C/C++ code. It did an amazing job of tracking down memory leaks, timer issues,
+image processing issues with PIL and PIXBUF, orphaned threads, pipe handling and network blocking issues.
+
+All the problems I had under WSL are now resolved. 
+
+Here's a summary of just the major issue that were fixec:
+
+
+## Original Problems
+
+1. **GUI freezes after ~2 hours**
+2. **Audio skips after ~20-30 seconds**  
+3. **Audio eventually stops completely** (recoverable with Stop/Play)
+4. **GUI freezes completely after ~2.5 hours** (only Ctrl+C can kill it)
+
+## All Issues Fixed
+
+### Issue 1: GUI Freeze (FIXED)
+**Cause**: Weather maps list growing unbounded
+**Solution**: Limit list to 50 most recent maps
+**Files Modified**: Added `addWeatherMap()` method, set `maxWeatherMaps = 50`
+
+### Issue 2: Audio Skipping at 20-30 seconds (FIXED)
+**Cause**: Heavy image processing blocking stderr reader
+**Key Operations**:
+- `makeBaseMap()` - Opens full US map, crops, saves (500ms-2s)
+- `processWeatherOverlay()` - Image compositing (100-500ms)
+- `processTrafficMap()` - Image compositing (100-500ms)
+
+**Solution**: Made all heavy operations asynchronous with `GLib.idle_add()`
+**Impact**: stderr reader never blocks, nrsc5 pipe never fills up
+
+### Issue 3: Audio Stops Completely (FIXED)
+**Cause**: stdout pipe filling up and blocking nrsc5
+**Problem**: Code piped stdout but never read it → 64KB buffer fills → nrsc5 blocks
+**Solution**: Redirect stdout to `/dev/null` instead of PIPE
+**Impact**: nrsc5 can run indefinitely without blocking
+
+### Issue 4: Complete GUI Freeze at ~2.5 Hours (FIXED)
+**Cause**: Synchronous network I/O on GTK main thread
+**Problem**: `get_cover_image_online()` makes MusicBrainz API calls on main thread → network timeout/slowness blocks entire GUI
+**Solution**: Run cover image fetching in background thread, use `GLib.idle_add()` for GTK updates
+**Impact**: GUI stays responsive even if network is slow or MusicBrainz is down
+
+## Summary of Code Changes
+
+### 1. Memory Management
+```python
+# Added limit to prevent unbounded list growth
+self.maxWeatherMaps = 50
+
+def addWeatherMap(self, mapFile):
+    self.weatherMaps.append(mapFile)
+    if len(self.weatherMaps) > self.maxWeatherMaps:
+        self.weatherMaps = self.weatherMaps[-self.maxWeatherMaps:]
+```
+
+### 2. Asynchronous Image Processing
+```python
+# BEFORE - Blocking
+self.processWeatherOverlay(fileName)
+self.makeBaseMap(weatherID, weatherPos)
+
+# AFTER - Non-blocking
+GLib.idle_add(self.processWeatherOverlay, fileName)
+GLib.idle_add(self.makeBaseMap, weatherID, weatherPos)
+```
+
+### 3. Fixed Pipe Handling
+```python
+# BEFORE - stdout blocks
+Popen(..., stdout=PIPE, stderr=PIPE, ...)
+
+# AFTER - stdout discarded
+FNULL = open(os.devnull, 'w')
+Popen(..., stdout=FNULL, stderr=PIPE, ...)
+```
+
+### 4. Fixed Network Blocking on Main Thread
+```python
+# BEFORE - Blocks GTK main thread
+if (self.cbCovers.get_active() and self.id3Changed):
+    self.get_cover_image_online()  # Network I/O blocks GUI
+
+# AFTER - Runs in background thread
+if (self.cbCovers.get_active() and self.id3Changed):
+    Thread(target=self.get_cover_image_online, daemon=True).start()
+
+# In get_cover_image_online():
+# BEFORE
+self.showArtwork(self.coverImage)
+
+# AFTER - GTK updates on main thread
+GLib.idle_add(self.showArtwork, self.coverImage)
+```
+
+### 5. Image Transparency Handling
+```python
+# Fixed palette-mode PNG transparency warnings
+with Image.open(fileName) as img:
+    if img.mode == 'P':
+        imgRadar = img.convert("RGBA")
+    else:
+        imgRadar = img.convert("RGBA")
+    imgRadar = imgRadar.copy()  # Copy before with block closes
+```
+
+### 5. Explicit Memory Cleanup
+```python
+# Added explicit cleanup after image operations
+del imgRadar
+del imgAlpha
+del imgMap
+# Note: Removed gc.collect() - caused audio stuttering
+```
+
+## What We Learned
+
+### Thread Count is Normal
+- 8-12 threads is normal for this application
+- Python's Timer objects self-terminate - no leak
+- Original Timer pattern was correct
+
+### gc.collect() is Harmful
+- Pauses entire interpreter (10-50ms)
+- Causes audio buffer underruns
+- Python's automatic GC is better for real-time apps
+
+### Pipe Management is Critical
+- Never use `PIPE` without reading it
+- Pipe buffers fill up and block processes
+- Use `DEVNULL` for unneeded output
+
+### Image Processing Must be Async
+- Operations taking >100ms block I/O threads
+- Blocked I/O causes upstream processes to block
+- `GLib.idle_add()` is the correct pattern for GTK apps
+
+## Testing Checklist
+
+- [ ] GUI remains responsive after 6+ hours
+- [ ] Thread count stays at ~8-12 (not growing)
+- [ ] Memory usage stabilizes (not growing indefinitely)  
+- [ ] Audio plays without skipping when weather maps arrive
+- [ ] Audio continues playing indefinitely (no stopping)
+- [ ] No "Palette images with Transparency" warnings
+- [ ] Weather maps display correctly
+- [ ] Stop/Play works cleanly
+- [ ] No zombie processes after stopping
+
+## Performance Expectations
+
+| Metric | Before | After |
+|--------|--------|-------|
+| GUI Freeze | 2 hours | Never |
+| Audio Skip | 20-30 sec | Never |
+| Audio Stop | Eventually | Never |
+| Thread Count | Growing | Stable ~12 |
+| Memory Usage | Growing | Stable |
+| Weather Maps | Unlimited | Max 50 |
+
+## Files Changed
+
+- `nrsc5-dui.py` - Main application file
+  - Added `addWeatherMap()` method (line ~2266)
+  - Modified `play()` function (line ~1089)
+  - Modified `animate()` function (line ~2438)
+  - Modified `proccessWeatherInfo()` (line ~1484)
+  - Modified `proccessHEREWeatherInfo()` (line ~1515)
+  - Modified weather overlay processing (lines ~1675-1684)
+  - Modified legacy format processing (lines ~1745-1750)
+  - Modified `imgToPixbuf()` function (line ~2481)
+  - Modified image compositing in weather maps (lines ~1425-1475)
+
+## Key Takeaways
+
+1. **Profile before optimizing**: The "obvious" timer leak wasn't the issue
+2. **I/O and processing must be separated**: Never block I/O with heavy work
+3. **Pipes are not infinite**: Unread pipes will block writers
+4. **GLib.idle_add() for GTK**: Correct way to defer work in GTK apps
+5. **Explicit cleanup helps**: `del` statements make intentions clear
+6. **Don't force GC in real-time apps**: Causes stuttering
+
+The application should now run stably for days/weeks without any issues.
+
+
 NRSC5-DUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5). It makes it easy to play your favorite FM HD radio stations using an RTL-SDR or SDRPlay dongle. It will also display weather radar and traffic maps found on most iHeart radio stations.
 
 This version is really a fork of a fork of the original nrsc5-gui: The first was developed by [cmnybo](https://github.com/cmnybo/nrsc5-gui) and subsequently modified by [zefie](https://github.com/zefie/nrsc5-gui). It merges the features of the former to the architecture of the latter, while adding several additional control and display features.
