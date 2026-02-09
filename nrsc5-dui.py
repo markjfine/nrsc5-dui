@@ -1324,6 +1324,7 @@ class NRSC5_DUI(object):
                 # prepend filename with timestamp
                 fileName = "{0}_{1}".format(ts,fileName)
                 self.finishTrafficMap(fileName, ts, t, x, y)
+                return False  # CRITICAL: Tell GTK not to call this again
             
     def processTrafficMap(self, fileName):
         global aasDir, mapDir, imgLANCZOS
@@ -1340,6 +1341,7 @@ class NRSC5_DUI(object):
             t  = dt.astimezone(tz.tzlocal())                                                        # local time
             ts = dtToTs(dt)
             self.finishTrafficMap(fileName, ts, t, x, y)                                            # unix timestamp (utc)
+            return False  # CRITICAL: Tell GTK not to call this again
             
     def finishTrafficMap(self, fileName, ts, t, x, y):
         global aasDir, mapDir, imgLANCZOS
@@ -1416,6 +1418,7 @@ class NRSC5_DUI(object):
             # prepend filename with timestamp
             fileName = "{0}_{1}".format(ts,fileName)
             self.finishWeatherOverlay(fileName, ts, t, id)
+            return False  # CRITICAL: Tell GTK not to call this again
     
     def processWeatherOverlay(self, fileName):
         global aasDir, mapDir, imgLANCZOS
@@ -1434,9 +1437,10 @@ class NRSC5_DUI(object):
                     self.debugLog("Received weather overlay before metadata, ignoring...");
                 else:
                     self.debugLog("Received weather overlay with the wrong ID: " + m.group(1) + " (wanted " + id +")")
-                return
+                return False  # CRITICAL: Tell GTK not to call this again
                 
             self.finishWeatherOverlay(fileName, ts, t, id)
+            return False  # CRITICAL: Tell GTK not to call this again
             
     def finishWeatherOverlay(self, fileName, ts, t, id):
         global aasDir, mapDir, imgLANCZOS
@@ -1617,6 +1621,7 @@ class NRSC5_DUI(object):
         
 
         self.debugLog("Found {} weather maps".format(numberOfMaps))
+        return False  # CRITICAL: Tell GTK not to call this again
         
     def getMapArea(self, lat1, lon1, lat2, lon2):
         from math import asinh, tan, radians
@@ -1648,6 +1653,7 @@ class NRSC5_DUI(object):
             self.debugLog("Error map file not found: " + self.mapFile, True)
             mapImg = Image.new("RGBA", (pos[2]-pos[1], pos[3]-pos[1]), "white")                 # if the full map is not available, use a blank image
             mapImg.save(mapPath)
+        return False  # CRITICAL: Tell GTK not to call this again
     
     def checkTiles(self, t):
         # check if all the tiles have been received
