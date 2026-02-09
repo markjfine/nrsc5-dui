@@ -190,6 +190,27 @@ del imgMap
 The application should now run stably for days/weeks without any issues.
 
 
+If you still experience audio skipping under WSLg, it is often caused by synchronization issues between the WSLg backend (PulseAudio) and the Windows host.
+
+Quick Fix  
+Disable Time Sync: A known conflict between the system clock and audio playback can cause frequent stuttering.
+
+sudo systemctl stop systemd-timesyncd
+
+If this works you can permanently disable it with:
+
+sudo systemctl disable systemd-timesyncd
+
+If the issue persists, try adjusting the PulseAudio configuration within your Linux distribution:
+Edit the configuration file: sudo nano /etc/pulse/daemon.conf.
+Add/Update these lines:
+high-priority = yes
+nice-level = -15
+default-fragments = 8
+default-fragment-size-msec = 10
+Restart PulseAudio: Kill the process with pulseaudio -k and let it restart automatically.
+
+
 NRSC5-DUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5). It makes it easy to play your favorite FM HD radio stations using an RTL-SDR or SDRPlay dongle. It will also display weather radar and traffic maps found on most iHeart radio stations.
 
 This version is really a fork of a fork of the original nrsc5-gui: The first was developed by [cmnybo](https://github.com/cmnybo/nrsc5-gui) and subsequently modified by [zefie](https://github.com/zefie/nrsc5-gui). It merges the features of the former to the architecture of the latter, while adding several additional control and display features.
