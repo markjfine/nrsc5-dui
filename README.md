@@ -7,7 +7,29 @@ the interface would freeze so I decided to see if Claude Code could isolate and 
 since it was doing such an amazing job with C/C++ code. It did an amazing job of tracking down memory leaks, timer issues,
 image processing issues with PIL and PIXBUF, orphaned threads, pipe handling and network blocking issues.
 
-All the problems I had under WSL are now resolved. 
+If you still experience audio skipping under WSLg, it is often caused by synchronization issues between the WSLg backend (PulseAudio) and the Windows host.
+
+Quick Fix  
+Disable Time Sync: A known conflict between the system clock and audio playback can cause frequent stuttering.
+
+sudo systemctl stop systemd-timesyncd
+
+If this works you can permanently disable it with:
+
+sudo systemctl disable systemd-timesyncd
+
+If the issue persists, try adjusting the PulseAudio configuration within your Linux distribution:
+Edit the configuration file: sudo nano /etc/pulse/daemon.conf.
+Add/Update these lines:
+high-priority = yes
+nice-level = -15
+default-fragments = 8
+default-fragment-size-msec = 10
+Restart PulseAudio: Kill the process with pulseaudio -k and let it restart automatically.
+
+
+
+All the problems I had under WSLg are now resolved. 
 
 Here's a summary of just the major issue that were fixed:
 
@@ -15,9 +37,9 @@ Here's a summary of just the major issue that were fixed:
 ## Original Problems
 
 1. **GUI freezes after ~2 hours**
-2. **Audio skips after ~20-30 seconds**  
+2. **Audio begins skipping after the above time period**  
 3. **Audio eventually stops completely** (recoverable with Stop/Play)
-4. **GUI freezes completely after ~2.5 hours** (only Ctrl+C can kill it)
+4. **GUI freezes completely after ~2 hours** (only Ctrl+C can kill it)
 
 ## All Issues Fixed
 
@@ -188,27 +210,6 @@ del imgMap
 6. **Don't force GC in real-time apps**: Causes stuttering
 
 The application should now run stably for days/weeks without any issues.
-
-
-If you still experience audio skipping under WSLg, it is often caused by synchronization issues between the WSLg backend (PulseAudio) and the Windows host.
-
-Quick Fix  
-Disable Time Sync: A known conflict between the system clock and audio playback can cause frequent stuttering.
-
-sudo systemctl stop systemd-timesyncd
-
-If this works you can permanently disable it with:
-
-sudo systemctl disable systemd-timesyncd
-
-If the issue persists, try adjusting the PulseAudio configuration within your Linux distribution:
-Edit the configuration file: sudo nano /etc/pulse/daemon.conf.
-Add/Update these lines:
-high-priority = yes
-nice-level = -15
-default-fragments = 8
-default-fragment-size-msec = 10
-Restart PulseAudio: Kill the process with pulseaudio -k and let it restart automatically.
 
 
 NRSC5-DUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5). It makes it easy to play your favorite FM HD radio stations using an RTL-SDR or SDRPlay dongle. It will also display weather radar and traffic maps found on most iHeart radio stations.
