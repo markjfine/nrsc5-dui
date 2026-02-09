@@ -21,10 +21,15 @@ sudo systemctl disable systemd-timesyncd
 If the issue persists, try adjusting the PulseAudio configuration within your Linux distribution:
 Edit the configuration file: sudo nano /etc/pulse/daemon.conf.
 Add/Update these lines:
+
 high-priority = yes
+
 nice-level = -15
+
 default-fragments = 8
+
 default-fragment-size-msec = 10
+
 Restart PulseAudio: Kill the process with pulseaudio -k and let it restart automatically.
 
 
