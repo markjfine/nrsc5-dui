@@ -2,7 +2,7 @@ I'm a C/C++ programmer who recently started testing AI to assist me with coding 
 tremendously impressed with what qwen3-coder and Claude Code have been able to do in regards to writing and
 debugging C/C++ code.  I'm a huge fan of NRSC5 and NRSC5-DUI but I'm a Windows-based developer and don't have
 any dedicated Linux boxes set aside just to run NRSC5-DUI so I've been running it under the Windows Subsystem for Linux
-on Windows 11, AKA WSL.  NRSC5-DUI would run for ~2-3 hours under WSL before the audio would start skipping and
+on Windows 11, AKA WSLg.  NRSC5-DUI would run for ~2-3 hours under WSL before the audio would start skipping and
 the interface would freeze so I decided to see if Claude Code could isolate and fix any problems with the python code
 since it was doing such an amazing job with C/C++ code. It did an amazing job of tracking down memory leaks, timer issues,
 image processing issues with PIL and PIXBUF, orphaned threads, pipe handling and network blocking issues.
@@ -36,7 +36,7 @@ Restart PulseAudio: Kill the process with pulseaudio -k and let it restart autom
 
 All the problems I had under WSLg are now resolved. 
 
-Here's a summary of just the major issue that were fixed:
+Here's a summary of just the major issues that were fixed:
 
 
 ## Original Problems
