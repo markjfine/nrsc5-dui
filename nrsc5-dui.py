@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 #    NRSC5 DUI - A graphical interface for nrsc5
@@ -22,7 +22,7 @@
 
 import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform, io
 from subprocess import Popen, PIPE
-from threading import Timer, Thread
+from threading import Timer, Thread, Event, Lock
 from dateutil import tz
 from PIL import Image, ImageFont, ImageDraw, __version__
 import gc
@@ -152,6 +152,13 @@ class NRSC5_DUI(object):
         }
         self.maxWeatherMaps = 50  # Limit weather map history to prevent unbounded growth
 
+        # CRITICAL FIX: Add cover download thread management
+        self.coverDownloadThread = None     # current cover download thread
+        self.coverDownloadCancel = Event()  # event to cancel cover download
+        self.coverDownloadLock = Lock()     # lock to prevent multiple simultaneous downloads
+        self.lastCoverRequest = 0           # timestamp of last cover request (for rate limiting)
+        self.coverRequestMinInterval = 2.0  # minimum seconds between cover requests
+
         # Now initialize components in correct order
         self.getControls()              # get controls and windows
         self.set_program_btns()         # set the stream buttons (needs GUI widgets)
@@ -171,6 +178,9 @@ class NRSC5_DUI(object):
             if hasattr(self, 'statusTimer') and self.statusTimer is not None:
                 self.statusTimer.cancel()
                 self.statusTimer = None
+            
+            # CRITICAL FIX: Cancel any pending cover downloads
+            self.cancelCoverDownload()
         except:
             pass
 
@@ -537,6 +547,11 @@ class NRSC5_DUI(object):
                 i = 1
 
                 while (not imgSaved):
+                    # CRITICAL FIX: Check for cancellation
+                    if self.coverDownloadCancel.is_set():
+                        self.debugLog("Cover download cancelled")
+                        return
+                        
                     setStrict = (i in [1,3,5,7])
                     setType = ''
                     if (i in [1,2,3,4]):
@@ -562,6 +577,11 @@ class NRSC5_DUI(object):
                     if (result is not None) and ('recording-list' in result) and (len(result['recording-list']) != 0):    
                         # loop through the list until you get a match
                         for (idx, release) in enumerate(result['recording-list']):
+                            # CRITICAL FIX: Check for cancellation in inner loop
+                            if self.coverDownloadCancel.is_set():
+                                self.debugLog("Cover download cancelled in search")
+                                return
+                                
                             resultID = self.check_value('id',release,"")
                             resultScore = self.check_value('ext:score',release,"0")
                             resultArtist = self.check_value('artist-credit-phrase',release,"")
@@ -647,6 +667,43 @@ class NRSC5_DUI(object):
         else:
             # add entry in database for the station if it doesn't exist
             self.stationLogos[self.stationStr] = ["", "", "", "", "", "", "", ""]
+
+
+    def cancelCoverDownload(self):
+        """
+        Cancel any running cover download thread.
+        Called when stopping playback or starting new download.
+        """
+        if self.coverDownloadThread and self.coverDownloadThread.is_alive():
+            self.debugLog("Cancelling cover download thread")
+            self.coverDownloadCancel.set()
+            # Give it a moment to notice the cancellation
+            self.coverDownloadThread.join(timeout=0.5)
+            if self.coverDownloadThread.is_alive():
+                self.debugLog("Warning: Cover download thread did not stop gracefully")
+            self.coverDownloadThread = None
+
+    def get_cover_image_online_wrapper(self):
+        """
+        Wrapper for get_cover_image_online that supports cancellation.
+        This runs in a background thread.
+        """
+        try:
+            # Check for cancellation before starting
+            if self.coverDownloadCancel.is_set():
+                self.debugLog("Cover download cancelled before start")
+                return
+                
+            # Run the actual download
+            self.get_cover_image_online()
+            
+        except Exception as e:
+            print(f"Error in cover download thread: {e}")
+        finally:
+            # Clean up thread reference
+            with self.coverDownloadLock:
+                if self.coverDownloadThread:
+                    self.coverDownloadThread = None
 
     def service_data_type_name(self, type):
         for key, value in self.ServiceDataType.items():
@@ -1293,7 +1350,26 @@ class NRSC5_DUI(object):
                 # Disable downloaded cover images until fixed with MusicBrainz
                 # CRITICAL: Run in separate thread to avoid blocking GTK main thread with network I/O
                 if (self.cbCovers.get_active() and self.id3Changed):
-                    Thread(target=self.get_cover_image_online, daemon=True).start()
+                    # CRITICAL FIX: Thread-safe cover download with rate limiting
+                    current_time = time.time()
+                    time_since_last = current_time - self.lastCoverRequest
+                    
+                    # Only start if no download in progress and enough time has passed
+                    if (time_since_last >= self.coverRequestMinInterval and 
+                        self.coverDownloadLock.acquire(blocking=False)):
+                        try:
+                            self.lastCoverRequest = current_time
+                            # Cancel any existing download
+                            self.cancelCoverDownload()
+                            # Start new download in background
+                            self.coverDownloadCancel.clear()
+                            self.coverDownloadThread = Thread(
+                                target=self.get_cover_image_online_wrapper, 
+                                daemon=True
+                            )
+                            self.coverDownloadThread.start()
+                        finally:
+                            self.coverDownloadLock.release()
 
             finally:
                 pass        
@@ -2592,5 +2668,4 @@ if __name__ == "__main__":
         nrsc5_dui.on_btnPlay_clicked(nrsc5_dui)
 
     Gtk.main()
-
 
