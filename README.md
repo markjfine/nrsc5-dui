@@ -47,14 +47,23 @@ Here's a summary of just the major issues that were fixed:
 4. **GUI freezes completely after ~2 hours** (only Ctrl+C can kill it)
 
 Summary of Latest Changes
+
 Line 153 (after)Missing thread tracking. Added thread management variables
+
 Line 1296 Uncontrolled thread spawning. Added rate limiting and cancellation
+
 Line 1302 Idle callback repeats. Added return False
+
 Line 539 Long-running loop can't cancel. Added cancellation checks
+
 Line 562 Inner loop can't cancel. Added cancellation checks
+
 Line 629 (after)No wrapper for cancellation. Added wrapper method
+
 Line 649 (after)No cancel helper. Added cancelCoverDownload()
+
 Line 818 (after)Threads not stopped. Call cancelCoverDownload()
+
 Shutdown - Resources not cleaned. Added proper shutdown.
 
 NRSC5-DUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5). It makes it easy to play your favorite FM HD radio stations using an RTL-SDR or SDRPlay dongle. It will also display weather radar and traffic maps found on most iHeart radio stations.
