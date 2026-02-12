@@ -22,7 +22,7 @@
 
 import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform, io
 from subprocess import Popen, PIPE
-from threading import Timer, Thread, Event, Lock
+from threading import Timer, Thread
 from dateutil import tz
 from PIL import Image, ImageFont, ImageDraw, __version__
 import gc
@@ -152,13 +152,6 @@ class NRSC5_DUI(object):
         }
         self.maxWeatherMaps = 50  # Limit weather map history to prevent unbounded growth
 
-        # CRITICAL FIX: Add cover download thread management
-        self.coverDownloadThread = None     # current cover download thread
-        self.coverDownloadCancel = Event()  # event to cancel cover download
-        self.coverDownloadLock = Lock()     # lock to prevent multiple simultaneous downloads
-        self.lastCoverRequest = 0           # timestamp of last cover request (for rate limiting)
-        self.coverRequestMinInterval = 2.0  # minimum seconds between cover requests
-
         # Now initialize components in correct order
         self.getControls()              # get controls and windows
         self.set_program_btns()         # set the stream buttons (needs GUI widgets)
@@ -178,9 +171,6 @@ class NRSC5_DUI(object):
             if hasattr(self, 'statusTimer') and self.statusTimer is not None:
                 self.statusTimer.cancel()
                 self.statusTimer = None
-            
-            # CRITICAL FIX: Cancel any pending cover downloads
-            self.cancelCoverDownload()
         except:
             pass
 
@@ -547,11 +537,6 @@ class NRSC5_DUI(object):
                 i = 1
 
                 while (not imgSaved):
-                    # CRITICAL FIX: Check for cancellation
-                    if self.coverDownloadCancel.is_set():
-                        self.debugLog("Cover download cancelled")
-                        return
-                        
                     setStrict = (i in [1,3,5,7])
                     setType = ''
                     if (i in [1,2,3,4]):
@@ -577,11 +562,6 @@ class NRSC5_DUI(object):
                     if (result is not None) and ('recording-list' in result) and (len(result['recording-list']) != 0):    
                         # loop through the list until you get a match
                         for (idx, release) in enumerate(result['recording-list']):
-                            # CRITICAL FIX: Check for cancellation in inner loop
-                            if self.coverDownloadCancel.is_set():
-                                self.debugLog("Cover download cancelled in search")
-                                return
-                                
                             resultID = self.check_value('id',release,"")
                             resultScore = self.check_value('ext:score',release,"0")
                             resultArtist = self.check_value('artist-credit-phrase',release,"")
@@ -669,43 +649,6 @@ class NRSC5_DUI(object):
         else:
             # add entry in database for the station if it doesn't exist
             self.stationLogos[self.stationStr] = ["", "", "", "", "", "", "", ""]
-
-
-    def cancelCoverDownload(self):
-        """
-        Cancel any running cover download thread.
-        Called when stopping playback or starting new download.
-        """
-        if self.coverDownloadThread and self.coverDownloadThread.is_alive():
-            self.debugLog("Cancelling cover download thread")
-            self.coverDownloadCancel.set()
-            # Give it a moment to notice the cancellation
-            self.coverDownloadThread.join(timeout=0.5)
-            if self.coverDownloadThread.is_alive():
-                self.debugLog("Warning: Cover download thread did not stop gracefully")
-            self.coverDownloadThread = None
-
-    def get_cover_image_online_wrapper(self):
-        """
-        Wrapper for get_cover_image_online that supports cancellation.
-        This runs in a background thread.
-        """
-        try:
-            # Check for cancellation before starting
-            if self.coverDownloadCancel.is_set():
-                self.debugLog("Cover download cancelled before start")
-                return
-                
-            # Run the actual download
-            self.get_cover_image_online()
-            
-        except Exception as e:
-            print(f"Error in cover download thread: {e}")
-        finally:
-            # Clean up thread reference
-            with self.coverDownloadLock:
-                if self.coverDownloadThread:
-                    self.coverDownloadThread = None
 
     def service_data_type_name(self, type):
         for key, value in self.ServiceDataType.items():
@@ -1164,6 +1107,11 @@ class NRSC5_DUI(object):
         # CRITICAL: stdout must not use PIPE or it will fill up and block nrsc5
         self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
         
+        # CRITICAL FIX: Make stderr non-blocking to prevent pipe deadlock
+        import fcntl
+        flags = fcntl.fcntl(self.nrsc5.stderr, fcntl.F_GETFL)
+        fcntl.fcntl(self.nrsc5.stderr, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+        
         try:
             while True:
                 # Check if nrsc5 process is still valid
@@ -1175,9 +1123,34 @@ class NRSC5_DUI(object):
                     select.select([],[self.nrsc5master],[])
                     os.write(self.nrsc5master,str.encode(self.nrsc5msg))
                     self.nrsc5msg = ""
+                
+                # CRITICAL FIX: Use select() to wait for data before reading
+                # This prevents blocking and allows nrsc5 to write freely
+                readable, _, _ = select.select([self.nrsc5.stderr], [], [], 0.1)
+                
+                if not readable:
+                    # No data available, check if process is still alive
+                    if self.nrsc5.poll() is not None:
+                        if self.playing:
+                            self.debugLog("Restarting NRSC5 (unexpected termination)")
+                            time.sleep(1)
+                            self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
+                            # Make new stderr non-blocking too
+                            flags = fcntl.fcntl(self.nrsc5.stderr, fcntl.F_GETFL)
+                            fcntl.fcntl(self.nrsc5.stderr, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+                            continue
+                        else:
+                            self.debugLog("Process Terminated")
+                            self.nrsc5 = None
+                            break
+                    continue
                     
-                # read output from nrsc5
-                output = self.nrsc5.stderr.readline()
+                # read output from nrsc5 (non-blocking now)
+                try:
+                    output = self.nrsc5.stderr.readline()
+                except IOError:
+                    # Would block - skip this iteration
+                    continue
                 
                 # Check if we got EOF (empty string means process ended)
                 if not output:
@@ -1253,6 +1226,24 @@ class NRSC5_DUI(object):
         # update status information
         def update():
             global aasDir
+            # DIAGNOSTIC: Track if update() is called multiple times
+            if not hasattr(self, '_update_call_count'):
+                self._update_call_count = 0
+                self._update_last_log = 0
+                import time
+                self._start_time = time.time()
+            self._update_call_count += 1
+            
+            # Log if we're getting called too often (more than once per second)
+            import time
+            current_time = time.time()
+            if current_time - self._update_last_log >= 10:  # Log every 10 seconds
+                expected_calls = int(current_time - self._start_time)
+                print(f"[DIAG] update() called {self._update_call_count} times (expected: ~{expected_calls})")
+                if self._update_call_count > expected_calls * 2:
+                    print(f"[WARNING] update() being called TOO OFTEN! Callback leak detected!")
+                self._update_last_log = current_time
+            
             try:
                 imagePath = ""
                 image = ""
@@ -1352,33 +1343,29 @@ class NRSC5_DUI(object):
                 # Disable downloaded cover images until fixed with MusicBrainz
                 # CRITICAL: Run in separate thread to avoid blocking GTK main thread with network I/O
                 if (self.cbCovers.get_active() and self.id3Changed):
-                    # CRITICAL FIX: Thread-safe cover download with rate limiting
-                    current_time = time.time()
-                    time_since_last = current_time - self.lastCoverRequest
-                    
-                    # Only start if no download in progress and enough time has passed
-                    if (time_since_last >= self.coverRequestMinInterval and 
-                        self.coverDownloadLock.acquire(blocking=False)):
-                        try:
-                            self.lastCoverRequest = current_time
-                            # Cancel any existing download
-                            self.cancelCoverDownload()
-                            # Start new download in background
-                            self.coverDownloadCancel.clear()
-                            self.coverDownloadThread = Thread(
-                                target=self.get_cover_image_online_wrapper, 
-                                daemon=True
-                            )
-                            self.coverDownloadThread.start()
-                        finally:
-                            self.coverDownloadLock.release()
+                    Thread(target=self.get_cover_image_online, daemon=True).start()
 
+            except Exception as e:
+                print(f"Error in update(): {e}")
+                import traceback
+                traceback.print_exc()
             finally:
-                pass        
-            
-            # CRITICAL FIX: Return False to tell GTK "don't call me again"
-            return False
+                # CRITICAL FIX: Must return False to prevent GTK from re-queuing this callback
+                return False
+        
         if (self.playing):
+            # DIAGNOSTIC: Monitor resources every 60 seconds
+            if not hasattr(self, '_diag_counter'):
+                self._diag_counter = 0
+            self._diag_counter += 1
+            
+            if self._diag_counter % 60 == 0:
+                import gc
+                import threading
+                obj_count = len(gc.get_objects())
+                thread_count = threading.active_count()
+                print(f"[RESOURCE] {self._diag_counter}s - Objects: {obj_count}, Threads: {thread_count}, Playing: {self.playing}")
+            
             GLib.idle_add(update)
             self.statusTimer = Timer(1, self.checkStatus)
             self.statusTimer.start()
@@ -1856,13 +1843,10 @@ class NRSC5_DUI(object):
                 coverStream = self.checkPorts(p,0)
                 logoStream = self.checkPorts(p,1)
 
-                # check file existance and size .. right now we just debug log
-                if (not os.path.isfile(os.path.join(aasDir,fileName))):
-                    self.debugLog("Missing file: " + fileName)
-                else:
-                    actualFileSize = os.path.getsize(os.path.join(aasDir,fileName))
-                    if (fileSize != actualFileSize):
-                        self.debugLog("Corrupt file: " + fileName + " (expected: "+str(fileSize)+" bytes, got "+str(actualFileSize)+" bytes)")
+                # CRITICAL FIX: Removed blocking file existence/size checks
+                # These block the main loop when aas directory has thousands of files
+                # The checks were just for debug logging anyway - not critical
+                # Original code at lines 1779-1785 caused slowdowns after hours of runtime
 
                 if (coverStream > -1):
                     if coverStream == self.streamNum:
