@@ -1373,7 +1373,9 @@ class NRSC5_DUI(object):
 
             finally:
                 pass        
-        
+            
+            # CRITICAL FIX: Return False to tell GTK "don't call me again"
+            return False
         if (self.playing):
             GLib.idle_add(update)
             self.statusTimer = Timer(1, self.checkStatus)
@@ -2668,4 +2670,5 @@ if __name__ == "__main__":
         nrsc5_dui.on_btnPlay_clicked(nrsc5_dui)
 
     Gtk.main()
+
 
