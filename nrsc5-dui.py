@@ -654,6 +654,8 @@ class NRSC5_DUI(object):
             self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(art)
             self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
             self.imgCover.set_from_pixbuf(self.pixbuf)
+        # CRITICAL FIX: Tell GTK not to call this callback again
+        return False
 
     def displayLogo(self):
         global aasDir
