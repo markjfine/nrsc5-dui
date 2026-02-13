@@ -12,5 +12,5 @@ For those who wish to create a quick-launch CMD file for use under Windows, crea
 
 C:\msys64\msys2_shell.cmd -defterm -no-start -mingw64 -here -c   /c/msys64/home/your_user_name_here/nrsc5-dui-msys2/nrsc5-dui-msys2.py
 
-Insert your own user name where it says "your_user_name_here".  You can then double-click this CMD file or invoke it from the command line to launch the script.
+Insert your own user name where it says "your_user_name_here" and modify paths accordingly.  You can then double-click this CMD file or invoke it from the command line to launch the script.
 
