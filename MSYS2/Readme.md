@@ -1,4 +1,4 @@
-This script is for use under MSYS2/Cygwin on Windows.  It has been tested for over 8 hours under MSYS2 on Windows 11 without any issues and maintains all the features of
+This script is for use under MSYS2/Cygwin on Windows.  It has been tested for over 8 hours under MSYS2 on Windows 11 without any audio issues and maintains all the features of
 the Linux version of nrsc5-dui. To achieve this, I used Claude Code to remove/replace any dependencies on tty since Windows does not have native, Unix-style TTY device files.
 
 I'm assuming you already have a working knowledge of how to install and build NRSC5 and also how to install the python dependencies under MSYS2 for this script so I won't go thru that here.  Just 
@@ -13,4 +13,4 @@ For those who wish to create a quick-launch CMD file for use under Windows, crea
 C:\msys64\msys2_shell.cmd -defterm -no-start -mingw64 -here -c   /c/msys64/home/your_user_name_here/nrsc5-dui-msys2/nrsc5-dui-msys2.py
 
 Insert your own user name where it says "your_user_name_here" and modify paths accordingly.  You can then double-click this CMD file or invoke it from the command line to launch the script.
-
+This has not been fully tested so expect bugs.
