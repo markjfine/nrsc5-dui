@@ -1,4 +1,4 @@
-This script is for use under MSYS2/Cygwin on Windows.  It has been tested for over 24 hours under MSYS2 on Windows 11 without any audio issues and maintains all the features of
+This script is for use under MSYS2/Cygwin on Windows.  It has been tested for over 36 hours under MSYS2 on Windows 11 without any audio issues and maintains all the features of
 the Linux version of nrsc5-dui. To achieve this, I used Claude Code to remove/replace any dependencies on tty since Windows does not have native, Unix-style TTY device files.
 
 I'm assuming you already have a working knowledge of how to install and build NRSC5 and also how to install the python dependencies under MSYS2 for this script so I won't go thru that here.  Just 
