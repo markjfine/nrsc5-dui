@@ -2,12 +2,12 @@ I'm a C/C++ programmer who recently started testing AI to assist me with coding 
 tremendously impressed with what qwen3-coder and Claude Code have been able to do in regards to writing and
 debugging C/C++ code.  I'm a huge fan of NRSC5 and NRSC5-DUI but I'm a Windows-based developer and don't have
 any dedicated Linux boxes set aside just to run NRSC5-DUI so I've been running it under the Windows Subsystem for Linux
-on Windows 11, AKA WSLg.  NRSC5-DUI would run for ~2-3 hours under WSL before the audio would start skipping and
+on Windows 11, AKA WSLg.  NRSC5-DUI would run for ~3 hours under WSL before the audio would start skipping and
 the interface would freeze so I decided to see if Claude Code could isolate and fix any problems with the python code
 since it was doing such an amazing job with C/C++ code. It did an amazing job of tracking down memory leaks, timer issues,
 image processing issues with PIL and PIXBUF, orphaned threads, pipe handling and network blocking issues.
 
-If you still experience audio skipping under WSLg, it is often caused by synchronization issues between the WSLg backend (PulseAudio) and the Windows host.
+If you experience audio skipping under WSLg, it is often caused by synchronization issues between the WSLg backend (PulseAudio) and the Windows host.
 
 Quick Fix  
 Disable Time Sync: A known conflict between the system clock and audio playback can cause frequent stuttering.
@@ -32,9 +32,12 @@ default-fragment-size-msec = 10
 
 Restart PulseAudio: Kill the process with pulseaudio -k and let it restart automatically.
 
-Audio under WSLg is known to be buggy and your audio will become choppy again at some point.  The above modifications only delay the inevitable.
-This issue also affects pipewire.  Once skipping starts (usually around 3 hours and 15 minutes, just close the app and restart it. If you absolutely
-insist on running nrsc5-dui, use the version found here to run it with MSYS2/Cygwin:  https://github.com/ferrellsl/nrsc5-dui/tree/master/MSYS2
+Pulseaudio under WSLg is known to be buggy and your audio WILL become choppy again at some point, usually around 3 hours and 15 minutes.
+The above modifications only delay the inevitable.  This issue also affects pipewire.  Once skipping starts, just close the app and restart it. If you absolutely
+insist on running nrsc5-dui under Windows and want to avoid audio skiopping altogether, use the version found at the link below to run it with MSYS2/Cygwin:  
+https://github.com/ferrellsl/nrsc5-dui/tree/master/MSYS2
+I've tested the MSYS2 version under Windows for over 36 hours without audio skipping.
+
 
 Summary of Latest Changes
 
