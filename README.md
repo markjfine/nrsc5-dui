@@ -32,19 +32,9 @@ default-fragment-size-msec = 10
 
 Restart PulseAudio: Kill the process with pulseaudio -k and let it restart automatically.
 
-
-
-All the problems I had under WSLg are now resolved. 
-
-Here's a summary of just the major issues that were fixed:
-
-
-## Original Problems
-
-1. **GUI freezes after ~2 hours**
-2. **Audio begins skipping after the above time period**  
-3. **Audio eventually stops completely** (recoverable with Stop/Play)
-4. **GUI freezes completely after ~2 hours** (only Ctrl+C can kill it)
+Audio under WSLg is known to be buggy and your audio will become choppy again at some point.  The above modifications only delay the inevitable.
+This issue also affects pipewire.  Once skipping starts (usually around 3 hours and 15 minutes, just close the app and restart it. If you absolutely
+insist on running nrsc5-dui, use the version found here to run it with MSYS2/Cygwin:  https://github.com/ferrellsl/nrsc5-dui/tree/master/MSYS2
 
 Summary of Latest Changes
 
