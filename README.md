@@ -41,25 +41,37 @@ The bottom line is that some have had success installing and running the applica
 ### Usage under Windows Subsystem for Linux (WSL2)
 Stephen Ferrell has graciously taken a look at stability issues when running under WSL2g. Specifically, the application would run for ~3 hours until which time the audio would start skipping and the interface would freeze. He used Claude Code to isolate the issues and was extremely successful tracking down several issues impacting nrsc5-dui operation.
 If skipping is still experienced, Stephen recommends disabling the time sync due to a known conflict between the WSL2 backend (PulseAudio) and the Windows host. This can be done by entering:
-```sudo systemctl stop systemd-timesyncd```
+```
+sudo systemctl stop systemd-timesyncd
+```
 If this works, you can permanently disable it with:
-```sudo systemctl disable systemd-timesyncd```
+```
+sudo systemctl disable systemd-timesyncd
+```
 If the issue still persists, try adjusting the PulseAudio configuration within your Linux distribution. This can be done by editing the configuration file `/etc/pulse/daemon.conf` and adding/updating the following lines:
-```high-priority = yes
+```
+high-priority = yes
 nice-level = -15
 default-fragments = 8
-default-fragment-size-msec = 10```
+default-fragment-size-msec = 10
+```
 Once the configuration file is edited, kill PulseAudio by entering `pulseaudio -k` and let it restart automatically.
 You are cautioned that both PulseAudio and pipewire implementations have been known to be buggy under WSL2. Although the above suggestions will improve things, choppy audio may still occur at some point. The only solution is to close and restart nrsc5-dui.
 
 ### Usage under MSYS2/Cygwin
 Much of the audio skipping problems associated with WSL2 can be avoided by using a version of nrsc5-dui specifically modified by Stephen Ferrell for use under MSYS2/Cygwin. The MSYS2-specific version can be found in the MSYS2 directory. It has been tested for over 36 hours under MSYS2 on Windows 11 without any audio issues. It includes all the features of nrsc5-dui with none of the reliance on Posix-compliant dependencies, such as tty.
 It is recommended that you install each of the dependencies using MSYS2 pacman. As an example:
-```pacman -S mingw-w64-x86_64-python-numpy```
+```
+pacman -S mingw-w64-x86_64-python-numpy
+```
 This may not work correctly for musicbrainz, which under a managed environment should be installed using pip as follows:
-```pip install musicbrainzngs --break-system-packages```
+```
+pip install musicbrainzngs --break-system-packages
+```
 For those that wish to create a quick-launch CMD file, simply create a CMD file and add the following line:
-```C:\msys64\msys2_shell.cmd -defterm -no-start -mingw64 -here -c /c/msys64/home/<user name>/<nrsc5-dui directory>/nrsc5-dui-msys2.py```
+```
+C:\msys64\msys2_shell.cmd -defterm -no-start -mingw64 -here -c /c/msys64/home/<user name>/<nrsc5-dui directory>/nrsc5-dui-msys2.py
+```
 Remember to change <user name> to your user name, and <nrsc5-dui directory> to the directory where nrsc5-dui-msys2.py resides. The CMD file could then be double-clicked to launch the application.
 
 # Usage
