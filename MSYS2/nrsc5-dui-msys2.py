@@ -1177,7 +1177,7 @@ class NRSC5_DUI(object):
                         if self.playing:
                             self.debugLog("Restarting NRSC5 (unexpected termination)")
                             time.sleep(1)
-                            self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
+                            self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=PIPE, stdout=FNULL, stderr=PIPE, universal_newlines=False, bufsize=0)
                             continue
                         else:
                             self.debugLog("Process Terminated")
