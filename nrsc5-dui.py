@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #    NRSC5 DUI - A graphical interface for nrsc5
-#    Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-25 Mark J. Fine
+#    Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-26 Mark J. Fine
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -18,7 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #    Updated by zefie for modern nrsc5 ~ 2019
-#    Updated and enhanced by markjfine ~ 2021-25
+#    Updated and enhanced by markjfine ~ 2021-26
+#    Stability enhancements by ferrellsl ~ 2026
 
 import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform, io
 from subprocess import Popen, PIPE
@@ -90,7 +91,7 @@ class NRSC5_DUI(object):
         self.app_name       = "NRSC5-DUI"
         self.version        = "2.2.5"
         self.web_addr       = "https://github.com/markjfine/nrsc5-dui"
-        self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021-25 Mark J. Fine"
+        self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021-26 Mark J. Fine"
         musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
 
         self.width          = 0         # window width
@@ -905,11 +906,12 @@ class NRSC5_DUI(object):
             "Clayton Smith <argilo@gmail.com>",
             "zefie <zefie@zefie.net>",
             "Mark J. Fine <mark.fine@fineware-swl.com>"
+            "Stephen Ferrell <sferrellblue@yahoo.com>"
         ]
 
         license = """
         NRSC5 DUI - A second-generation graphical interface for nrsc5
-        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-25 Mark J. Fine
+        Copyright (C) 2017-2019  Cody Nybo & Clayton Smith, 2019 zefie, 2021-26 Mark J. Fine
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
