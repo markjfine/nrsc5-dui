@@ -2,8 +2,13 @@
 **/.DS_Store
 *.txt
 *.log
+HERE*
+here.zip
 aas/**
 cfg/**
 cfg/config.json
 cfg/stationLogos.json
 map/**
+linux_binary
+macOS_binary
+
