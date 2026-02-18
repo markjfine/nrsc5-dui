@@ -24,7 +24,7 @@ It is also assumed you have a fully operational Gtk3 environment installed from 
 1. Install the latest version of Python, PyGObject, Pillow, and other python dependencies. Once Python is installed, you may install the dependencies by giving the command `pip install -r <path_to requirements.txt>`  
 2. Compile and install nrsc5. If using an SDRPlay, you must compile and install the version provided by [fventuri](https://github.com/fventuri/nrsc5).  
 3. Install nrsc5-dui files in a directory where you have write permissions.  
-4. Optional: To use the binary version of nrsc5-dui, copy the file `nrsc5-dui` in `binary` up one level, so it's in the same directory as `nrsc5-dui.py`.  
+4. Optional: To use the macOS arm64 binary version of nrsc5-dui, copy the file `nrsc5-dui` in `binary` up one level, so it's in the same directory as `nrsc5-dui.py`. Note that this has only been tested on a MacBook Pro with an Apple M1 chip, running Tahoe 26.3 with an arm64 architecture. Your mileage may vary.  
 
 The configuration and resource directories will be created in a new `cfg` and `res` directory under where nrsc5-dui.py resides. Similarly, an `aas` directory will be created for downloaded files and a `map` directory will be created to store weather & traffic maps. The `aas`, `cfg`, and `map` directories may optionally be created in a separate user-defined path as specified within a `$NRSC5DUI_DATA` environment variable.
 
