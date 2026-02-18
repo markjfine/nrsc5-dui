@@ -23,7 +23,8 @@ It is also assumed you have a fully operational Gtk3 environment installed from 
 # Setup
 1. Install the latest version of Python, PyGObject, Pillow, and other python dependencies. Once Python is installed, you may install the dependencies by giving the command `pip install -r <path_to requirements.txt>`  
 2. Compile and install nrsc5. If using an SDRPlay, you must compile and install the version provided by [fventuri](https://github.com/fventuri/nrsc5).  
-3. Install nrsc5-dui files in a directory where you have write permissions.
+3. Install nrsc5-dui files in a directory where you have write permissions.  
+4. Optional: To use the binary version of nrsc5-dui, copy the file `nrsc5-dui` in `binary` up one level, so it's in the same directory as `nrsc5-dui.py`.  
 
 The configuration and resource directories will be created in a new `cfg` and `res` directory under where nrsc5-dui.py resides. Similarly, an `aas` directory will be created for downloaded files and a `map` directory will be created to store weather & traffic maps. The `aas`, `cfg`, and `map` directories may optionally be created in a separate user-defined path as specified within a `$NRSC5DUI_DATA` environment variable.
 
@@ -39,47 +40,39 @@ One of the goals of this project was to provide a stand-alone, cross-platform ap
 The bottom line is that some have had success installing and running the application and it's dependencies under specific MinGW environments such as WSL2, but may still require the dongle to operate under RTL_TCP and not directly via NRSC5.EXE. Some legacy Windows executables and libraries have been provided in the `bin` directory for those that wish to experiment further. Feel free to use them at your own risk.
 
 ### Usage under Windows Subsystem for Linux (WSL2)
-Stephen Ferrell has graciously taken a look at stability issues when running under WSL2g. Specifically, the application would run for ~3 hours until which time the audio would start skipping and the interface would freeze. He used Claude Code to isolate the issues and was extremely successful tracking down several issues impacting nrsc5-dui operation.
-If skipping is still experienced, Stephen recommends disabling the time sync due to a known conflict between the WSL2 backend (PulseAudio) and the Windows host. This can be done by entering:
-```
-sudo systemctl stop systemd-timesyncd
-```
-If this works, you can permanently disable it with:
-```
-sudo systemctl disable systemd-timesyncd
-```
-If the issue still persists, try adjusting the PulseAudio configuration within your Linux distribution. This can be done by editing the configuration file `/etc/pulse/daemon.conf` and adding/updating the following lines:
+Stephen Ferrell has graciously taken a look at stability issues when running under WSL2g. Specifically, the application would run for ~3 hours until which time the audio would start skipping and the interface would freeze. He used Claude Code to isolate the issues and was extremely successful tracking down several issues impacting nrsc5-dui operation.  
+If skipping is still experienced, Stephen recommends disabling the time sync due to a known conflict between the WSL2 backend (PulseAudio) and the Windows host. This can be done by entering:  
+`sudo systemctl stop systemd-timesyncd`  
+If this works, you can permanently disable it with:  
+`sudo systemctl disable systemd-timesyncd`  
+If the issue still persists, try adjusting the PulseAudio configuration within your Linux distribution. This can be done by editing the configuration file `/etc/pulse/daemon.conf` and adding/updating the following lines:  
 ```
 high-priority = yes
 nice-level = -15
 default-fragments = 8
 default-fragment-size-msec = 10
 ```
-Once the configuration file is edited, kill PulseAudio by entering `pulseaudio -k` and let it restart automatically.
+Once the configuration file is edited, kill PulseAudio by entering `pulseaudio -k` and let it restart automatically.  
 You are cautioned that both PulseAudio and pipewire implementations have been known to be buggy under WSL2. Although the above suggestions will improve things, choppy audio may still occur at some point. The only solution is to close and restart nrsc5-dui.
 
 ### Usage under MSYS2/Cygwin
-Much of the audio skipping problems associated with WSL2 can be avoided by using a version of nrsc5-dui specifically modified by Stephen Ferrell for use under MSYS2/Cygwin. The MSYS2-specific version can be found in the MSYS2 directory. It has been tested for over 36 hours under MSYS2 on Windows 11 without any audio issues. It includes all the features of nrsc5-dui with none of the reliance on Posix-compliant dependencies, such as tty.
-It is recommended that you install each of the dependencies using MSYS2 pacman. As an example:
-```
-pacman -S mingw-w64-x86_64-python-numpy
-```
-This may not work correctly for musicbrainz, which under a managed environment should be installed using pip as follows:
-```
-pip install musicbrainzngs --break-system-packages
-```
-For those that wish to create a quick-launch CMD file, simply create a CMD file and add the following line:
-```
-C:\msys64\msys2_shell.cmd -defterm -no-start -mingw64 -here -c /c/msys64/home/<user name>/<nrsc5-dui directory>/nrsc5-dui-msys2.py
-```
+Much of the audio skipping problems associated with WSL2 can be avoided by using a version of nrsc5-dui specifically modified by Stephen Ferrell for use under MSYS2/Cygwin. The MSYS2-specific version can be found in the MSYS2 directory. It has been tested for over 36 hours under MSYS2 on Windows 11 without any audio issues. It includes all the features of nrsc5-dui with none of the reliance on Posix-compliant dependencies, such as tty.  
+It is recommended that you install each of the dependencies using MSYS2 pacman. As an example:  
+`pacman -S mingw-w64-x86_64-python-numpy`  
+This may not work correctly for musicbrainz, which under a managed environment should be installed using pip as follows:  
+`pip install musicbrainzngs --break-system-packages`  
+For those that wish to create a quick-launch CMD file, simply create a CMD file and add the following line:  
+`C:\msys64\msys2_shell.cmd -defterm -no-start -mingw64 -here -c /c/msys64/home/<user name>/<nrsc5-dui directory>/nrsc5-dui-msys2.py`  
 Remember to change `<user name>` to your user name, and `<nrsc5-dui directory>` to the directory where nrsc5-dui-msys2.py resides. The CMD file could then be double-clicked to launch the application.
 
 # Usage
-Please ensure your RTL-SDR dongle or SDRPlay is first connected to an available USB port. Then, from the terminal, start nrsc5-dui by entering:
-`python3 nrsc5-dui.py`
-or something like:
-`python3 nrsc5-dui.py /usr/local/bin/`
-The latter includes the path to nrsc5 when using scripts (like Apple Script) that seemingly ignore the environment.
+Please ensure your RTL-SDR dongle or SDRPlay is first connected to an available USB port. Then, from the terminal, start nrsc5-dui by entering:  
+`python3 nrsc5-dui.py`  
+or something like:  
+`python3 nrsc5-dui.py /usr/local/bin/`  
+The latter includes the path to nrsc5 when using scripts (like Apple Script) that seemingly ignore the environment.  
+You may optionally use the binary version by running it without `python3` or the `.py` extension as follows:  
+`nrsc5-dui /usr/local/bin/`
 
 ## Settings
 You may first change some optional parameters of how nrsc5 works from the Settings tab in nrsc5-dui:  
