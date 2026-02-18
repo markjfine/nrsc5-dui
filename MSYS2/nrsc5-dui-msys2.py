@@ -920,7 +920,7 @@ class NRSC5_DUI(object):
             "Cody Nybo <cmnybo@gmail.com>",
             "Clayton Smith <argilo@gmail.com>",
             "zefie <zefie@zefie.net>",
-            "Mark J. Fine <mark.fine@fineware-swl.com>"
+            "Mark J. Fine <mark.fine@fineware-swl.com>",
             "Stephen Ferrell <sferrellblue@yahoo.com>"
         ]
 
