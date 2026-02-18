@@ -72,7 +72,7 @@ For those that wish to create a quick-launch CMD file, simply create a CMD file 
 ```
 C:\msys64\msys2_shell.cmd -defterm -no-start -mingw64 -here -c /c/msys64/home/<user name>/<nrsc5-dui directory>/nrsc5-dui-msys2.py
 ```
-Remember to change <user name> to your user name, and <nrsc5-dui directory> to the directory where nrsc5-dui-msys2.py resides. The CMD file could then be double-clicked to launch the application.
+Remember to change `<user name>` to your user name, and `<nrsc5-dui directory>` to the directory where nrsc5-dui-msys2.py resides. The CMD file could then be double-clicked to launch the application.
 
 # Usage
 Please ensure your RTL-SDR dongle or SDRPlay is first connected to an available USB port. Then, from the terminal, start nrsc5-dui by entering:
