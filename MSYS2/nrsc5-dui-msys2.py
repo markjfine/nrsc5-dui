@@ -105,7 +105,7 @@ class NRSC5_DUI(object):
         self.debugLog("nrsc5 path: {}".format(self.nrsc5Path))
 
         self.app_name       = "NRSC5-DUI"
-        self.version        = "2.2.5"
+        self.version        = "2.2.6"
         self.web_addr       = "https://github.com/markjfine/nrsc5-dui"
         self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021-26 Mark J. Fine"
         musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
