@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
@@ -19,9 +20,9 @@
 
 #    Updated by zefie for modern nrsc5 ~ 2019
 #    Updated and enhanced by markjfine ~ 2021-26
-#    Stability enhancements by ferrellsl ~ 2026
+#    Stability and MSYS2 enhancements by ferrellsl ~ 2026
 
-import os, pty, select, sys, shutil, re, json, datetime, numpy, glob, time, platform, io
+import os, select, sys, shutil, re, json, datetime, numpy, glob, time, platform, io
 from subprocess import Popen, PIPE
 from threading import Timer, Thread
 from dateutil import tz
@@ -73,20 +74,35 @@ class NRSC5_DUI(object):
         self.debugLog("Local path determined as " + runtimeDir)
         self.debugLog("User data base directory: " + userDataDir)
 
-        if (platform.system() == 'Windows'):
-            # Windows release layout
+        # Detect MSYS2 environment
+        is_msys2 = os.environ.get('MSYSTEM') is not None or 'msys' in sys.platform.lower()
+        
+        if (platform.system() == 'Windows' and not is_msys2):
+            # Native Windows release layout
             self.windowsOS = True
             self.binDir = os.path.join(runtimeDir, "bin")  # windows binaries directory
             self.nrsc5Path = os.path.join(self.binDir,'nrsc5.exe')
         else:
-            # Linux/Mac/proper posix
-            # if nrsc5 and transcoder are not in the system path, set the full path here
+            # Linux/Mac/MSYS2/proper posix
+            # if nrsc5 is not in the system path, set the full path here
             arg1 = ""
             if (len(sys.argv[1:]) > 0):
                 arg1 = sys.argv[1].strip()
-            self.nrsc5Path = arg1+"nrsc5"
+            
+            # For MSYS2, try to find nrsc5 in PATH
+            if is_msys2:
+                import shutil as sh
+                nrsc5_in_path = sh.which('nrsc5')
+                if nrsc5_in_path:
+                    self.nrsc5Path = nrsc5_in_path
+                    self.debugLog(f"Found nrsc5 in PATH: {nrsc5_in_path}")
+                else:
+                    self.nrsc5Path = arg1 + "nrsc5"
+            else:
+                self.nrsc5Path = arg1 + "nrsc5"
  
-        self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
+        self.debugLog("OS Determination: Windows = {}, MSYS2 = {}".format(self.windowsOS, is_msys2))
+        self.debugLog("nrsc5 path: {}".format(self.nrsc5Path))
 
         self.app_name       = "NRSC5-DUI"
         self.version        = "2.2.5"
@@ -334,8 +350,9 @@ class NRSC5_DUI(object):
         re.compile("^[0-9:]{8,8} Packet data: port=([0-9]+).* mime=([a-zA-Z0-9_]+) size=([0-9]+)$")        # 24 Navteq/HERE packet info
         ]
         
-        # set up pty
-        self.nrsc5master,self.nrsc5slave = pty.openpty()
+        # Use PIPE for stdin (works on all platforms)
+        self.nrsc5master = None  # Not used with PIPE
+        self.nrsc5slave = PIPE   # Will use stdin PIPE
 
 
     def set_tuning_actions(self, widget, name, has_win, set_curs):
@@ -635,8 +652,6 @@ class NRSC5_DUI(object):
             self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(art)
             self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
             self.imgCover.set_from_pixbuf(self.pixbuf)
-        # CRITICAL FIX: Tell GTK not to call this callback again
-        return False
 
     def displayLogo(self):
         global aasDir
@@ -963,9 +978,36 @@ class NRSC5_DUI(object):
         self.streamInfo["Bitrate"] = 0
         self.set_program_btns()
         if self.playing:
-            self.nrsc5msg = str(self.streamNum)
+            # Instead of sending to stdin (which doesn't work without PTY),
+            # restart nrsc5 with the new stream number
+            print(f"[STREAM] Restarting nrsc5 on stream {self.streamNum}")
+            self.restart_nrsc5_with_stream(self.streamNum)
             self.displayLogo()
         self.update_bookmark_buttons()
+    
+    def restart_nrsc5_with_stream(self, stream_num):
+        """Restart nrsc5 with a different stream number (Windows-compatible)"""
+        if self.nrsc5 is not None:
+            try:
+                # Terminate the current nrsc5 process
+                self.nrsc5.terminate()
+                self.nrsc5.wait(timeout=2)
+            except:
+                # Force kill if it doesn't terminate
+                try:
+                    self.nrsc5.kill()
+                except:
+                    pass
+        
+        # Update the args with the new stream number
+        # The stream number is the last argument
+        self.nrsc5Args[-1] = str(int(stream_num))
+        print(f"[STREAM] New args: {self.nrsc5Args}")
+        
+        # Start nrsc5 again with the new stream
+        FNULL = open(os.devnull, 'w')
+        self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=PIPE, stdout=FNULL, stderr=PIPE, 
+                          universal_newlines=False, bufsize=0)
 
     def set_program_btns(self):
         self.btnAudioPrgs0.set_active(self.update_btns and self.streamNum == 0)
@@ -1107,52 +1149,27 @@ class NRSC5_DUI(object):
 
         # run nrsc5 and output stderr to pipe, stdout to /dev/null
         # CRITICAL: stdout must not use PIPE or it will fill up and block nrsc5
-        self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
-        
-        # CRITICAL FIX: Make stderr non-blocking to prevent pipe deadlock
-        import fcntl
-        flags = fcntl.fcntl(self.nrsc5.stderr, fcntl.F_GETFL)
-        fcntl.fcntl(self.nrsc5.stderr, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+        # Use unbuffered stdin (bufsize=0) for immediate command processing
+        self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=PIPE, stdout=FNULL, stderr=PIPE, 
+                          universal_newlines=False, bufsize=0)
         
         try:
             while True:
                 # Check if nrsc5 process is still valid
                 if self.nrsc5 is None:
                     break
-                    
-                # send input to nrsc5 if needed
-                if (self.nrsc5msg != ""):
-                    select.select([],[self.nrsc5master],[])
-                    os.write(self.nrsc5master,str.encode(self.nrsc5msg))
-                    self.nrsc5msg = ""
                 
-                # CRITICAL FIX: Use select() to wait for data before reading
-                # This prevents blocking and allows nrsc5 to write freely
-                readable, _, _ = select.select([self.nrsc5.stderr], [], [], 0.1)
-                
-                if not readable:
-                    # No data available, check if process is still alive
-                    if self.nrsc5.poll() is not None:
-                        if self.playing:
-                            self.debugLog("Restarting NRSC5 (unexpected termination)")
-                            time.sleep(1)
-                            self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
-                            # Make new stderr non-blocking too
-                            flags = fcntl.fcntl(self.nrsc5.stderr, fcntl.F_GETFL)
-                            fcntl.fcntl(self.nrsc5.stderr, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-                            continue
-                        else:
-                            self.debugLog("Process Terminated")
-                            self.nrsc5 = None
-                            break
-                    continue
+                # Note: We no longer send stream changes via stdin
+                # Stream changes now restart nrsc5 with the new stream number
+                # This works on all platforms without requiring PTY
                     
-                # read output from nrsc5 (non-blocking now)
-                try:
-                    output = self.nrsc5.stderr.readline()
-                except IOError:
-                    # Would block - skip this iteration
-                    continue
+                # read output from nrsc5 (now in binary mode)
+                output_bytes = self.nrsc5.stderr.readline()
+                if not output_bytes:
+                    # EOF
+                    output = ""
+                else:
+                    output = output_bytes.decode('utf-8', errors='replace')
                 
                 # Check if we got EOF (empty string means process ended)
                 if not output:
@@ -1162,7 +1179,7 @@ class NRSC5_DUI(object):
                         if self.playing:
                             self.debugLog("Restarting NRSC5 (unexpected termination)")
                             time.sleep(1)
-                            self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=self.nrsc5slave, stdout=FNULL, stderr=PIPE, universal_newlines=True)
+                            self.nrsc5 = Popen(self.nrsc5Args, shell=False, stdin=PIPE, stdout=FNULL, stderr=PIPE, universal_newlines=False, bufsize=0)
                             continue
                         else:
                             self.debugLog("Process Terminated")
@@ -1228,24 +1245,6 @@ class NRSC5_DUI(object):
         # update status information
         def update():
             global aasDir
-            # DIAGNOSTIC: Track if update() is called multiple times
-            if not hasattr(self, '_update_call_count'):
-                self._update_call_count = 0
-                self._update_last_log = 0
-                import time
-                self._start_time = time.time()
-            self._update_call_count += 1
-            
-            # Log if we're getting called too often (more than once per second)
-            import time
-            current_time = time.time()
-            if current_time - self._update_last_log >= 10:  # Log every 10 seconds
-                expected_calls = int(current_time - self._start_time)
-                print(f"[DIAG] update() called {self._update_call_count} times (expected: ~{expected_calls})")
-                if self._update_call_count > expected_calls * 2:
-                    print(f"[WARNING] update() being called TOO OFTEN! Callback leak detected!")
-                self._update_last_log = current_time
-            
             try:
                 imagePath = ""
                 image = ""
@@ -1347,27 +1346,10 @@ class NRSC5_DUI(object):
                 if (self.cbCovers.get_active() and self.id3Changed):
                     Thread(target=self.get_cover_image_online, daemon=True).start()
 
-            except Exception as e:
-                print(f"Error in update(): {e}")
-                import traceback
-                traceback.print_exc()
             finally:
-                # CRITICAL FIX: Must return False to prevent GTK from re-queuing this callback
-                return False
+                pass        
         
         if (self.playing):
-            # DIAGNOSTIC: Monitor resources every 60 seconds
-            if not hasattr(self, '_diag_counter'):
-                self._diag_counter = 0
-            self._diag_counter += 1
-            
-            if self._diag_counter % 60 == 0:
-                import gc
-                import threading
-                obj_count = len(gc.get_objects())
-                thread_count = threading.active_count()
-                print(f"[RESOURCE] {self._diag_counter}s - Objects: {obj_count}, Threads: {thread_count}, Playing: {self.playing}")
-            
             GLib.idle_add(update)
             self.statusTimer = Timer(1, self.checkStatus)
             self.statusTimer.start()
@@ -1845,10 +1827,13 @@ class NRSC5_DUI(object):
                 coverStream = self.checkPorts(p,0)
                 logoStream = self.checkPorts(p,1)
 
-                # CRITICAL FIX: Removed blocking file existence/size checks
-                # These block the main loop when aas directory has thousands of files
-                # The checks were just for debug logging anyway - not critical
-                # Original code at lines 1779-1785 caused slowdowns after hours of runtime
+                # check file existance and size .. right now we just debug log
+                if (not os.path.isfile(os.path.join(aasDir,fileName))):
+                    self.debugLog("Missing file: " + fileName)
+                else:
+                    actualFileSize = os.path.getsize(os.path.join(aasDir,fileName))
+                    if (fileSize != actualFileSize):
+                        self.debugLog("Corrupt file: " + fileName + " (expected: "+str(fileSize)+" bytes, got "+str(actualFileSize)+" bytes)")
 
                 if (coverStream > -1):
                     if coverStream == self.streamNum:
@@ -1904,8 +1889,12 @@ class NRSC5_DUI(object):
                 self.numStreams = s
                 self.streamInfo["Streams"][s-1] = n
             if (t == "data"):
-                self.streamInfo["Services"][self.numServices] = n
-                self.numServices += 1
+                # CRITICAL FIX: Bounds check to prevent crash during nrsc5 restart
+                if self.numServices < len(self.streamInfo["Services"]):
+                    self.streamInfo["Services"][self.numServices] = n
+                    self.numServices += 1
+                else:
+                    self.debugLog(f"Warning: numServices={self.numServices} exceeds Services array size")
         elif (self.regex[12].match(line)):
             # match port and data_service_type
             m = self.regex[12].match(line)
@@ -1917,7 +1906,9 @@ class NRSC5_DUI(object):
             if (self.lastType == "audio" and self.numStreams > 0):
                 self.streams[self.numStreams-1].append(p)
             if ((self.lastType == "data") and (id == 0) and (self.numServices > 0)):
-                self.streamInfo["SvcTypes"][self.numServices-1] = self.service_data_type_name(t)
+                # CRITICAL FIX: Bounds check
+                if self.numServices <= len(self.streamInfo["SvcTypes"]):
+                    self.streamInfo["SvcTypes"][self.numServices-1] = self.service_data_type_name(t)
         elif (self.regex[18].match(line)):
             # match program type
             m = self.regex[18].match(line)
@@ -2658,5 +2649,3 @@ if __name__ == "__main__":
         nrsc5_dui.on_btnPlay_clicked(nrsc5_dui)
 
     Gtk.main()
-
-

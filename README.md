@@ -29,7 +29,7 @@ The configuration and resource directories will be created in a new `cfg` and `r
 
 nrsc5 should be installed in a directory that is in your `$PATH` environment variable. Otherwise the full path to nrsc5 (e.g., `/usr/local/bin/`) may be entered at runtime (see Usage for details, below).
 
-## Windows 10 setup notes
+## Windows 10/11 setup notes
 One of the goals of this project was to provide a stand-alone, cross-platform application. Please note that NRSC5-DUI will not operate natively in this manner under Windows 10 at this time. This is even when built under a MinGW environment (such as MSYS2) or cross-compiled using MinGW-compatible compilers. The issues found are as follows:  
   
 1. The resulting RTL_SDR library used by NRSC5.EXE doesn't seem to work correctly with respect to communicating with the RTL-SDR dongle, as well as any appropriate signal detection and bit error rate evaluation. There has been some success in getting NRSC5.EXE to run using the -H option when the dongle is operating under RTL_TCP on another platform, but again, that's outside a stand-alone operating environment. There is also a question of whether NRSC5.EXE responds to keyboard input properly under a MinGW-environment, which may preclude changing streams (`0` thru `3` keypress) as well as exiting it properly (`q`keypress) without typing Ctrl-C.  
@@ -37,6 +37,42 @@ One of the goals of this project was to provide a stand-alone, cross-platform ap
 3. Win10, which is not Posix-compliant, does not provide a good pty solution under Python. This is required to spawn and interact with NRSC5.EXE via a pipe. WinPty does exist as an alternative, however it requires a complete rewrite of how the current version of NRSC5-DUI operates. This does not appear to be an issue when running under a MinGW environment.  
   
 The bottom line is that some have had success installing and running the application and it's dependencies under specific MinGW environments such as WSL2, but may still require the dongle to operate under RTL_TCP and not directly via NRSC5.EXE. Some legacy Windows executables and libraries have been provided in the `bin` directory for those that wish to experiment further. Feel free to use them at your own risk.
+
+### Usage under Windows Subsystem for Linux (WSL2)
+Stephen Ferrell has graciously taken a look at stability issues when running under WSL2g. Specifically, the application would run for ~3 hours until which time the audio would start skipping and the interface would freeze. He used Claude Code to isolate the issues and was extremely successful tracking down several issues impacting nrsc5-dui operation.
+If skipping is still experienced, Stephen recommends disabling the time sync due to a known conflict between the WSL2 backend (PulseAudio) and the Windows host. This can be done by entering:
+```
+sudo systemctl stop systemd-timesyncd
+```
+If this works, you can permanently disable it with:
+```
+sudo systemctl disable systemd-timesyncd
+```
+If the issue still persists, try adjusting the PulseAudio configuration within your Linux distribution. This can be done by editing the configuration file `/etc/pulse/daemon.conf` and adding/updating the following lines:
+```
+high-priority = yes
+nice-level = -15
+default-fragments = 8
+default-fragment-size-msec = 10
+```
+Once the configuration file is edited, kill PulseAudio by entering `pulseaudio -k` and let it restart automatically.
+You are cautioned that both PulseAudio and pipewire implementations have been known to be buggy under WSL2. Although the above suggestions will improve things, choppy audio may still occur at some point. The only solution is to close and restart nrsc5-dui.
+
+### Usage under MSYS2/Cygwin
+Much of the audio skipping problems associated with WSL2 can be avoided by using a version of nrsc5-dui specifically modified by Stephen Ferrell for use under MSYS2/Cygwin. The MSYS2-specific version can be found in the MSYS2 directory. It has been tested for over 36 hours under MSYS2 on Windows 11 without any audio issues. It includes all the features of nrsc5-dui with none of the reliance on Posix-compliant dependencies, such as tty.
+It is recommended that you install each of the dependencies using MSYS2 pacman. As an example:
+```
+pacman -S mingw-w64-x86_64-python-numpy
+```
+This may not work correctly for musicbrainz, which under a managed environment should be installed using pip as follows:
+```
+pip install musicbrainzngs --break-system-packages
+```
+For those that wish to create a quick-launch CMD file, simply create a CMD file and add the following line:
+```
+C:\msys64\msys2_shell.cmd -defterm -no-start -mingw64 -here -c /c/msys64/home/<user name>/<nrsc5-dui directory>/nrsc5-dui-msys2.py
+```
+Remember to change <user name> to your user name, and <nrsc5-dui directory> to the directory where nrsc5-dui-msys2.py resides. The CMD file could then be double-clicked to launch the application.
 
 # Usage
 Please ensure your RTL-SDR dongle or SDRPlay is first connected to an available USB port. Then, from the terminal, start nrsc5-dui by entering:
