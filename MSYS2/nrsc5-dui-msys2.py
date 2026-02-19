@@ -1155,8 +1155,11 @@ class NRSC5_DUI(object):
         
         try:
             while True:
-                # Check if nrsc5 process is still valid
-                if self.nrsc5 is None:
+                # Capture a local reference to avoid race condition where another thread
+                # (e.g. switching stations from bookmarks) sets self.nrsc5 = None between
+                # our None-check and subsequent use of the object.
+                proc = self.nrsc5
+                if proc is None:
                     break
                 
                 # Note: We no longer send stream changes via stdin
@@ -1164,7 +1167,7 @@ class NRSC5_DUI(object):
                 # This works on all platforms without requiring PTY
                     
                 # read output from nrsc5 (now in binary mode)
-                output_bytes = self.nrsc5.stderr.readline()
+                output_bytes = proc.stderr.readline()
                 if not output_bytes:
                     # EOF
                     output = ""
@@ -1174,7 +1177,7 @@ class NRSC5_DUI(object):
                 # Check if we got EOF (empty string means process ended)
                 if not output:
                     self.debugLog("nrsc5 stderr closed (process may have ended)")
-                    if self.nrsc5.poll() is not None:
+                    if proc.poll() is not None:
                         # Process has definitely exited
                         if self.playing:
                             self.debugLog("Restarting NRSC5 (unexpected termination)")
@@ -1198,8 +1201,9 @@ class NRSC5_DUI(object):
                     self.logFile.write(output)
                     self.logFile.flush()
                 
-                # check if nrsc5 has exited
-                poll_result = self.nrsc5.poll()
+                # check if nrsc5 has exited (use local proc ref — safe even if self.nrsc5
+                # was set to None by another thread mid-iteration)
+                poll_result = proc.poll()
                 if poll_result is not None:
                     # Process has exited
                     if not self.playing:
