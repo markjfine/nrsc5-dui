@@ -1036,18 +1036,57 @@ class NRSC5_DUI(object):
             # get station from bookmark row
             tree_iter = treeview.get_model().get_iter(path[0])
             station   = treeview.get_model().get_value(tree_iter, 2)
-            
-            # set frequency and stream
-            self.spinFreq.set_value(float(int(station/10)/10.0))
-            self.streamNum = (station%10)-1
-            self.on_stream_changed()
-            
-            # stop playback if playing
-            if (self.playing):
-                 self.on_btnStop_clicked(None)
-            time.sleep(1)
-            # play bookmarked station
-            self.on_btnPlay_clicked(None)
+
+            # capture target freq/stream before doing anything else
+            target_freq   = float(int(station/10)/10.0)
+            target_stream = (station%10)-1
+
+            # Do the stop/switch/play in a background thread so the GTK main
+            # thread is never blocked by sleep() or join(), which would freeze the GUI.
+            def _switch():
+                # 1. Stop the current player cleanly (kill process, join thread)
+                if self.playing:
+                    self.playing = False
+                    if self.nrsc5 is not None:
+                        try:
+                            if self.nrsc5.poll() is None:
+                                self.nrsc5.terminate()
+                                time.sleep(0.2)
+                            if self.nrsc5.poll() is None:
+                                self.nrsc5.kill()
+                        except Exception:
+                            pass
+                    # Wait for the old player thread to fully exit before starting a new one
+                    if self.playerThread is not None:
+                        self.playerThread.join(3)
+
+                # 2. Update frequency/stream *after* the old process is dead
+                GLib.idle_add(self._apply_bookmark_and_play, target_freq, target_stream)
+
+            Thread(target=_switch, daemon=True).start()
+
+    def _apply_bookmark_and_play(self, freq, stream):
+        """Called on the GTK main thread after the old player has been stopped."""
+        self.spinFreq.set_value(freq)
+        self.streamNum = stream
+        # Update stream info display without triggering a nrsc5 restart (we are already stopped)
+        self.on_stream_changed_silent()
+        # Now start fresh playback
+        self.on_btnPlay_clicked(None)
+        return False  # remove idle callback
+
+    def on_stream_changed_silent(self):
+        """Like on_stream_changed but skips the nrsc5 restart (used when already stopped)."""
+        self.streamInfo["Title"]   = ""
+        self.streamInfo["Album"]   = ""
+        self.streamInfo["Artist"]  = ""
+        self.streamInfo["Genre"]   = ""
+        self.streamInfo["Cover"]   = ""
+        self.streamInfo["Logo"]    = ""
+        self.streamInfo["Bitrate"] = 0
+        self.set_program_btns()
+        self.displayLogo()
+        self.update_bookmark_buttons()
 
     def on_lvBookmarks_selection_changed(self, tree_selection):
         # enable delete button if bookmark is selected
