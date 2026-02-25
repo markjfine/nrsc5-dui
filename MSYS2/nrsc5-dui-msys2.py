@@ -368,7 +368,7 @@ class NRSC5_DUI(object):
 
     def on_enter_set_cursor(self, widget, event):
         if (widget.get_label() != ""):
-            widget.get_window().set_cursor(self.hand_cursor)
+            widget.get_window().set_cursor(self.default)
 
     def on_cbCovers_clicked(self, btn):
         dlCoversSet = self.cbCovers.get_active()
