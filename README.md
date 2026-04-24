@@ -111,6 +111,8 @@ The station name, slogan, message, and optional alert message will display if th
 ### Signal Strength
 The Modulation Error Ratio for the lower and upper sidebands are displayed as they are determined. Important: High MER values for both sidebands indicates a strong signal. The current, average, minimum and maximum Bit Error Rates will also be displayed as they are determined. High BER values will cause the audio to glitch or drop out. The current BER is also shown on the status bar and may be used as a tuning tool.
 
+Note: The nrsc5 application initially operates on an inverted spectrum for FM signals, using the terms 'lower' and 'upper' to report the MER of the sidebands in a reversed state. The resulting MER values will therefore appear reversed from what a user would see on a standard spectrum display.
+
 ## Maps
 When listening to radio stations operated by [iHeartMedia](http://iheartmedia.com/iheartmedia/stations), you may view live traffic maps and weather radar. The images are typically sent every few minutes and will fill the tab area once received, processed, and loaded. Clicking the Map Viewer button on the toolbar will open a larger window to view the maps at full size. The weather radar information from the last 12 hours will be stored and can be played back by selecting the Animate Radar option. The delay between frames (in seconds) can be adjusted by changing the Animation Speed value. Other stations provide [Navteq/HERE](https://www.here.com) navigation and weather information which is also displayed. Note that the display of Navteq/HERE data requires the use of nrsc5 v3.00.
 
