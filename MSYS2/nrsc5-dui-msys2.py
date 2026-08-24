@@ -440,7 +440,9 @@ class NRSC5_DUI(object):
         if (self.did_resize()):
             self.showArtwork(self.coverImage)
 
-            img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12           
+            img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
+            if (img_size < 200):
+                img_size = 200
             if (self.mapData["mapMode"] == 0):
                 map_file = os.path.join(mapDir, "TrafficMap.png")
                 if os.path.isfile(map_file):
@@ -649,6 +651,8 @@ class NRSC5_DUI(object):
     def showArtwork(self, art):
         if (art != "") and (art[-5:] != "/aas/"):
             img_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
+            if (img_size < 200):
+                img_size = 200
             self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(art)
             self.pixbuf = self.pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
             self.imgCover.set_from_pixbuf(self.pixbuf)
@@ -679,6 +683,8 @@ class NRSC5_DUI(object):
     def handle_window_resize(self):
         if (self.pixbuf != None):
             desired_size = min(self.alignmentCover.get_allocated_height(), self.alignmentCover.get_allocated_width()) - 12
+            if (desired_size < 200):
+                desired_size = 200
             self.pixbuf = self.pixbuf.scale_simple(desired_size, desired_size, GdkPixbuf.InterpType.BILINEAR)
             self.imgCover.set_from_pixbuf(self.pixbuf)
 
@@ -1488,6 +1494,8 @@ class NRSC5_DUI(object):
             # display on map page
             if (self.radMapTraffic.get_active()):
                 img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
+                if (img_size < 200):
+                    img_size = 200
                 imgMap = imgMap.resize((img_size, img_size), imgLANCZOS)                            # scale map to fit window
                 self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
                 
@@ -1611,6 +1619,8 @@ class NRSC5_DUI(object):
             # display on map page
             if (self.radMapWeather.get_active()):
                 img_size = min(self.alignmentMap.get_allocated_height(), self.alignmentMap.get_allocated_width()) - 12
+                if (img_size < 200):
+                    img_size = 200
                 imgMapResized = imgMap.resize((img_size, img_size), imgLANCZOS)                     # scale map to fit window
                 self.imgMap.set_from_pixbuf(imgToPixbuf(imgMapResized))                             # convert image to pixbuf and display
                 del imgMapResized  # Clean up resized image
@@ -2689,6 +2699,18 @@ if __name__ == "__main__":
     nrsc5_dui = NRSC5_DUI()
     nrsc5_dui.mainWindow.show()
     if (debugMessages and debugAutoStart):
-        nrsc5_dui.on_btnPlay_clicked(nrsc5_dui)
+        # Defer autostart until the main loop is actually running.
+        # mainWindow.show() only *queues* the window to be realized/mapped;
+        # that work (and GTK's one-time CSS node cache setup for the whole
+        # widget tree) doesn't happen until Gtk.main() starts processing
+        # events. Calling on_btnPlay_clicked() synchronously here spins up
+        # the player thread (which touches GTK widgets from a background
+        # thread as soon as nrsc5 produces output) before that setup has
+        # run, racing it and corrupting GTK's internal CSS node cache:
+        #   Gtk:ERROR:...gtkcssnode.c:319:lookup_in_global_parent_cache:
+        #   assertion failed: (node->cache == NULL)
+        # Scheduling via GLib.idle_add runs it after the loop is up and the
+        # window has been realized, instead of racing ahead of it.
+        GLib.idle_add(nrsc5_dui.on_btnPlay_clicked, nrsc5_dui)
 
     Gtk.main()
