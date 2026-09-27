@@ -1,4 +1,4 @@
-NRSC5-DUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5). It makes it easy to play your favorite FM HD radio stations using an RTL-SDR or SDRPlay dongle. It will also display weather radar and traffic maps found on most iHeart radio stations.
+NRSC5-DUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5). It makes it easy to play your favorite FM HD radio stations using an RTL-SDR, SDRPlay, or Airspy HF+ SDR device. It will also display weather radar and traffic maps found on most iHeart radio stations.
 
 This version is really a fork of a fork of the original nrsc5-gui: The first was developed by [cmnybo](https://github.com/cmnybo/nrsc5-gui) and subsequently modified by [zefie](https://github.com/zefie/nrsc5-gui). It merges the features of the former to the architecture of the latter, while adding several additional control and display features.
 
@@ -17,6 +17,8 @@ The following programs are required to run NRSC5-DUI
 * [pyOpenSSL](https://pypi.org/project/pyOpenSSL)
 * [musicbrainzngs](https://pypi.org/project/musicbrainzngs)
 * [nrsc5 for RTL_SDR only](https://github.com/theori-io/nrsc5) or [nrsc5 for SDRPlay](https://github.com/fventuri/nrsc5)
+* [gnuradio](https://github.com/gnuradio/gnuradio)
+* [gr-osmosdr] (https://https://github.com/osmocom/gr-osmosdr)
 
 It is also assumed you have a fully operational Gtk3 environment installed from [Homebrew](https://brew.sh/), if running on macOS.
 
@@ -66,7 +68,7 @@ For those that wish to create a quick-launch CMD file, simply create a CMD file 
 Remember to change `<user name>` to your user name, and `<nrsc5-dui directory>` to the directory where nrsc5-dui-msys2.py resides. The CMD file could then be double-clicked to launch the application.
 
 # Usage
-Please ensure your RTL-SDR dongle or SDRPlay is first connected to an available USB port. Then, from the terminal, start nrsc5-dui by entering:  
+Please ensure your RTL-SDR, SDRPlay, or Airspy HF is first connected to an available USB port. Then, from the terminal, start nrsc5-dui by entering:  
 `python3 nrsc5-dui.py`  
 or something like:  
 `python3 nrsc5-dui.py /usr/local/bin/`  
@@ -76,9 +78,9 @@ You may optionally use the binary version by running it without `python3` or the
 
 ## Settings
 You may first change some optional parameters of how nrsc5 works from the Settings tab in nrsc5-dui:  
-Set the radio you are using to either RTL_SDR or SDRPlay.  
-Set the gain to Auto, or optionally enter an RF gain in dB that has known to work well for some stations.  
-Enter a PPM correction value if your RTL-SDR dongle has an offset.  
+Set the radio you are using to either RTL_SDR, SDRPlay, or AirspyHF.  
+Set the gain to Auto, or optionally enter an RF gain in dB that has known to work well for some stations (not for Airspy HF).  
+Enter a PPM correction value if your RTL-SDR dongle has an offset (not for Airspy HF).  
 
 If using an RTL_SDR:  
 Enter the number of the desired device if you have more than one RTL-SDR dongle.  
@@ -87,6 +89,13 @@ Enter the IP address that rtl_tcp is listening to and check the Enabled box if y
 If using an SDRPlay:  
 Enter the serial number of the SDRPlay.  
 Enter the antenna port used by the SDRPlay.  
+
+If using an Airspy HF:  
+Note that most of the settings are taken care of for you.  
+The Airspy HF setting uses a special front-end within the application to drive nrsc5 via a streaming file sink containing IQ data.  
+The file sink can grow very large (potentially 100s of GB) if used for a long time and grows in size regardless if the station playing is producing audio. Please ensure that you have plenty of free disk space.  
+The file sink is reset each time a new station is tuned and is removed when the application is exited to help with maintaining the application's footprint.  
+This method may be extended for use with other SDRs if this proves to be a desirable feature.  
 
 Other settings:  
 Check `Log to file` to enable writing debug information from nrsc5 to nrsc5.log.  
@@ -133,4 +142,5 @@ The default map used for the weather radar comes from [OpenStreetMap](https://ww
 1.2.0 zefie update to modern nrsc5 build  
 2.0.0 Updated to use the nrsc5 API  
 2.1.0 Updated and enhanced operation and use  
-2.2.0 Updated for use with SDRPlay and operates with up to 8 possible audio channels (per nrsc5 spec) 
+2.2.0 Updated for use with SDRPlay and operates with up to 8 possible audio channels (per nrsc5 spec)  
+2.3.0 Updated for use with Airspy HF via an embedded gnuradio/gr-osmocom front-end  

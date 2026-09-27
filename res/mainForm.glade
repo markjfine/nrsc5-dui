@@ -1435,6 +1435,7 @@
                             <items>
                               <item translatable="yes" id="rcvrRTL-SDR">RTL-SDR</item>
                               <item translatable="yes" id="rcvrSDRPlay">SDRPlay</item>
+                              <item translatable="yes" id="rcvrAirspyHF">AirspyHF</item>
                             </items>
                           </object>                          
                           <packing>

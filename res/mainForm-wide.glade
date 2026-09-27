@@ -1433,8 +1433,9 @@
                                 <property name="active">0</property>
                                 <signal name="changed" handler="on_cbxSDRRadio_changed" swapped="no"/>
                                 <items>
-            			          <item translatable="yes" id="rcvrRTL-SDR">RTL-SDR</item>
+                                  <item translatable="yes" id="rcvrRTL-SDR">RTL-SDR</item>
                                   <item translatable="yes" id="rcvrSDRPlay">SDRPlay</item>
+                                  <item translatable="yes" id="rcvrAirspyHF">AirspyHF</item>
                                 </items>
                               </object>
                               <packing>

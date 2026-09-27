@@ -44,6 +44,16 @@ from OpenSSL import SSL
 
 import musicbrainzngs
 
+from gnuradio import blocks
+from gnuradio import filter
+from gnuradio.filter import firdes
+from gnuradio import gr
+from gnuradio.fft import window
+from gnuradio.eng_arg import eng_float, intx
+from gnuradio import eng_notation
+import osmosdr
+import threading
+
 # print debug messages to stdout (if debugger is attached)
 debugMessages = (sys.gettrace() != None)
 debugAutoStart = True
@@ -89,7 +99,7 @@ class NRSC5_DUI(object):
         self.debugLog("OS Determination: Windows = {}".format(self.windowsOS))
 
         self.app_name       = "NRSC5-DUI"
-        self.version        = "2.2.6"
+        self.version        = "2.3.0"
         self.web_addr       = "https://github.com/markjfine/nrsc5-dui"
         self.copyright      = "Copyright © 2017-2019 Cody Nybo & Clayton Smith, 2019 zefie, 2021-26 Mark J. Fine"
         musicbrainzngs.set_useragent(self.app_name,self.version,self.web_addr)
@@ -259,7 +269,7 @@ class NRSC5_DUI(object):
         }
 
         self.pointer_cursor = Gdk.Cursor(Gdk.CursorType.LEFT_PTR)
-        #       self.hand_cursor = Gdk.Cursor(Gdk.CursorType.HAND2)
+        self.hand_cursor = Gdk.Cursor(Gdk.CursorType.HAND2)
 
         # set events on info labels
         self.set_tuning_actions(self.btnAudioPrgs0, "btn_prg0", False, False)
@@ -385,7 +395,9 @@ class NRSC5_DUI(object):
                     self.restart_program()
                     
     def on_cbxSDRRadio_changed(self, btn):
+        useRTL = (self.cbxSDRRadio.get_active_text() == "RTL-SDR")
         useSDRPlay = (self.cbxSDRRadio.get_active_text() == "SDRPlay")
+        useAirspyHF = (self.cbxSDRRadio.get_active_text() == "AirspyHF")
         self.lblSdrPlaySer.set_visible(useSDRPlay)
         self.txtSDRPlaySer.set_visible(useSDRPlay)
         self.txtSDRPlaySer.set_can_focus(useSDRPlay)
@@ -394,15 +406,21 @@ class NRSC5_DUI(object):
         self.cbxSDRPlayAnt.set_visible(useSDRPlay)
         self.cbxSDRPlayAnt.set_can_focus(useSDRPlay)
         self.label14a.set_visible(useSDRPlay)
-        self.lblRTL.set_visible(not(useSDRPlay))
-        self.spinRTL.set_visible(not(useSDRPlay))
-        self.spinRTL.set_can_focus(not(useSDRPlay))
+        self.lblRTL.set_visible(useRTL)
+        self.spinRTL.set_visible(useRTL)
+        self.spinRTL.set_can_focus(useRTL)
         self.label14b.set_visible(useSDRPlay)
-        self.lblDevIP.set_visible(not(useSDRPlay))
-        self.txtDevIP.set_visible(not(useSDRPlay))
-        self.txtDevIP.set_can_focus(not(useSDRPlay))
-        self.cbDevIP.set_visible(not(useSDRPlay))
-        self.cbDevIP.set_can_focus(not(useSDRPlay))
+        self.lblDevIP.set_visible(useRTL)
+        self.txtDevIP.set_visible(useRTL)
+        self.txtDevIP.set_can_focus(useRTL)
+        self.cbDevIP.set_visible(useRTL)
+        self.cbDevIP.set_can_focus(useRTL)
+        self.lblGain5.set_visible(not(useAirspyHF))
+        self.spinGain.set_visible(not(useAirspyHF))
+        self.cbAutoGain.set_visible(not(useAirspyHF))
+        self.lblGain1.set_visible(not(useAirspyHF))
+        self.spinPPM.set_visible(not(useAirspyHF))
+        self.lblGain2.set_visible(not(useAirspyHF))
 
     def img_to_pixbuf(self,img):
         """convert PIL.Image to GdkPixbuf.Pixbuf"""
@@ -683,31 +701,41 @@ class NRSC5_DUI(object):
             self.spinPPM.update()
             self.spinRTL.update()
             
+            useRTL = (self.cbxSDRRadio.get_active_text() == "RTL-SDR")
             useSDRPlay = (self.cbxSDRRadio.get_active_text() == "SDRPlay")
+            useAirspyHF = (self.cbxSDRRadio.get_active_text() == "AirspyHF")
             
+            #start flowgraph if AirspyHF
+            if (useAirspyHF):
+                #initialize airspy front-end
+                self.tb = airspy_hd_radio_front_end(self)
+                self.tb.set_freq01(self.spinFreq.get_value()*1000000)
+                self.tb.start()
+
             # enable aas output if temp dir was created
             if (aasDir is not None):
                 self.nrsc5Args.append("--dump-aas-files")
                 self.nrsc5Args.append(aasDir)
             
             # set IP address if rtl_tcp is used
-            if (not(useSDRPlay)) and (self.cbDevIP.get_active()):
+            if (useRTL) and (self.cbDevIP.get_active()):
                 self.nrsc5Args.append("-H")
                 self.nrsc5Args.append(self.txtDevIP.get_text())
             
             # set gain if auto gain is not selected
-            if (not self.cbAutoGain.get_active()):
-                self.streamInfo["Gain"] = round(self.spinGain.get_value(),2)
-                self.nrsc5Args.append("-g")
-                self.nrsc5Args.append(str(self.streamInfo["Gain"]))
+            if (not(useAirspyHF)):
+                if (not self.cbAutoGain.get_active()):
+                    self.streamInfo["Gain"] = round(self.spinGain.get_value(),2)
+                    self.nrsc5Args.append("-g")
+                    self.nrsc5Args.append(str(self.streamInfo["Gain"]))
             
-            # set ppm error if not zero
-            if (self.spinPPM.get_value() != 0):
-                self.nrsc5Args.append("-p")
-                self.nrsc5Args.append(str(int(self.spinPPM.get_value())))
+                # set ppm error if not zero
+                if (self.spinPPM.get_value() != 0):
+                    self.nrsc5Args.append("-p")
+                    self.nrsc5Args.append(str(int(self.spinPPM.get_value())))
             
             # set rtl device number if not zero
-            if (not(useSDRPlay)) and (self.spinRTL.get_value() != 0):
+            if (useRTL) and (self.spinRTL.get_value() != 0):
                 self.nrsc5Args.append("-d")
                 self.nrsc5Args.append(str(int(self.spinRTL.get_value())))
 
@@ -727,8 +755,9 @@ class NRSC5_DUI(object):
                     self.nrsc5Args.append("Antenna "+self.cbxSDRPlayAnt.get_active_text())
             
             # set frequency and stream
-            self.nrsc5Args.append(str(self.spinFreq.get_value()))
-            self.nrsc5Args.append(str(int(self.streamNum)))
+            if (not(useAirspyHF)):
+                self.nrsc5Args.append(str(self.spinFreq.get_value()))
+                self.nrsc5Args.append(str(int(self.streamNum)))
 
             # to emulate reading an IQ file use two lines below, instead of the above:
             # (make sure to set the frequency spinner to the station's frequency before hitting play)
@@ -737,6 +766,14 @@ class NRSC5_DUI(object):
             #self.nrsc5Args.append("/Users/mark/downloads/detroit-1043-HERE.cu8")
             #self.nrsc5Args.append("0")
             #self.spinFreq.set_value(104.3)
+            
+            # set to input file pipe
+            if (useAirspyHF):
+                self.nrsc5Args.append("--iq-input-format")
+                self.nrsc5Args.append("cf32")
+                self.nrsc5Args.append("-r")
+                self.nrsc5Args.append("./sink")
+                self.nrsc5Args.append(str(int(self.streamNum)))
 
             print(self.nrsc5Args)
 
@@ -822,6 +859,11 @@ class NRSC5_DUI(object):
             self.statusTimer.cancel()
             self.statusTimer = None
             
+            if (self.cbxSDRRadio.get_active_text() == "AirspyHF"):
+                self.tb.stop()
+                self.tb.wait()
+                del self.tb
+
             # enable controls
             if (not self.cbAutoGain.get_active()):
                 self.spinGain.set_sensitive(True)
@@ -1966,9 +2008,12 @@ class NRSC5_DUI(object):
         self.spinFreq      = builder.get_object("spinFreq")
         self.cbxAspect     = builder.get_object("cbxAspect")
         self.cbxSDRRadio   = builder.get_object("cbxSDRRadio")
+        self.lblGain5      = builder.get_object("lblGain5")
         self.spinGain      = builder.get_object("spinGain")
         self.cbAutoGain    = builder.get_object("cbAutoGain")
+        self.lblGain1      = builder.get_object("lblGain1")
         self.spinPPM       = builder.get_object("spinPPM")
+        self.lblGain2      = builder.get_object("lblGain2")
         self.lblRTL        = builder.get_object("lblRTL")
         self.spinRTL       = builder.get_object("spinRTL")
         self.label14b      = builder.get_object("label14b")
@@ -2631,6 +2676,91 @@ class NRSC5_Map(object):
             self.setMap(1)
             self.mapIndex = len(self.weatherMaps)-1
 
+class airspy_hd_radio_front_end(gr.top_block):
+    def __init__(self, parent):
+        gr.top_block.__init__(self, "AirSpy HD Radio Front-End", catch_exceptions=True)
+        self.flowgraph_started = threading.Event()
+
+        ##################################################
+        # Variables
+        ##################################################
+        self.samp_rate = samp_rate = 912e3
+        self.taps = taps = firdes.low_pass(200.0, samp_rate,225e3,100000)
+        #self.freq01 = freq01
+
+        ##################################################
+        # Blocks
+        ##################################################
+        self.rational_resampler_xxx_1 = filter.rational_resampler_ccc(
+                interpolation=102,
+                decimation=125,
+                taps=[],
+                fractional_bw=0)
+        self.osmosdr_source_0 = osmosdr.source(
+            args="numchan=" + str(1) + " " + "airspyhf=0"
+        )
+        self.osmosdr_source_0.set_time_unknown_pps(osmosdr.time_spec_t())
+        self.osmosdr_source_0.set_sample_rate(samp_rate)
+        #self.osmosdr_source_0.set_center_freq(self.freq01, 0)
+        self.osmosdr_source_0.set_freq_corr(0, 0)
+        self.osmosdr_source_0.set_dc_offset_mode(1, 0)
+        self.osmosdr_source_0.set_iq_balance_mode(1, 0)
+        self.osmosdr_source_0.set_gain_mode(False, 0)
+        self.osmosdr_source_0.set_gain(0, 0)
+        self.osmosdr_source_0.set_if_gain(20, 0)
+        self.osmosdr_source_0.set_bb_gain(20, 0)
+        self.osmosdr_source_0.set_antenna('', 0)
+        self.osmosdr_source_0.set_bandwidth(0, 0)
+        self.low_pass_filter_0 = filter.fir_filter_ccf(
+            1,
+            firdes.low_pass(
+                200,
+                samp_rate,
+                225e3,
+                100e3,
+                window.WIN_HAMMING,
+                6.76))
+        self.blocks_interleave_0 = blocks.interleave(gr.sizeof_float*1, 1)
+        self.blocks_file_sink_1 = blocks.file_sink(gr.sizeof_float*1, './sink', False)
+        self.blocks_file_sink_1.set_unbuffered(True)
+        self.blocks_complex_to_float_0 = blocks.complex_to_float(1)
+        self.blocks_add_const_vxx_0_0 = blocks.add_const_ff(127.5)
+
+
+        ##################################################
+        # Connections
+        ##################################################
+        self.connect((self.blocks_add_const_vxx_0_0, 0), (self.blocks_file_sink_1, 0))
+        self.connect((self.blocks_complex_to_float_0, 1), (self.blocks_interleave_0, 1))
+        self.connect((self.blocks_complex_to_float_0, 0), (self.blocks_interleave_0, 0))
+        self.connect((self.blocks_interleave_0, 0), (self.blocks_add_const_vxx_0_0, 0))
+        self.connect((self.low_pass_filter_0, 0), (self.rational_resampler_xxx_1, 0))
+        self.connect((self.osmosdr_source_0, 0), (self.low_pass_filter_0, 0))
+        self.connect((self.rational_resampler_xxx_1, 0), (self.blocks_complex_to_float_0, 0))
+
+    def get_samp_rate(self):
+        return self.samp_rate
+
+    def set_samp_rate(self, samp_rate):
+        self.samp_rate = samp_rate
+        self.set_taps(firdes.low_pass(200.0, self.samp_rate,225e3,100000))
+        self.low_pass_filter_0.set_taps(firdes.low_pass(200, self.samp_rate, 225e3, 100e3, window.WIN_HAMMING, 6.76))
+        self.osmosdr_source_0.set_sample_rate(self.samp_rate)
+
+    def get_taps(self):
+        return self.taps
+
+    def set_taps(self, taps):
+        self.taps = taps
+
+    def get_freq01(self):
+        return self.freq01
+
+    def set_freq01(self, freq01):
+        self.freq01 = freq01
+        self.osmosdr_source_0.set_center_freq(self.freq01, 0)
+
+
 def dtToTs(dt):
     # convert datetime to timestamp
     return int((dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds())
@@ -2649,6 +2779,13 @@ def imgToPixbuf(img):
     del data
     return pixbuf
 
+def delete_file_sink():
+    if os.path.isfile("./sink"):
+        try:
+            print("removing file sink")
+            os.remove("./sink")
+        except:
+            pass
 
 if __name__ == "__main__":
     # show main window and start main thread
@@ -2658,5 +2795,6 @@ if __name__ == "__main__":
         nrsc5_dui.on_btnPlay_clicked(nrsc5_dui)
 
     Gtk.main()
-
+    # delete sink file on close to clean up
+    delete_file_sink()
 
